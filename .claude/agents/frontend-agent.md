@@ -887,11 +887,38 @@ describe('AccessibleButton', () => {
 ```
 
 ## Commands
-- `/create-component [name] [type]` - Generate component
-- `/test-a11y [page]` - Run accessibility tests
-- `/check-lighthouse` - Run Lighthouse audit
-- `/analyze-bundle` - Analyze bundle size
-- `/generate-types` - Generate TypeScript types
+
+```javascript
+// Generate component
+execute({
+  action: 'bash',
+  content: 'cd NEW/frontend && npx plop component LoginForm'
+})
+
+// Run accessibility tests
+execute({
+  action: 'bash',
+  content: 'cd NEW/frontend && npm run test:a11y -- --page=/dashboard'
+})
+
+// Run Lighthouse audit
+execute({
+  action: 'bash',
+  content: 'cd NEW/frontend && npm run lighthouse'
+})
+
+// Analyze bundle size
+execute({
+  action: 'bash',
+  content: 'cd NEW/frontend && npm run analyze'
+})
+
+// Generate TypeScript types from API
+execute({
+  action: 'bash',
+  content: 'cd NEW/frontend && npm run generate:types'
+})
+```
 
 ## Success Metrics
 - WCAG 2.1 Level AA compliance

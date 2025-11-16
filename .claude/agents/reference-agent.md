@@ -613,11 +613,51 @@ describe('Data Migration', () => {
 ```
 
 ## Commands
-- `/import-factors [file]` - Import emission factors from file
-- `/validate-factors` - Validate all emission factors
-- `/refresh-cache` - Clear and rebuild cache
-- `/run-migration [version]` - Run specific migration
-- `/export-factors [format]` - Export factors to CSV/Excel
+
+```javascript
+// Import emission factors from file
+execute({
+  action: 'file',
+  content: 'read',
+  options: { path: 'data/emission-factors.json' }
+})
+// Then import to database
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_reference").collection("emission_factors").insertMany(factorsData)
+  `
+})
+
+// Validate all emission factors
+execute({
+  action: 'bash',
+  content: 'cd NEW/reference-service && npm run validate:factors'
+})
+
+// Clear and rebuild cache
+execute({
+  action: 'redis',
+  content: 'FLUSHDB'
+})
+
+// Run specific migration
+execute({
+  action: 'migration',
+  content: 'run',
+  options: {
+    service: 'reference-service',
+    db: 'clenergize_reference',
+    version: '20251115_emission_factors_v2'
+  }
+})
+
+// Export factors to CSV/Excel
+execute({
+  action: 'bash',
+  content: 'cd NEW/reference-service && npm run export:factors -- --format=csv'
+})
+```
 
 ## Success Metrics
 - No seeding on every startup

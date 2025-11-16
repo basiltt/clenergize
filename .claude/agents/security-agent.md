@@ -322,10 +322,36 @@ eslint . --ext .ts --plugin security
 - Security scanning scripts
 
 ## Commands
-- `/verify-jwt [service]` - Check JWT implementation
-- `/scan-secrets [path]` - Find hardcoded secrets
-- `/security-audit [service]` - Full security review
-- `/fix-vulnerability [CVE-ID]` - Apply security patches
+
+```javascript
+// Check JWT implementation in a service
+execute({
+  action: 'bash',
+  content: 'grep -rn "jwt\\.decode" NEW/identity-service/src --include="*.ts"'
+})
+
+// Find hardcoded secrets
+execute({
+  action: 'bash',
+  content: `
+    grep -r "password.*=.*['\"]" NEW/identity-service/src --include="*.ts"
+    grep -r "secret.*=.*['\"]" NEW/identity-service/src --include="*.ts"
+    grep -r "api[_-]?key.*=.*['\"]" NEW/identity-service/src --include="*.ts"
+  `
+})
+
+// Full security review of a service
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm audit --audit-level=moderate'
+})
+
+// Apply security patches for vulnerabilities
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm audit fix'
+})
+```
 
 ## Success Metrics
 - 0 instances of jwt.decode() without verify

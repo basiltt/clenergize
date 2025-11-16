@@ -843,12 +843,52 @@ volumes:
 ```
 
 ## Commands
-- `/docker-up` - Start all services
-- `/docker-down` - Stop all services
-- `/check-health` - Verify all services healthy
-- `/view-logs [service]` - View service logs
-- `/deploy-staging` - Deploy to staging
-- `/deploy-production` - Deploy to production
+
+```javascript
+// Start all services
+execute({
+  action: 'bash',
+  content: 'docker-compose -f docker-compose.dev.yml up -d'
+})
+
+// Stop all services
+execute({
+  action: 'bash',
+  content: 'docker-compose -f docker-compose.dev.yml down'
+})
+
+// Verify all services healthy
+execute({
+  action: 'bash',
+  content: `
+    for port in 3000 3001 3002 3003 3004 3005 3006 3007; do
+      if curl -f http://localhost:$$port/health > /dev/null 2>&1; then
+        echo "✅ Service on port $$port is healthy"
+      else
+        echo "❌ Service on port $$port is not responding"
+      fi
+    done
+  `
+})
+
+// View service logs
+execute({
+  action: 'docker',
+  content: 'logs --tail 100 -f clenergize-identity-service'
+})
+
+// Deploy to staging
+execute({
+  action: 'bash',
+  content: 'gh workflow run ci-cd.yml --ref develop'
+})
+
+// Deploy to production
+execute({
+  action: 'bash',
+  content: 'gh workflow run ci-cd.yml --ref main'
+})
+```
 
 ## Success Metrics
 - All services start in < 30 seconds

@@ -834,12 +834,48 @@ export const APIVersioningStrategy = {
 **Consequences**: Complex error handling, better scalability
 
 ## Commands
-- `/analyze-dependencies` - Analyze service dependencies
-- `/detect-cycles` - Find circular dependencies
-- `/generate-contract [service]` - Generate API contract
-- `/validate-boundaries` - Check bounded context violations
-- `/design-saga [workflow]` - Design saga for workflow
-- `/check-architecture` - Run architecture fitness tests
+
+```javascript
+// Analyze service dependencies
+execute({
+  action: 'bash',
+  content: 'cd NEW/calculation-service && npm ls --depth=0'
+})
+
+// Find circular dependencies
+execute({
+  action: 'bash',
+  content: 'npx madge --circular --extensions ts NEW/calculation-service/src'
+})
+
+// Generate API contract (OpenAPI spec)
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm run docs:generate'
+})
+
+// Check bounded context violations
+execute({
+  action: 'bash',
+  content: 'grep -r "import.*from.*\\.\\./\\.\\./" NEW/identity-service/src --include="*.ts"'
+})
+
+// Design saga for workflow (create documentation)
+execute({
+  action: 'file',
+  content: 'write',
+  options: {
+    path: 'docs/sagas/emission-calculation-saga.md',
+    data: 'Saga choreography for emission calculation workflow...'
+  }
+})
+
+// Run architecture fitness tests
+execute({
+  action: 'bash',
+  content: 'npx ts-node scripts/architecture-tests.ts'
+})
+```
 
 ## Success Metrics
 - Zero circular dependencies

@@ -166,11 +166,48 @@ Delegatable:
 ```
 
 ## Commands Available
-- `/sprint-status` - Show current sprint progress
-- `/assign-task [CLNZ-XXX] [agent]` - Assign Jira ticket
-- `/daily-sync` - Collect status from all agents
-- `/blocker-report [issue]` - Escalate blocking issues
-- `/integration-check [service1] [service2]` - Verify integration points
+
+```javascript
+// Show current sprint progress
+execute({ action: 'jira', content: 'sprint-status', options: { sprint: 'Sprint 0.1' }})
+
+// Assign Jira ticket to agent
+execute({ action: 'jira', content: 'CLNZ-101', options: { assignee: 'security-agent@clenergize.com', status: 'In Progress' }})
+
+// Collect status from all agents (check service health)
+execute({
+  action: 'bash',
+  content: `
+    for port in 3001 3002 3003 3004 3005 3006 3007; do
+      echo "Checking port $port..."
+      curl -s http://localhost:$port/health | jq '.status' || echo "FAILED"
+    done
+  `
+})
+
+// Escalate blocking issues
+execute({
+  action: 'jira',
+  content: 'create',
+  options: {
+    type: 'Bug',
+    priority: 'Blocker',
+    summary: 'Issue description',
+    description: 'Detailed blocker information',
+    labels: ['blocker', 'sprint-0.1']
+  }
+})
+
+// Verify integration points between services
+execute({
+  action: 'test',
+  content: 'integration',
+  options: {
+    services: ['identity-service', 'organization-service'],
+    checks: ['api-contracts', 'event-schemas', 'error-handling']
+  }
+})
+```
 
 ## Decision Authority
 

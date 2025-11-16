@@ -1,576 +1,565 @@
-# Testing Commands
+# Testing Commands (MCP Executor)
 
 ## Test Execution Commands
 
-### /run-tests [service] [type]
-Run tests for a specific service.
+### Run Tests
+```javascript
+// Run unit tests
+execute({
+  action: 'test',
+  content: 'unit',
+  options: { service: 'identity' }
+})
 
-**Usage**: `/run-tests identity-service unit`
+// Run integration tests
+execute({
+  action: 'test',
+  content: 'integration',
+  options: { service: 'identity' }
+})
 
-**Test Types**:
-- `unit`: Unit tests only
-- `integration`: Integration tests
-- `e2e`: End-to-end tests
-- `all`: All test types
-- `smoke`: Quick smoke tests
-- `regression`: Regression suite
+// Run E2E tests
+execute({
+  action: 'test',
+  content: 'e2e',
+  options: { service: 'identity' }
+})
 
-**Output**:
-```
-Running Unit Tests: identity-service
-Framework: Jest
-Coverage: Enabled
+// Run all tests
+execute({
+  action: 'test',
+  content: 'all',
+  options: { service: 'identity' }
+})
 
-Test Suites: 23 total
-Tests: 145 total
+// Run specific test file
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm test -- jwt-verification.service.spec.ts'
+})
 
-PASS src/domain/services/user.service.spec.ts (2.3s)
-  UserService
-    ✓ should create user with valid data (45ms)
-    ✓ should hash password before saving (23ms)
-    ✓ should generate verification token (12ms)
-    ✓ should publish UserCreated event (34ms)
-
-PASS src/application/commands/auth.handler.spec.ts (1.8s)
-  AuthCommandHandler
-    ✓ should verify JWT with JWKS (156ms)
-    ✓ should reject invalid tokens (23ms)
-    ✓ should handle expired tokens (18ms)
-
-Test Results:
-├─ Passed: 143 ✅
-├─ Failed: 2 ❌
-├─ Skipped: 0
-└─ Time: 14.3s
-
-Coverage:
-├─ Statements: 84.3% (1245/1478)
-├─ Branches: 78.9% (234/296)
-├─ Functions: 89.2% (145/162)
-└─ Lines: 85.1% (1189/1397)
+// Run tests in watch mode
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm run test:watch'
+})
 ```
 
-### /coverage-check [service] [threshold]
-Check test coverage against thresholds.
+### Coverage Check
+```javascript
+// Generate coverage report
+execute({
+  action: 'test',
+  content: 'coverage',
+  options: {
+    service: 'identity',
+    threshold: 80
+  }
+})
 
-**Usage**: `/coverage-check organization-service 80`
+// View coverage summary
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm run test:cov'
+})
 
-**Coverage Report**:
-```
-Coverage Analysis: organization-service
-Threshold: 80%
+// Check specific file coverage
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm run test:cov -- jwt.guard.ts'
+})
 
-File Coverage:
-=====================================
-✅ domain/entities/project.entity.ts          92.3%
-✅ domain/services/hierarchy.service.ts       87.5%
-⚠️ application/commands/create.handler.ts     76.8%
-❌ infrastructure/repositories/project.repo.ts 68.2%
-✅ infrastructure/controllers/project.ctrl.ts  94.1%
-
-Uncovered Code:
-📍 project.repo.ts:145-156
-   Missing: Error handling in findWithHierarchy()
-📍 project.repo.ts:234-245
-   Missing: Transaction rollback scenario
-📍 create.handler.ts:78-82
-   Missing: Validation edge cases
-
-Summary:
-├─ Overall Coverage: 78.4% ❌ (Below 80% threshold)
-├─ Critical Paths: 92.3% ✅
-├─ Error Handlers: 65.4% ❌
-└─ Action Required: Add 12 more tests
-
-Suggested Tests:
-1. Test transaction rollback in createProject()
-2. Test hierarchy reference validation
-3. Test concurrent update handling
+// Generate HTML coverage report
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm run test:cov && open coverage/index.html'
+})
 ```
 
-### /run-e2e [flow]
-Execute end-to-end test flows.
+### Run E2E Tests
+```javascript
+// Run user registration flow
+execute({
+  action: 'bash',
+  content: 'cd NEW/frontend && npm run cypress:run -- --spec "cypress/e2e/user-registration.cy.ts"'
+})
 
-**Usage**: `/run-e2e user-registration`
+// Run with UI
+execute({
+  action: 'bash',
+  content: 'cd NEW/frontend && npm run cypress:open'
+})
 
-**Available Flows**:
-- `user-registration`: Complete signup flow
-- `project-creation`: Create and configure project
-- `emission-calculation`: Full calculation workflow
-- `report-generation`: Generate and export report
-- `data-import`: Bulk data import flow
+// Run all E2E tests
+execute({
+  action: 'bash',
+  content: 'cd NEW/frontend && npm run test:e2e'
+})
 
-**Execution**:
-```
-E2E Test: User Registration Flow
-Framework: Cypress
-Browser: Chrome 119
-Environment: http://localhost:3000
-
-Steps:
-1. Navigate to signup page ✅ (1.2s)
-2. Fill registration form ✅ (0.8s)
-3. Submit form ✅ (2.3s)
-4. Verify email sent ✅ (0.5s)
-5. Click verification link ✅ (1.1s)
-6. Complete profile ✅ (1.5s)
-7. Land on dashboard ✅ (0.9s)
-
-Screenshots:
-- step-1-signup-page.png
-- step-3-form-submitted.png
-- step-7-dashboard.png
-
-Video: cypress/videos/user-registration.mp4
-
-Result: ✅ PASSED (8.3s)
+// Run specific test suite
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm run test:e2e -- auth.e2e-spec.ts'
+})
 ```
 
-### /performance-test [service] [scenario]
-Run performance tests.
+### Performance Testing
+```javascript
+// Run K6 performance test
+execute({
+  action: 'bash',
+  content: `
+    k6 run --vus 100 --duration 5m \\
+      --out json=performance-results.json \\
+      tests/performance/calculation-service.js
+  `
+})
 
-**Usage**: `/performance-test calculation-service bulk-calculation`
+// Quick baseline test
+execute({
+  action: 'bash',
+  content: `
+    k6 run --vus 10 --duration 30s \\
+      tests/performance/baseline.js
+  `
+})
 
-**Scenarios**:
-- `baseline`: Normal load
-- `stress`: 2x normal load
-- `spike`: Sudden traffic spike
-- `soak`: Extended duration
-- `bulk-calculation`: Large batch processing
-
-**Results**:
-```
-Performance Test: Bulk Calculation
-Tool: K6
-Duration: 5 minutes
-Virtual Users: 100
-
-Scenario Metrics:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Request Rate: 500 req/s
-Data Processed: 50,000 activities
-
-Response Times:
-├─ p50: 45ms ✅
-├─ p95: 156ms ✅
-├─ p99: 423ms ⚠️ (target: <400ms)
-└─ max: 1,234ms
-
-Throughput:
-├─ Success: 498 req/s (99.6%)
-├─ Failed: 2 req/s (0.4%)
-└─ Total: 150,000 requests
-
-Resource Usage:
-├─ CPU: 78% average, 92% peak
-├─ Memory: 2.3GB average, 3.1GB peak
-├─ Database: 234 connections peak
-└─ Redis: 45MB cache size
-
-Errors:
-├─ Timeouts: 234 (0.15%)
-├─ 500 errors: 12 (0.008%)
-└─ Connection refused: 0
-
-Bottlenecks Identified:
-1. Database connection pool (increase to 300)
-2. Redis cache misses (add warming)
-3. Memory spike during aggregation
+// Stress test
+execute({
+  action: 'bash',
+  content: `
+    k6 run --vus 200 --duration 10m \\
+      --stage 5m:100,5m:200 \\
+      tests/performance/stress-test.js
+  `
+})
 ```
 
 ## Test Generation Commands
 
-### /generate-tests [file]
-Generate tests for a specific file.
+### Generate Tests
+```javascript
+// Generate test file for service
+execute({
+  action: 'file',
+  content: 'write',
+  options: {
+    path: 'NEW/identity-service/src/auth/jwt.guard.spec.ts',
+    data: `
+import { Test, TestingModule } from '@nestjs/testing';
+import { JwtGuard } from './jwt.guard';
+import { UnauthorizedException } from '@nestjs/common';
 
-**Usage**: `/generate-tests src/domain/services/calculation.service.ts`
+describe('JwtGuard', () => {
+  let guard: JwtGuard;
 
-**Generated**: `calculation.service.spec.ts`
-```typescript
-describe('CalculationService', () => {
-  let service: CalculationService;
-  let mockRepository: jest.Mocked<CalculationRepository>;
-  let mockEventBus: jest.Mocked<EventBus>;
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [JwtGuard],
+    }).compile();
 
-  beforeEach(() => {
-    mockRepository = createMock<CalculationRepository>();
-    mockEventBus = createMock<EventBus>();
-    service = new CalculationService(mockRepository, mockEventBus);
+    guard = module.get<JwtGuard>(JwtGuard);
   });
 
-  describe('calculateEmissions', () => {
-    it('should calculate emissions with valid data', async () => {
-      // Arrange
-      const activity = { quantity: 100, emissionFactor: 2.34 };
-      mockRepository.findFactor.mockResolvedValue({ value: 2.34 });
-
-      // Act
-      const result = await service.calculateEmissions(activity);
-
-      // Assert
-      expect(result).toBe(234);
-      expect(mockEventBus.publish).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'EmissionCalculated'
-        })
-      );
+  describe('validateToken', () => {
+    it('should validate a valid JWT token', async () => {
+      const validToken = 'valid.jwt.token';
+      const result = await guard.validateToken(validToken);
+      expect(result).toBeDefined();
+      expect(result.sub).toBeTruthy();
     });
 
-    it('should handle missing emission factor', async () => {
-      mockRepository.findFactor.mockResolvedValue(null);
-
-      await expect(service.calculateEmissions({}))
-        .rejects.toThrow('Emission factor not found');
+    it('should throw UnauthorizedException for invalid token', async () => {
+      const invalidToken = 'invalid.token';
+      await expect(guard.validateToken(invalidToken))
+        .rejects.toThrow(UnauthorizedException);
     });
 
-    // Generated: 15 more test cases...
+    it('should throw UnauthorizedException for expired token', async () => {
+      const expiredToken = 'expired.jwt.token';
+      await expect(guard.validateToken(expiredToken))
+        .rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should verify token signature with JWKS', async () => {
+      const token = 'signed.jwt.token';
+      const result = await guard.validateToken(token);
+      expect(result).toHaveProperty('sub');
+      expect(result).toHaveProperty('iss');
+    });
   });
 });
+    `
+  }
+})
 ```
 
-### /mutation-test [service]
-Run mutation testing to verify test quality.
+### Mutation Testing
+```javascript
+// Install Stryker
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm install -D @stryker-mutator/core @stryker-mutator/jest-runner'
+})
 
-**Usage**: `/mutation-test identity-service`
+// Run mutation tests
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm run test:mutation'
+})
 
-**Mutation Report**:
-```
-Mutation Testing Report
-Framework: Stryker
-Service: identity-service
-
-Mutations Applied: 234
-Mutations Killed: 198 ✅
-Mutations Survived: 36 ❌
-
-Survived Mutations (Test Gaps):
-1. auth.service.ts:45
-   Original: if (user.status === 'ACTIVE')
-   Mutation: if (user.status !== 'ACTIVE')
-   Impact: Test missing for inactive user login
-
-2. jwt.guard.ts:78
-   Original: throw new UnauthorizedException()
-   Mutation: return true
-   Impact: Test missing for invalid token bypass
-
-3. user.repository.ts:123
-   Original: { email: email.toLowerCase() }
-   Mutation: { email: email }
-   Impact: Test missing for case sensitivity
-
-Mutation Score: 84.6%
-Quality Rating: Good (target: >80%)
-
-Recommendations:
-- Add test for inactive user authentication
-- Add test for JWT guard bypass prevention
-- Add test for email normalization
+// View mutation report
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && open mutation-report/index.html'
+})
 ```
 
 ## Test Data Management
 
-### /seed-test-data [scenario]
-Seed database with test data scenarios.
+### Seed Test Data
+```javascript
+// Seed minimal test data
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_identity_test").collection("users").insertMany([
+      {email: "admin@test.com", role: "admin", password: "hashed_password"},
+      {email: "user@test.com", role: "user", password: "hashed_password"}
+    ])
+  `
+})
 
-**Usage**: `/seed-test-data performance-testing`
+// Seed performance test data
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm run seed:performance'
+})
 
-**Scenarios**:
-- `minimal`: 10 users, 5 projects
-- `standard`: 100 users, 50 projects
-- `performance-testing`: 10k users, 1k projects
-- `edge-cases`: Boundary and error conditions
-- `demo`: Realistic demo data
-
-**Seeding Process**:
-```
-Seeding: Performance Testing Dataset
-Target: mongodb://localhost:27017/clenergize_test
-
-Creating:
-✅ 10,000 users (with varied roles)
-✅ 500 organizations (hierarchical)
-✅ 1,000 projects (distributed)
-✅ 50,000 activities (mixed types)
-✅ 25,000 calculations (pre-computed)
-✅ 5,000 reports (various formats)
-
-Relationships:
-- Each org: 5-50 users
-- Each project: 10-500 activities
-- Each activity: 1-5 calculations
-
-Special Cases:
-- 10% deleted (soft)
-- 5% with errors
-- 15% incomplete data
-- 20% edge date ranges
-
-Seeding Complete: 2.3 minutes
-Database Size: 1.2 GB
+// Seed from fixture file
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm run seed -- fixtures/users.json'
+})
 ```
 
-### /clean-test-data [service]
-Clean test data from database.
+### Clean Test Data
+```javascript
+// Clean test database
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_identity_test").dropDatabase()
+  `
+})
 
-**Usage**: `/clean-test-data organization-service`
+// Clean specific collection
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_identity_test").collection("users").deleteMany({
+      email: {$regex: "_test_"}
+    })
+  `
+})
 
-**Cleaning Process**:
-```
-Test Data Cleanup
-Service: organization-service
-Database: clenergize_organization_test
-
-Identifying Test Data:
-- Pattern: *_test_*, *_e2e_*
-- Created by: test users
-- Marked: isTestData: true
-
-Found:
-- Projects: 234 test records
-- Organizations: 45 test records
-- Hierarchies: 89 test records
-
-Cleaning...
-✅ Deleted 368 documents
-✅ Cleared test collections
-✅ Reset sequences
-✅ Cleaned Redis cache
-
-Verification:
-- Production data intact ✅
-- Test data removed ✅
-- Indexes preserved ✅
+// Reset test database
+execute({
+  action: 'bash',
+  content: `
+    mongo clenergize_identity_test --eval "db.dropDatabase()" &&
+    cd NEW/identity-service && npm run seed:test
+  `
+})
 ```
 
 ## Test Quality Commands
 
-### /test-smell-detector [path]
-Detect test smells and anti-patterns.
+### Detect Test Smells
+```javascript
+// Scan for test smells
+execute({
+  action: 'bash',
+  content: `
+    echo "=== Magic Numbers ==="
+    grep -rn "expect.*toBe([0-9]" NEW/identity-service/test --include="*.spec.ts"
 
-**Usage**: `/test-smell-detector src/test`
+    echo "=== Hardcoded Delays ==="
+    grep -rn "sleep\\|setTimeout" NEW/identity-service/test --include="*.spec.ts"
 
-**Analysis**:
-```
-Test Smell Detection Report
-===========================
+    echo "=== Missing Assertions ==="
+    grep -rn "it(.*=>.*{$" NEW/identity-service/test --include="*.spec.ts" -A 5 | grep -v "expect"
+  `
+})
 
-Smells Detected:
-
-1. Magic Numbers (12 occurrences)
-   File: calculation.spec.ts:45
-   Code: expect(result).toBe(234)
-   Fix: Use named constants
-
-2. Excessive Mocking (8 occurrences)
-   File: service.spec.ts:12-45
-   Impact: Brittle tests, hard to maintain
-   Fix: Use integration tests
-
-3. Test Interdependence (3 occurrences)
-   File: auth.spec.ts:78, 92, 105
-   Impact: Order-dependent failures
-   Fix: Isolate test cases
-
-4. Missing Assertions (5 occurrences)
-   File: repository.spec.ts:234
-   Impact: False positives
-   Fix: Add expect() statements
-
-5. Hardcoded Delays (2 occurrences)
-   File: e2e.spec.ts:156
-   Code: await sleep(5000)
-   Fix: Use waitFor patterns
-
-Quality Score: 7.2/10
-Priority Fixes: Test interdependence, Missing assertions
+// Check test naming conventions
+execute({
+  action: 'bash',
+  content: `
+    grep -rn "it('test" NEW/identity-service/test --include="*.spec.ts"
+  `
+})
 ```
 
-### /test-flakiness [suite]
-Detect and fix flaky tests.
+### Flaky Test Detection
+```javascript
+// Run tests multiple times
+execute({
+  action: 'bash',
+  content: `
+    for i in {1..10}; do
+      echo "Run $i/10"
+      cd NEW/identity-service && npm test -- --silent 2>&1 | tee test-run-$i.log
+    done
+  `
+})
 
-**Usage**: `/test-flakiness e2e`
-
-**Flakiness Report**:
-```
-Flaky Test Detection
-Runs: 10 iterations
-Suite: E2E Tests
-
-Flaky Tests Found:
-
-1. "should handle concurrent updates"
-   Failure Rate: 30% (3/10)
-   Reason: Race condition
-   Line: concurrent.spec.ts:45
-   Fix: Add proper synchronization
-
-2. "should timeout after 5 seconds"
-   Failure Rate: 20% (2/10)
-   Reason: Hardcoded timeout
-   Line: timeout.spec.ts:78
-   Fix: Use configurable timeout
-
-3. "should connect to external API"
-   Failure Rate: 40% (4/10)
-   Reason: Network dependency
-   Line: api.spec.ts:123
-   Fix: Mock external service
-
-Stability Score: 73%
-Action: Fix flaky tests before deployment
+// Analyze flaky tests
+execute({
+  action: 'bash',
+  content: `
+    grep -h "FAIL" test-run-*.log | sort | uniq -c | sort -rn
+  `
+})
 ```
 
-## Contract Testing Commands
+## Contract Testing
 
-### /contract-test [consumer] [provider]
-Test API contracts between services.
+### Test API Contracts
+```javascript
+// Install Pact
+execute({
+  action: 'bash',
+  content: 'cd NEW/frontend && npm install -D @pact-foundation/pact'
+})
 
-**Usage**: `/contract-test frontend identity-service`
+// Consumer test (Frontend)
+execute({
+  action: 'file',
+  content: 'write',
+  options: {
+    path: 'NEW/frontend/tests/pact/identity-service.pact.spec.ts',
+    data: `
+import { Pact } from '@pact-foundation/pact';
 
-**Contract Validation**:
+describe('Identity Service Contract', () => {
+  const provider = new Pact({
+    consumer: 'Frontend',
+    provider: 'IdentityService',
+    port: 1234
+  });
+
+  beforeAll(() => provider.setup());
+  afterAll(() => provider.finalize());
+
+  describe('POST /auth/login', () => {
+    it('returns token on successful login', async () => {
+      await provider.addInteraction({
+        state: 'user exists',
+        uponReceiving: 'login request',
+        withRequest: {
+          method: 'POST',
+          path: '/auth/login',
+          body: { email: 'test@example.com', password: 'Test123!' }
+        },
+        willRespondWith: {
+          status: 200,
+          body: { token: 'jwt-token' }
+        }
+      });
+
+      // Test implementation
+    });
+  });
+});
+    `
+  }
+})
+
+// Verify provider
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm run test:pact:verify'
+})
 ```
-Contract Testing
-Consumer: frontend
-Provider: identity-service
-Contract: auth-api-v1.json
 
-Testing Endpoints:
-
-POST /auth/login
-✅ Request schema valid
-✅ Response schema valid
-✅ Status codes match
-✅ Headers present
-
-GET /auth/user/:id
-✅ Request params valid
-✅ Response schema valid
-⚠️ Optional field 'avatar' not documented
-✅ Error responses match
-
-POST /auth/refresh
-❌ Response schema mismatch
-   Expected: { token, refreshToken }
-   Actual: { accessToken, refreshToken }
-
-Contract Compliance: 92%
-Breaking Changes: 1
-Warnings: 1
-```
-
-### /generate-mocks [service]
-Generate mock services for testing.
-
-**Usage**: `/generate-mocks identity-service`
-
-**Generated Mocks**:
-```typescript
-// Generated: identity-service.mock.ts
-export class IdentityServiceMock {
+### Generate Mocks
+```javascript
+// Create mock service
+execute({
+  action: 'file',
+  content: 'write',
+  options: {
+    path: 'NEW/identity-service/test/mocks/jwt.service.mock.ts',
+    data: `
+export class JwtServiceMock {
   private responses = new Map();
 
-  // Auto-generated from OpenAPI
-  async login(email: string, password: string) {
-    return this.responses.get('login') || {
-      token: 'mock-jwt-token',
-      user: { id: 'user-123', email }
-    };
+  sign(payload: any): string {
+    return this.responses.get('sign') || 'mock-jwt-token';
   }
 
-  // Configure responses
+  verify(token: string): any {
+    return this.responses.get('verify') || { sub: 'user-123', email: 'test@example.com' };
+  }
+
   setResponse(method: string, response: any) {
     this.responses.set(method, response);
   }
 
-  // Verify calls
   verifyCalled(method: string, times: number = 1) {
-    // Implementation
+    // Verification logic
   }
 }
-
-// Usage in tests:
-const identityMock = new IdentityServiceMock();
-identityMock.setResponse('login', { error: 'Invalid' });
+    `
+  }
+})
 ```
 
-## Monitoring Commands
+## Monitoring & Metrics
 
-### /test-metrics [period]
-Display testing metrics and trends.
+### Test Metrics Dashboard
+```javascript
+// Get test execution stats
+execute({
+  action: 'bash',
+  content: `
+    cd NEW/identity-service &&
+    npm test -- --json --outputFile=test-results.json &&
+    cat test-results.json | jq '{
+      total: .numTotalTests,
+      passed: .numPassedTests,
+      failed: .numFailedTests,
+      duration: .testResults[].endTime - .testResults[].startTime
+    }'
+  `
+})
 
-**Usage**: `/test-metrics week`
-
-**Dashboard**:
-```
-Testing Metrics Dashboard
-Period: Last 7 Days
-═════════════════════════════════════
-
-Test Execution:
-├─ Total Runs: 1,234
-├─ Passed: 1,189 (96.4%)
-├─ Failed: 45 (3.6%)
-└─ Flaky: 12 (1%)
-
-Coverage Trend:
-Day 1: ████████░░ 78%
-Day 2: ████████░░ 79%
-Day 3: ████████░░ 80%
-Day 4: █████████░ 82%
-Day 5: █████████░ 83%
-Day 6: █████████░ 84%
-Day 7: █████████░ 85% ✅
-
-Test Duration:
-├─ Unit: 14s average
-├─ Integration: 45s average
-├─ E2E: 3m 23s average
-└─ Total CI: 8m 45s
-
-Top Failures:
-1. auth.spec.ts: 12 failures
-2. calculation.spec.ts: 8 failures
-3. migration.spec.ts: 6 failures
-
-New Tests Added: 45
-Tests Removed: 12
-Net Growth: +33
+// Generate coverage trend
+execute({
+  action: 'bash',
+  content: `
+    for service in identity organization reference activity calculation reporting audit; do
+      echo "=== $service ==="
+      cd NEW/$service-service &&
+      npm run test:cov --silent 2>&1 | grep "All files" | awk '{print $10}'
+      cd ../..
+    done
+  `
+})
 ```
 
-### /test-impact-analysis [commit]
-Analyze which tests to run based on changes.
+### Test Impact Analysis
+```javascript
+// Find affected tests
+execute({
+  action: 'bash',
+  content: `
+    # Get changed files
+    CHANGED_FILES=$(git diff --name-only HEAD~1)
 
-**Usage**: `/test-impact-analysis HEAD~1`
+    # Find related test files
+    for file in $CHANGED_FILES; do
+      if [[ $file == *.ts ]]; then
+        TEST_FILE="${file%.ts}.spec.ts"
+        if [ -f "$TEST_FILE" ]; then
+          echo "$TEST_FILE"
+        fi
+      fi
+    done
+  `
+})
 
-**Analysis**:
+// Run only affected tests
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm test -- --onlyChanged'
+})
 ```
-Test Impact Analysis
-Commit: feat: update calculation algorithm
-Files Changed: 5
 
-Affected Components:
-✓ calculation.service.ts
-✓ emission.calculator.ts
-✓ aggregation.helper.ts
+## Integration Testing
 
-Recommended Tests:
-Required (directly affected):
-- calculation.service.spec.ts
-- emission.calculator.spec.ts
-- aggregation.helper.spec.ts
+### Service Integration Tests
+```javascript
+// Test service-to-service communication
+execute({
+  action: 'bash',
+  content: `
+    # Start all services
+    docker-compose -f docker-compose.test.yml up -d
 
-Related (integration):
-- calculation.e2e.spec.ts
-- reporting.integration.spec.ts
+    # Wait for services
+    sleep 10
 
-Skippable (unaffected):
-- auth.spec.ts (0% overlap)
-- user.spec.ts (0% overlap)
-- 127 other test files
+    # Run integration tests
+    cd NEW/identity-service && npm run test:integration
 
-Estimated Time:
-- Full Suite: 8m 45s
-- Recommended Only: 2m 15s
-- Time Saved: 6m 30s (74%)
+    # Cleanup
+    docker-compose -f docker-compose.test.yml down
+  `
+})
+
+// Test with TestContainers
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm install -D testcontainers'
+})
 ```
+
+### Database Integration Tests
+```javascript
+// Test MongoDB transactions
+execute({
+  action: 'file',
+  content: 'write',
+  options: {
+    path: 'NEW/identity-service/test/integration/transaction.spec.ts',
+    data: `
+import { MongoClient } from 'mongodb';
+
+describe('Transaction Tests', () => {
+  let client: MongoClient;
+
+  beforeAll(async () => {
+    client = await MongoClient.connect(process.env.MONGODB_URI_TEST);
+  });
+
+  afterAll(async () => {
+    await client.close();
+  });
+
+  it('should rollback on error', async () => {
+    const session = client.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await db.collection('users').insertOne({ email: 'test@test.com' }, { session });
+        throw new Error('Simulated error');
+      });
+    } catch (error) {
+      // Transaction rolled back
+    }
+
+    const user = await db.collection('users').findOne({ email: 'test@test.com' });
+    expect(user).toBeNull();
+  });
+});
+    `
+  }
+})
+```
+
+## Quick Reference
+
+| Task | Command |
+|------|---------|
+| Run unit tests | `execute({ action: 'test', content: 'unit', options: { service: 'identity' }})` |
+| Run E2E tests | `execute({ action: 'test', content: 'e2e', options: { service: 'identity' }})` |
+| Check coverage | `execute({ action: 'test', content: 'coverage', options: { service: 'identity', threshold: 80 }})` |
+| Performance test | `execute({ action: 'bash', content: 'k6 run tests/performance/...' })` |
+| Seed test data | `execute({ action: 'mongodb', content: 'db("test").collection("users").insertMany(...)' })` |
+| Clean test data | `execute({ action: 'mongodb', content: 'db("test").dropDatabase()' })` |
+| Generate tests | Create .spec.ts file with test template |
+| Mutation testing | `execute({ action: 'bash', content: 'npm run test:mutation' })` |
+| Contract testing | Use Pact for consumer/provider tests |
+
+Remember: Test early, test often - aim for 80% coverage!

@@ -1,250 +1,305 @@
-# Security Commands
+# Security Commands (MCP Executor)
 
 ## Authentication & Authorization Commands
 
-### /verify-jwt [token]
-Verify JWT token with proper JWKS validation.
+### Verify JWT Token
+```javascript
+// Verify JWT with JWKS
+execute({
+  action: 'code',
+  content: `
+const jwt = require('jsonwebtoken');
+const jwksClient = require('jwks-rsa');
 
-**Usage**: `/verify-jwt "eyJhbGciOiJSUzI1NiIs..."`
-
-**Output**:
-```
-Token Status: ✅ VALID
-Algorithm: RS256
-Issuer: https://cognito.amazonaws.com/us-east-1_xxxxx
-Audience: clenergize-api
-Subject: user-123
-Expiry: 2025-11-15T14:30:00Z
-Claims: {
-  "email": "user@example.com",
-  "roles": ["admin", "project-manager"],
-  "organizationId": "org-456"
-}
-Key ID: 48f7e3a9-2b4f-4c89-b123-456def789abc
-Signature: VERIFIED ✅
-```
-
-### /scan-secrets [path]
-Scan for hardcoded secrets and credentials.
-
-**Usage**: `/scan-secrets NEW/identity-service`
-
-**Detects**:
-- Hardcoded API keys
-- JWT secrets in code
-- Database passwords
-- AWS credentials
-- Private keys
-- Default fallback values
-
-**Output**:
-```
-Scanning: NEW/identity-service
-❌ CRITICAL: Hardcoded secret found
-File: src/config/auth.config.ts:15
-Line: const secret = process.env.JWT_SECRET || 'default-secret'
-Fix: Remove fallback value, use proper secrets management
-
-❌ WARNING: Potential API key detected
-File: src/services/external.service.ts:8
-Line: headers: { 'x-api-key': 'sk_test_4242424242' }
-Fix: Move to environment variables or AWS Secrets Manager
-
-Summary: 2 issues found (1 critical, 1 warning)
-```
-
-### /security-audit [service]
-Comprehensive security audit of a service.
-
-**Usage**: `/security-audit identity-service`
-
-**Checks Performed**:
-```
-Authentication:
-✅ JWT verification implemented correctly
-✅ JWKS client configured with caching
-✅ Token expiry validation
-❌ Missing rate limiting on auth endpoints
-
-Authorization:
-✅ RBAC implementation present
-✅ Permission checks on all endpoints
-⚠️ Some admin endpoints lack audit logging
-
-Secrets Management:
-✅ Using AWS Secrets Manager
-✅ No hardcoded credentials
-✅ Environment variables properly configured
-
-Input Validation:
-✅ Class-validator on all DTOs
-✅ SQL injection prevention
-⚠️ Missing XSS sanitization on user inputs
-
-Dependencies:
-❌ 3 packages with known vulnerabilities
-- express-jwt@5.3.1 (CVE-2022-xxxxx)
-- mongodb@3.6.0 (outdated)
-- bcrypt@3.0.0 (upgrade available)
-
-Network Security:
-✅ HTTPS enforced
-✅ CORS properly configured
-⚠️ Missing CSP headers
-
-Overall Score: 7.5/10
-Priority Fixes: Rate limiting, dependency updates
-```
-
-### /fix-jwt-vulnerability [service]
-Fix JWT decode without verification (C1 issue).
-
-**Usage**: `/fix-jwt-vulnerability identity-service`
-
-**Actions**:
-1. Searches for all jwt.decode() usage
-2. Replaces with jwt.verify()
-3. Adds JWKS client configuration
-4. Implements proper error handling
-5. Updates tests
-
-**Before**:
-```typescript
-const payload = jwt.decode(token); // VULNERABLE!
-```
-
-**After**:
-```typescript
-const key = await jwksClient.getSigningKey(kid);
-const payload = jwt.verify(token, key.getPublicKey(), {
-  algorithms: ['RS256'],
-  issuer: process.env.JWT_ISSUER,
-  audience: process.env.JWT_AUDIENCE
+const client = jwksClient({
+  jwksUri: 'https://cognito.amazonaws.com/.well-known/jwks.json',
+  cache: true
 });
-```
 
-## Encryption & Secrets Commands
-
-### /rotate-secrets [service]
-Rotate all secrets for a service.
-
-**Usage**: `/rotate-secrets calculation-service`
-
-**Actions**:
-1. Generates new JWT signing keys
-2. Updates AWS Secrets Manager
-3. Rotates database passwords
-4. Updates API keys
-5. Triggers rolling deployment
-6. Maintains zero downtime
-
-### /encrypt-pii [service] [field]
-Implement PII encryption for sensitive fields.
-
-**Usage**: `/encrypt-pii identity-service email`
-
-**Implementation**:
-```typescript
-class EncryptedField {
-  @Transform(({ value }) => encrypt(value), { toPlainOnly: true })
-  @Transform(({ value }) => decrypt(value), { toClassOnly: true })
-  email: string;
+async function verifyToken(token) {
+  const decoded = jwt.decode(token, { complete: true });
+  const key = await client.getSigningKey(decoded.header.kid);
+  return jwt.verify(token, key.getPublicKey(), {
+    algorithms: ['RS256'],
+    issuer: process.env.JWT_ISSUER
+  });
 }
 
-// Automatic encryption/decryption on database operations
-// Uses AWS KMS for key management
-// Searchable encryption with blind indexes
+verifyToken('YOUR_TOKEN_HERE').then(console.log).catch(console.error);
+  `,
+  options: { language: 'javascript' }
+})
 ```
 
-### /generate-api-key [service] [scope]
-Generate secure API key with scoped permissions.
+### Scan for Hardcoded Secrets
+```javascript
+// Scan directory for secrets
+execute({
+  action: 'bash',
+  content: `
+    echo "=== Scanning for hardcoded secrets ==="
+    grep -r "password.*=.*['\"]" NEW/identity-service/src --include="*.ts"
+    grep -r "secret.*=.*['\"]" NEW/identity-service/src --include="*.ts"
+    grep -r "api[_-]?key.*=.*['\"]" NEW/identity-service/src --include="*.ts"
+    grep -r "Bearer sk_" NEW/identity-service/src --include="*.ts"
+  `
+})
 
-**Usage**: `/generate-api-key reporting-service read-only`
-
-**Output**:
-```
-API Key Generated:
-Key: clnz_live_4f3a8b9c2d1e5f6g7h8i9j0k
-Prefix: clnz_live (identifiable)
-Service: reporting-service
-Scope: read-only
-Permissions: [
-  "reports:read",
-  "calculations:read",
-  "projects:read"
-]
-Rate Limit: 1000 req/hour
-Expires: 2026-11-15T00:00:00Z
-
-Store this key securely. It cannot be retrieved again.
-```
-
-## Vulnerability Management Commands
-
-### /dependency-check [service]
-Check for vulnerable dependencies.
-
-**Usage**: `/dependency-check organization-service`
-
-**Output**:
-```
-Running npm audit...
-
-Critical: 0
-High: 2
-Medium: 5
-Low: 8
-
-High Severity:
-1. jsonwebtoken < 9.0.0
-   Vulnerability: Improper Verification of Cryptographic Signature
-   Current: 8.5.1 → Upgrade to: 9.0.2
-
-2. mongodb < 5.0.0
-   Vulnerability: Prototype Pollution
-   Current: 4.17.2 → Upgrade to: 5.9.0
-
-Auto-fix available: npm audit fix
-Manual review needed: 2 breaking changes
+// Check for default fallback values
+execute({
+  action: 'bash',
+  content: `
+    grep -r "process\\.env\\.[A-Z_]*\\s*||\\s*['\"]" NEW/ --include="*.ts"
+  `
+})
 ```
 
-### /penetration-test [service]
-Run automated penetration testing.
+### Security Audit
+```javascript
+// Run comprehensive security audit
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm audit --audit-level=moderate'
+})
 
-**Usage**: `/penetration-test identity-service`
+// Check for vulnerable dependencies
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm audit --json | jq \'.vulnerabilities\''
+})
 
-**Tests**:
-- SQL/NoSQL injection
-- XSS attacks
-- CSRF vulnerabilities
-- Authentication bypass
-- Authorization flaws
-- Rate limiting bypass
-- Input validation
-- File upload vulnerabilities
+// Fix vulnerabilities
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm audit fix'
+})
+```
 
-### /compliance-check [standard]
-Check compliance with security standards.
+### Fix JWT Vulnerability (C1)
+```javascript
+// Find JWT decode without verification
+execute({
+  action: 'bash',
+  content: 'grep -rn "jwt\\.decode" NEW/identity-service/src --include="*.ts"'
+})
 
-**Usage**: `/compliance-check OWASP`
+// Replace with proper verification
+execute({
+  action: 'file',
+  content: 'write',
+  options: {
+    path: 'NEW/identity-service/src/auth/jwt.guard.ts',
+    data: `
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import jwksRsa from 'jwks-rsa';
+import * as jwt from 'jsonwebtoken';
 
-**Standards Supported**:
-- `OWASP`: OWASP Top 10
-- `PCI-DSS`: Payment Card Industry
-- `GDPR`: Data protection
-- `SOC2`: Security controls
-- `ISO27001`: Information security
+@Injectable()
+export class JwtGuard {
+  private jwksClient: jwksRsa.JwksClient;
+
+  constructor() {
+    this.jwksClient = jwksRsa({
+      jwksUri: process.env.JWKS_URI,
+      cache: true,
+      rateLimit: true
+    });
+  }
+
+  async validateToken(token: string) {
+    try {
+      const decoded = jwt.decode(token, { complete: true });
+      if (!decoded) throw new UnauthorizedException('Invalid token');
+
+      const key = await this.jwksClient.getSigningKey(decoded.header.kid);
+      const signingKey = key.getPublicKey();
+
+      return jwt.verify(token, signingKey, {
+        algorithms: ['RS256'],
+        issuer: process.env.JWT_ISSUER,
+        audience: process.env.JWT_AUDIENCE
+      });
+    } catch (error) {
+      throw new UnauthorizedException('Token verification failed');
+    }
+  }
+}
+    `
+  }
+})
+```
+
+## Encryption & Secrets Management
+
+### Rotate Secrets
+```javascript
+// Generate new secrets
+execute({
+  action: 'bash',
+  content: 'openssl rand -base64 32'
+})
+
+// Update AWS Secrets Manager
+execute({
+  action: 'aws',
+  content: `secretsmanager update-secret --secret-id jwt-signing-key --secret-string '{"key":"NEW_SECRET_HERE"}'`
+})
+
+// Trigger rolling deployment
+execute({
+  action: 'bash',
+  content: 'kubectl rollout restart deployment/identity-service'
+})
+```
+
+### Encrypt PII Fields
+```javascript
+// Implement field-level encryption
+execute({
+  action: 'file',
+  content: 'write',
+  options: {
+    path: 'NEW/identity-service/src/common/decorators/encrypted.decorator.ts',
+    data: `
+import { Transform } from 'class-transformer';
+import { createCipher, createDecipher } from 'crypto';
+
+export function Encrypted() {
+  return function (target: any, propertyKey: string) {
+    const key = process.env.ENCRYPTION_KEY;
+
+    Transform(({ value }) => {
+      const cipher = createCipher('aes-256-cbc', key);
+      return cipher.update(value, 'utf8', 'hex') + cipher.final('hex');
+    }, { toPlainOnly: true })(target, propertyKey);
+
+    Transform(({ value }) => {
+      const decipher = createDecipher('aes-256-cbc', key);
+      return decipher.update(value, 'hex', 'utf8') + decipher.final('utf8');
+    }, { toClassOnly: true })(target, propertyKey);
+  };
+}
+    `
+  }
+})
+```
+
+### Generate API Key
+```javascript
+// Generate secure API key
+execute({
+  action: 'code',
+  content: `
+const crypto = require('crypto');
+
+function generateAPIKey(prefix = 'clnz_live') {
+  const randomBytes = crypto.randomBytes(24).toString('hex');
+  return \`\${prefix}_\${randomBytes}\`;
+}
+
+const apiKey = generateAPIKey();
+console.log('API Key:', apiKey);
+
+// Store in database with hash
+const hash = crypto.createHash('sha256').update(apiKey).digest('hex');
+console.log('Store this hash:', hash);
+  `,
+  options: { language: 'javascript' }
+})
+```
+
+## Vulnerability Management
+
+### Dependency Check
+```javascript
+// Check for vulnerable dependencies
+execute({
+  action: 'bash',
+  content: 'cd NEW/organization-service && npm audit'
+})
+
+// Get detailed vulnerability report
+execute({
+  action: 'bash',
+  content: `
+    cd NEW/organization-service &&
+    npm audit --json | jq '{
+      critical: .metadata.vulnerabilities.critical,
+      high: .metadata.vulnerabilities.high,
+      moderate: .metadata.vulnerabilities.moderate,
+      low: .metadata.vulnerabilities.low
+    }'
+  `
+})
+
+// Update vulnerable packages
+execute({
+  action: 'bash',
+  content: 'cd NEW/organization-service && npm update'
+})
+```
+
+### Penetration Test
+```javascript
+// Run OWASP ZAP scan
+execute({
+  action: 'bash',
+  content: `
+    docker run -t owasp/zap2docker-stable zap-baseline.py \\
+      -t http://localhost:3001 \\
+      -r zap-report.html
+  `
+})
+
+// SQL/NoSQL injection test
+execute({
+  action: 'bash',
+  content: `
+    curl -X POST http://localhost:3001/auth/login \\
+      -H "Content-Type: application/json" \\
+      -d '{"email":"admin@test.com'\'' OR 1=1--","password":"test"}'
+  `
+})
+```
+
+### Compliance Check
+```javascript
+// OWASP Top 10 compliance check
+execute({
+  action: 'test',
+  content: 'security',
+  options: {
+    service: 'identity',
+    standard: 'OWASP',
+    checks: [
+      'injection',
+      'broken-auth',
+      'sensitive-data',
+      'xxe',
+      'broken-access-control',
+      'security-misconfiguration',
+      'xss',
+      'insecure-deserialization',
+      'vulnerable-components',
+      'logging-monitoring'
+    ]
+  }
+})
+```
 
 ## Access Control Commands
 
-### /setup-rbac [service]
-Configure Role-Based Access Control.
-
-**Usage**: `/setup-rbac organization-service`
-
-**Generated Structure**:
-```typescript
-enum Role {
+### Setup RBAC
+```javascript
+// Create role definitions
+execute({
+  action: 'file',
+  content: 'write',
+  options: {
+    path: 'NEW/organization-service/src/auth/roles.enum.ts',
+    data: `
+export enum Role {
   SUPER_ADMIN = 'super_admin',
   ORG_ADMIN = 'org_admin',
   PROJECT_MANAGER = 'project_manager',
@@ -252,176 +307,252 @@ enum Role {
   VIEWER = 'viewer'
 }
 
-enum Permission {
-  // Projects
+export enum Permission {
   PROJECT_CREATE = 'project:create',
   PROJECT_READ = 'project:read',
   PROJECT_UPDATE = 'project:update',
   PROJECT_DELETE = 'project:delete',
-
-  // Reports
   REPORT_GENERATE = 'report:generate',
-  REPORT_EXPORT = 'report:export'
+  REPORT_EXPORT = 'report:export',
+  USER_MANAGE = 'user:manage'
 }
 
-const RolePermissions = {
-  [Role.SUPER_ADMIN]: ['*'],
-  [Role.ORG_ADMIN]: [
-    'project:*',
-    'report:*',
-    'user:*'
-  ],
-  [Role.PROJECT_MANAGER]: [
-    'project:read',
-    'project:update',
-    'report:generate'
-  ]
+export const RolePermissions: Record<Role, Permission[]> = {
+  [Role.SUPER_ADMIN]: [Permission.PROJECT_CREATE, Permission.PROJECT_READ, Permission.PROJECT_UPDATE, Permission.PROJECT_DELETE, Permission.REPORT_GENERATE, Permission.REPORT_EXPORT, Permission.USER_MANAGE],
+  [Role.ORG_ADMIN]: [Permission.PROJECT_CREATE, Permission.PROJECT_READ, Permission.PROJECT_UPDATE, Permission.REPORT_GENERATE, Permission.REPORT_EXPORT],
+  [Role.PROJECT_MANAGER]: [Permission.PROJECT_READ, Permission.PROJECT_UPDATE, Permission.REPORT_GENERATE],
+  [Role.DATA_ANALYST]: [Permission.PROJECT_READ, Permission.REPORT_GENERATE],
+  [Role.VIEWER]: [Permission.PROJECT_READ]
 };
+    `
+  }
+})
 ```
 
-### /audit-log [action] [resource]
-Query security audit logs.
+### Audit Log Query
+```javascript
+// Query audit logs for failed logins
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_audit").collection("security_events").find({
+      event: "failed_login",
+      timestamp: { $gte: new Date(Date.now() - 24*60*60*1000) }
+    }).sort({ timestamp: -1 })
+  `
+})
 
-**Usage**: `/audit-log failed-login user`
-
-**Output**:
-```
-Security Audit Log - Failed Login Attempts
-Period: Last 24 hours
-
-1. 2025-11-15T10:30:45Z
-   User: john@example.com
-   IP: 192.168.1.50
-   Reason: Invalid password
-   Attempts: 3
-
-2. 2025-11-15T09:15:23Z
-   User: admin@company.com
-   IP: 203.0.113.45
-   Reason: Account locked
-   Attempts: 5
-
-Summary: 2 failed login incidents
-Action: Consider implementing 2FA
+// Find suspicious activity
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_audit").collection("security_events").aggregate([
+      {$match: {event: "failed_login"}},
+      {$group: {
+        _id: "$ip",
+        attempts: {$sum: 1},
+        users: {$addToSet: "$userId"}
+      }},
+      {$match: {attempts: {$gte: 5}}},
+      {$sort: {attempts: -1}}
+    ])
+  `
+})
 ```
 
 ## Network Security Commands
 
-### /configure-cors [service] [origins]
-Configure CORS policy for a service.
+### Configure CORS
+```javascript
+// Setup CORS configuration
+execute({
+  action: 'file',
+  content: 'write',
+  options: {
+    path: 'NEW/identity-service/src/main.ts',
+    data: `
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
 
-**Usage**: `/configure-cors identity-service "https://app.clenergize.com,https://staging.clenergize.com"`
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
 
-**Configuration**:
-```typescript
-const corsOptions = {
-  origin: [
-    'https://app.clenergize.com',
-    'https://staging.clenergize.com'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['X-Request-Id'],
-  maxAge: 86400 // 24 hours
-};
-```
+  app.enableCors({
+    origin: [
+      'https://app.clenergize.com',
+      'https://staging.clenergize.com',
+      process.env.NODE_ENV === 'development' && 'http://localhost:3000'
+    ].filter(Boolean),
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['X-Request-Id'],
+    maxAge: 86400
+  });
 
-### /rate-limit [service] [endpoint] [limit]
-Configure rate limiting for endpoints.
-
-**Usage**: `/rate-limit identity-service "/auth/login" "5/minute"`
-
-**Implementation**:
-```typescript
-@UseGuards(RateLimitGuard)
-@RateLimit({
-  window: 60,
-  limit: 5,
-  keyGenerator: (req) => req.ip,
-  handler: (req, res) => {
-    res.status(429).json({
-      error: 'Too many attempts. Please try again later.'
-    });
+  await app.listen(3001);
+}
+bootstrap();
+    `
   }
 })
-@Post('/auth/login')
-async login(@Body() dto: LoginDto) { }
+```
+
+### Rate Limiting
+```javascript
+// Implement rate limiting
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm install @nestjs/throttler'
+})
+
+// Configure rate limiter
+execute({
+  action: 'file',
+  content: 'write',
+  options: {
+    path: 'NEW/identity-service/src/auth/rate-limit.guard.ts',
+    data: `
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class AuthRateLimitGuard extends ThrottlerGuard {
+  protected getTracker(req: Record<string, any>): string {
+    return req.ip; // or req.user.id for authenticated requests
+  }
+}
+    `
+  }
+})
 ```
 
 ## Incident Response Commands
 
-### /security-incident [type] [severity]
-Report and handle security incident.
+### Security Incident Report
+```javascript
+// Log security incident
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_audit").collection("incidents").insertOne({
+      type: "data_breach",
+      severity: "critical",
+      timestamp: new Date(),
+      description: "Potential data breach detected",
+      affectedServices: ["calculation-service"],
+      status: "investigating",
+      reportedBy: "security-agent"
+    })
+  `
+})
 
-**Usage**: `/security-incident data-breach critical`
+// Notify security team
+execute({
+  action: 'slack',
+  content: 'send-message',
+  options: {
+    channel: '#security-incidents',
+    message: '🚨 CRITICAL: Security incident detected - Investigation started'
+  }
+})
+```
 
-**Actions**:
-1. Logs incident with timestamp
-2. Notifies security team
-3. Initiates response protocol
-4. Creates incident ticket
-5. Starts evidence collection
-6. Generates initial report
+### Quarantine Service
+```javascript
+// Remove from load balancer
+execute({
+  action: 'bash',
+  content: 'kubectl scale deployment calculation-service --replicas=0'
+})
 
-### /quarantine-service [name]
-Quarantine a compromised service.
+// Block all traffic
+execute({
+  action: 'bash',
+  content: `
+    docker network disconnect bridge calculation-service
+  `
+})
 
-**Usage**: `/quarantine-service calculation-service`
-
-**Actions**:
-1. Removes service from load balancer
-2. Blocks all incoming traffic
-3. Preserves current state
-4. Enables detailed logging
-5. Notifies operations team
-6. Initiates investigation mode
+// Enable detailed logging
+execute({
+  action: 'bash',
+  content: 'kubectl set env deployment/calculation-service LOG_LEVEL=debug'
+})
+```
 
 ## Monitoring Commands
 
-### /security-metrics
-Display security metrics dashboard.
+### Security Metrics
+```javascript
+// Get authentication metrics
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_audit").collection("auth_events").aggregate([
+      {$match: {timestamp: {$gte: new Date(Date.now() - 24*60*60*1000)}}},
+      {$group: {
+        _id: "$event",
+        count: {$sum: 1}
+      }}
+    ])
+  `
+})
 
-**Usage**: `/security-metrics`
-
-**Output**:
-```
-Security Metrics Dashboard
-═══════════════════════════════════════
-
-Authentication:
-├─ Successful Logins: 1,234 (98.5%)
-├─ Failed Logins: 18 (1.5%)
-├─ Active Sessions: 456
-└─ 2FA Adoption: 67%
-
-API Security:
-├─ Valid Requests: 45,678 (99.2%)
-├─ Blocked Requests: 367 (0.8%)
-├─ Rate Limited: 23
-└─ Malformed: 12
-
-Vulnerabilities:
-├─ Critical: 0 ✅
-├─ High: 2 ⚠️
-├─ Medium: 5
-└─ Low: 12
-
-Compliance:
-├─ OWASP Score: 8.5/10
-├─ Last Audit: 2025-11-10
-└─ Next Audit: 2025-12-10
+// Get vulnerability status
+execute({
+  action: 'bash',
+  content: `
+    for service in identity organization reference activity calculation reporting audit; do
+      echo "=== $service-service ==="
+      cd NEW/$service-service && npm audit --audit-level=high | grep "found"
+      cd ../..
+    done
+  `
+})
 ```
 
-### /threat-detection [enable|disable]
-Toggle real-time threat detection.
+### Threat Detection
+```javascript
+// Enable real-time threat detection
+execute({
+  action: 'bash',
+  content: `
+    # Enable fail2ban for brute force protection
+    docker run -d --name fail2ban \\
+      --network=host \\
+      -v /var/log:/var/log:ro \\
+      crazymax/fail2ban:latest
+  `
+})
 
-**Usage**: `/threat-detection enable`
+// Monitor suspicious patterns
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_audit").collection("requests").find({
+      $or: [
+        {path: {$regex: "\\\\.\\\\."}}, // Path traversal
+        {query: {$regex: "union.*select"}}, // SQL injection
+        {headers: {$regex: "<script"}}, // XSS
+      ]
+    })
+  `
+})
+```
 
-**Features**:
-- Anomaly detection
-- Brute force protection
-- Pattern recognition
-- Behavioral analysis
-- Automated blocking
-- Alert generation
+## Quick Reference
+
+| Task | Command |
+|------|---------|
+| Verify JWT | `execute({ action: 'code', content: 'jwt.verify(...)', options: {...}})` |
+| Scan secrets | `execute({ action: 'bash', content: 'grep -r "secret.*=" src/' })` |
+| Security audit | `execute({ action: 'bash', content: 'npm audit' })` |
+| Fix JWT vuln | Apply jwt-verification-fix skill |
+| Rotate secrets | `execute({ action: 'aws', content: 'secretsmanager update-secret...' })` |
+| Check dependencies | `execute({ action: 'bash', content: 'npm audit --json' })` |
+| Setup RBAC | Create roles.enum.ts with permissions |
+| Query audit log | `execute({ action: 'mongodb', content: 'db("audit").find(...)' })` |
+| Rate limiting | Install @nestjs/throttler |
+
+Remember: Security first - always verify, never trust!

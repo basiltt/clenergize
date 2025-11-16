@@ -639,11 +639,73 @@ describe('Hierarchy Migration', () => {
 ```
 
 ## Commands
-- `/create-org [name] [code]` - Create organization
-- `/create-project [orgId] [name]` - Create project
-- `/migrate-hierarchies` - Run hierarchy migration
-- `/analyze-duplication` - Show duplication stats
-- `/optimize-templates` - Consolidate similar templates
+
+```javascript
+// Create organization
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("organizations").insertOne({
+      name: "Acme Corp",
+      code: "ACME",
+      status: "active",
+      createdAt: new Date()
+    })
+  `
+})
+
+// Create project
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("projects").insertOne({
+      name: "Q1 Emissions Report",
+      organizationId: ObjectId("orgId"),
+      hierarchyTemplateId: ObjectId("templateId"),
+      status: "active",
+      createdAt: new Date()
+    })
+  `
+})
+
+// Run hierarchy migration (fix C3 issue)
+execute({
+  action: 'migration',
+  content: 'extract-unique-hierarchies',
+  options: {
+    sourceDb: 'clenergize_organization',
+    targetDb: 'clenergize_reference',
+    collection: 'hierarchies'
+  }
+})
+
+// Show duplication stats
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("projects").aggregate([
+      {$match: {clonedHierarchy: {$exists: true}}},
+      {$group: {
+        _id: null,
+        count: {$sum: 1},
+        totalSize: {$sum: {$bsonSize: "$clonedHierarchy"}}
+      }}
+    ])
+  `
+})
+
+// Consolidate similar templates
+execute({
+  action: 'migration',
+  content: 'merge-duplicates',
+  options: {
+    db: 'clenergize_reference',
+    collection: 'hierarchy_templates',
+    matchField: 'hash',
+    strategy: 'keep-most-referenced'
+  }
+})
+```
 
 ## Success Metrics
 - Hierarchy data stored as references (not cloned)

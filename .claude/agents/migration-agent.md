@@ -1023,11 +1023,59 @@ export class MigrationRollback {
 4. Rollback if needed
 
 ## Commands
-- `/analyze-migration` - Analyze migration requirements
-- `/run-migration [script]` - Execute migration script
-- `/validate-migration` - Run validation checks
-- `/rollback-migration [backup]` - Rollback to backup
-- `/migration-status` - Check migration progress
+
+```javascript
+// Analyze migration requirements
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("projects").aggregate([
+      {$match: {clonedHierarchy: {$exists: true}}},
+      {$group: {
+        _id: null,
+        count: {$sum: 1},
+        totalSize: {$sum: {$bsonSize: "$clonedHierarchy"}},
+        avgSize: {$avg: {$bsonSize: "$clonedHierarchy"}}
+      }}
+    ])
+  `
+})
+
+// Execute migration script
+execute({
+  action: 'migration',
+  content: 'extract-unique-hierarchies',
+  options: {
+    sourceDb: 'clenergize_organization',
+    targetDb: 'clenergize_reference',
+    collection: 'hierarchies'
+  }
+})
+
+// Run validation checks
+execute({
+  action: 'migration',
+  content: 'validate-integrity',
+  options: {
+    source: { db: 'clenergize_users', collection: 'users' },
+    target: { db: 'clenergize_identity', collection: 'users' },
+    checks: ['record-count', 'field-mapping', 'foreign-keys']
+  }
+})
+
+// Rollback to backup
+execute({
+  action: 'bash',
+  content: 'mongorestore --db=clenergize_organization --drop backups/organization_20251115_103045/clenergize_organization --gzip'
+})
+
+// Check migration progress
+execute({
+  action: 'migration',
+  content: 'status',
+  options: { services: 'all' }
+})
+```
 
 ## Success Metrics
 - Zero data loss

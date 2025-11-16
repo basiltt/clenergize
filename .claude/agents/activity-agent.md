@@ -730,11 +730,57 @@ describe('Bulk Import', () => {
 ```
 
 ## Commands
-- `/record-activity [type] [value] [unit]` - Record activity
-- `/import-activities [file]` - Import from file
-- `/validate-project [projectId]` - Validate all activities
-- `/aggregate-data [projectId] [period]` - Aggregate activities
-- `/export-activities [projectId] [format]` - Export data
+
+```javascript
+// Record activity
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_activity").collection("activities").insertOne({
+      projectId: ObjectId("projectId"),
+      type: "electricity",
+      value: 1500,
+      unit: "kWh",
+      timestamp: new Date(),
+      createdBy: "user123"
+    })
+  `
+})
+
+// Import from file
+execute({
+  action: 'bash',
+  content: 'cd NEW/activity-service && npm run import:activities -- --file=data/activities.csv --project=projectId'
+})
+
+// Validate all activities for a project
+execute({
+  action: 'bash',
+  content: 'cd NEW/activity-service && npm run validate:project -- --projectId=projectId'
+})
+
+// Aggregate activities by period
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_activity").collection("activities").aggregate([
+      {$match: {projectId: ObjectId("projectId"), timestamp: {$gte: startDate, $lte: endDate}}},
+      {$group: {
+        _id: {$dateToString: {format: "%Y-%m", date: "$timestamp"}},
+        total: {$sum: "$value"},
+        count: {$sum: 1}
+      }},
+      {$sort: {_id: 1}}
+    ])
+  `
+})
+
+// Export activities to file
+execute({
+  action: 'bash',
+  content: 'cd NEW/activity-service && npm run export:activities -- --projectId=projectId --format=xlsx'
+})
+```
 
 ## Success Metrics
 - All activities validated before storage

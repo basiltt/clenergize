@@ -1,218 +1,280 @@
-# Migration Commands
+# Migration Commands (MCP Executor)
 
 ## Hierarchy Migration Commands
 
-### /migrate-hierarchy [old-service] [new-service]
-Convert hierarchy cloning to reference pattern (fixes C3).
+### Migrate Hierarchy (Fix C3 - 300% Data Bloat)
+```javascript
+// Analyze hierarchy cloning issue
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("projects").aggregate([
+      {$match: {clonedHierarchy: {$exists: true}}},
+      {$group: {_id: null, count: {$sum: 1}, totalSize: {$sum: {$bsonSize: "$clonedHierarchy"}}}}
+    ])
+  `
+})
 
-**Usage**: `/migrate-hierarchy OLD/clenergizeV3-project-management-ms-dev NEW/organization-service`
+// Extract unique hierarchies to reference service
+execute({
+  action: 'migration',
+  content: 'extract-unique-hierarchies',
+  options: {
+    sourceDb: 'clenergize_organization',
+    targetDb: 'clenergize_reference',
+    collection: 'hierarchies'
+  }
+})
 
-**Process**:
+// Update projects with references
+execute({
+  action: 'migration',
+  content: 'convert-to-references',
+  options: {
+    db: 'clenergize_organization',
+    collection: 'projects',
+    field: 'clonedHierarchy',
+    newField: 'hierarchyRef'
+  }
+})
+
+// Verify migration success
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("projects").aggregate([
+      {$match: {hierarchyRef: {$exists: true}}},
+      {$lookup: {
+        from: "clenergize_reference.hierarchies",
+        localField: "hierarchyRef",
+        foreignField: "_id",
+        as: "hierarchy"
+      }},
+      {$match: {hierarchy: {$size: 0}}},
+      {$count: "brokenReferences"}
+    ])
+  `
+})
 ```
-Analyzing: 1,234 projects with cloned hierarchies
-Storage Used: 4.2 GB (denormalized)
-Unique Hierarchies: 45
 
-Migration Plan:
-1. Extract unique hierarchies → reference-service
-2. Create hierarchy references
-3. Update projects with reference IDs
-4. Remove cloned data
-5. Verify data integrity
-
-Estimated Outcome:
+**Expected Outcome**:
 - Storage: 4.2 GB → 120 MB (97% reduction)
 - Query Speed: 145ms → 23ms (84% faster)
 - Update Operations: 1 instead of 1,234
-```
 
-**Generated Migration Script**:
-```typescript
-class HierarchyMigration {
-  async migrate() {
-    const session = await mongoose.startSession();
-    await session.withTransaction(async () => {
-      // Step 1: Extract unique hierarchies
-      const hierarchies = await this.extractUniqueHierarchies();
-
-      // Step 2: Create references
-      const refMap = new Map();
-      for (const hierarchy of hierarchies) {
-        const ref = await this.createReference(hierarchy);
-        refMap.set(hierarchy.hash, ref.id);
-      }
-
-      // Step 3: Update projects
-      await this.updateProjectReferences(refMap);
-
-      // Step 4: Clean up
-      await this.removeClonedData();
-    });
-  }
-}
-```
-
-### /normalize-data [collection] [field]
-Convert denormalized data to normalized form.
-
-**Usage**: `/normalize-data projects organizationDetails`
-
-**Analysis**:
-```
-Field: organizationDetails
-Type: Embedded Document
-Occurrences: 5,678
-Unique Values: 234
-Duplication Rate: 96%
-
-Normalization Strategy:
-1. Create organizations collection
-2. Extract unique organizations
-3. Replace with organizationId reference
-4. Add population middleware
-
-Benefits:
-- Storage: -85%
-- Updates: O(1) instead of O(n)
-- Consistency: Guaranteed
-```
-
-### /migrate-v1-to-v2 [entity]
-Migrate V1 duplicate data to V2 format (fixes C5).
-
-**Usage**: `/migrate-v1-to-v2 activities`
-
-**Transformation**:
+### Normalize Data
 ```javascript
-// OLD: Duplicate V1 fields
-{
-  // V2 fields
-  emissionFactor: 2.34,
-  quantity: 100,
-  unit: 'kg',
+// Analyze denormalization
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("projects").aggregate([
+      {$group: {
+        _id: "$organizationDetails",
+        count: {$sum: 1}
+      }},
+      {$match: {count: {$gt: 1}}},
+      {$count: "duplicates"}
+    ])
+  `
+})
 
-  // V1 duplicate fields (to remove)
-  v1_emission_factor: 2.34,
-  v1_amount: 100,
-  v1_unit_type: 'kg',
-  v1_calculation_method: 'standard'
-}
-
-// NEW: Clean V2 only
-{
-  emissionFactor: 2.34,
-  quantity: 100,
-  unit: 'kg',
-  metadata: {
-    version: 2,
-    migrated: '2025-11-15T10:00:00Z'
+// Extract unique organizations
+execute({
+  action: 'migration',
+  content: 'normalize-field',
+  options: {
+    sourceDb: 'clenergize_organization',
+    collection: 'projects',
+    field: 'organizationDetails',
+    targetCollection: 'organizations',
+    referenceField: 'organizationId'
   }
-}
+})
+
+// Verify normalization
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("projects").find({
+      organizationDetails: {$exists: true}
+    }).count()
+  `
+})
+```
+
+### Migrate V1 to V2 Format
+```javascript
+// Find V1 duplicate fields
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_activity").collection("activities").find({
+      v1_emission_factor: {$exists: true}
+    }).count()
+  `
+})
+
+// Migrate to V2 format
+execute({
+  action: 'migration',
+  content: 'v1-to-v2',
+  options: {
+    db: 'clenergize_activity',
+    collection: 'activities',
+    removeFields: [
+      'v1_emission_factor',
+      'v1_amount',
+      'v1_unit_type',
+      'v1_calculation_method'
+    ],
+    addMetadata: {
+      version: 2,
+      migrated: new Date().toISOString()
+    }
+  }
+})
+
+// Verify V1 fields removed
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_activity").collection("activities").aggregate([
+      {$match: {
+        $or: [
+          {v1_emission_factor: {$exists: true}},
+          {v1_amount: {$exists: true}}
+        ]
+      }},
+      {$count: "remaining"}
+    ])
+  `
+})
 ```
 
 ## Data Transfer Commands
 
-### /export-old-data [service] [format]
-Export data from OLD service for migration.
+### Export Old Data
+```javascript
+// Export from OLD service
+execute({
+  action: 'bash',
+  content: 'mongoexport --db=clenergize_users --collection=users --out=exports/users_$(date +%Y%m%d).json --jsonArray'
+})
 
-**Usage**: `/export-old-data clenergizeV3-user-management-ms-dev json`
+// Export with relationships
+execute({
+  action: 'migration',
+  content: 'export-with-relations',
+  options: {
+    db: 'clenergize_users',
+    collections: ['users', 'roles', 'permissions'],
+    outputDir: 'exports',
+    format: 'json',
+    includeRelations: true
+  }
+})
 
-**Formats**:
-- `json`: JSON with relationships
-- `csv`: Flat CSV files
-- `mongodb`: MongoDB archive
-- `parquet`: Columnar format
-
-**Output**:
-```
-Export Summary:
-- Users: 12,345 records
-- Organizations: 567 records
-- Roles: 15 records
-- Permissions: 89 records
-
-Files Created:
-- users_2025-11-15.json (145 MB)
-- users_relations.json (23 MB)
-- migration_manifest.json (2 KB)
-
-Validation:
-✅ All required fields present
-✅ No corrupt data detected
-⚠️ 23 users with missing organizationId
+// Validate export
+execute({
+  action: 'bash',
+  content: 'ls -lh exports/ && wc -l exports/users_*.json'
+})
 ```
 
-### /import-to-new [service] [file]
-Import migrated data to NEW service.
+### Import to New Service
+```javascript
+// Transform and import data
+execute({
+  action: 'migration',
+  content: 'import-transformed',
+  options: {
+    sourceFile: 'exports/users_20251115.json',
+    targetDb: 'clenergize_identity',
+    targetCollection: 'users',
+    transformations: [
+      { from: 'user_id', to: '_id' },
+      { from: 'email_address', to: 'email' },
+      { from: 'created_date', to: 'createdAt', type: 'date' }
+    ],
+    batchSize: 1000,
+    validateSchema: true
+  }
+})
 
-**Usage**: `/import-to-new identity-service exports/users_2025-11-15.json`
-
-**Process**:
+// Monitor import progress
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_identity").collection("users").count()
+  `
+})
 ```
-Import Pipeline:
-1. Schema Validation ✅
-2. Data Transformation
-   - Fix JWT fields
-   - Add missing defaults
-   - Convert dates to ISO
-3. Batch Processing (1000 records/batch)
-4. Transaction Management
-5. Event Publishing
-6. Integrity Verification
 
-Progress: [████████░░] 82% (10,123/12,345)
-Errors: 0
-Warnings: 23
-Time Remaining: ~2 minutes
-```
+### Validate Migration
+```javascript
+// Compare record counts
+execute({
+  action: 'bash',
+  content: `
+    OLD_COUNT=$(mongo clenergize_users --quiet --eval "db.users.count()")
+    NEW_COUNT=$(mongo clenergize_identity --quiet --eval "db.users.count()")
+    echo "OLD: $OLD_COUNT, NEW: $NEW_COUNT"
+  `
+})
 
-### /validate-migration [old] [new]
-Validate data consistency after migration.
+// Validate data integrity
+execute({
+  action: 'migration',
+  content: 'validate-integrity',
+  options: {
+    source: { db: 'clenergize_users', collection: 'users' },
+    target: { db: 'clenergize_identity', collection: 'users' },
+    checks: [
+      'record-count',
+      'field-mapping',
+      'foreign-keys',
+      'calculated-fields',
+      'business-logic'
+    ]
+  }
+})
 
-**Usage**: `/validate-migration OLD/clenergizeV3-project-management-ms-dev NEW/organization-service`
+// Generate validation report
+execute({
+  action: 'file',
+  content: 'write',
+  options: {
+    path: 'migration-reports/validation_$(date +%Y%m%d).md',
+    data: `# Migration Validation Report
 
-**Validation Report**:
-```
-Data Validation Report
-═══════════════════════════════
+Date: $(date)
+Source: clenergize_users
+Target: clenergize_identity
 
-Record Counts:
-OLD Projects: 1,234 ✅
-NEW Projects: 1,234 ✅
-Match: 100%
-
-Field Mapping:
-- id → _id: ✅ All mapped
-- name → projectName: ✅ All mapped
-- company_id → organizationId: ✅ All mapped
-- hierarchy (cloned) → hierarchyRef: ✅ All converted
-
-Data Integrity:
-✅ All foreign keys valid
-✅ No orphaned records
-✅ Calculated fields match
-⚠️ 3 projects with future dates (non-critical)
-
-Business Logic:
-✅ Emission calculations match
-✅ Rollup aggregations correct
-✅ Permission mappings preserved
+Results: See validation output above
+    `
+  }
+})
 ```
 
 ## Schema Migration Commands
 
-### /generate-migration [name]
-Generate database migration script.
+### Generate Migration Script
+```javascript
+// Create migration file
+execute({
+  action: 'file',
+  content: 'write',
+  options: {
+    path: 'migrations/20251115_add_audit_fields.ts',
+    data: `
+import { Db } from 'mongodb';
 
-**Usage**: `/generate-migration add-audit-fields`
-
-**Generated File**: `migrations/20251115_add-audit-fields.ts`
-```typescript
-export class AddAuditFields20251115 implements Migration {
+export class AddAuditFields20251115 {
   version = '20251115_add-audit-fields';
 
   async up(db: Db): Promise<void> {
-    // Add audit fields to all collections
     const collections = await db.collections();
 
     for (const collection of collections) {
@@ -230,7 +292,6 @@ export class AddAuditFields20251115 implements Migration {
   }
 
   async down(db: Db): Promise<void> {
-    // Remove audit fields
     const collections = await db.collections();
 
     for (const collection of collections) {
@@ -247,276 +308,282 @@ export class AddAuditFields20251115 implements Migration {
     }
   }
 }
+    `
+  }
+})
 ```
 
-### /run-migration [service] [version]
-Execute migration on a service database.
+### Run Migration
+```javascript
+// Execute migration
+execute({
+  action: 'migration',
+  content: 'run',
+  options: {
+    service: 'organization-service',
+    db: 'clenergize_organization',
+    version: '20251115_add-audit-fields'
+  }
+})
 
-**Usage**: `/run-migration organization-service 20251115_add-audit-fields`
-
-**Output**:
-```
-Migration Runner
-Service: organization-service
-Database: clenergize_organization
-
-Current Version: 20251110_initial_schema
-Target Version: 20251115_add-audit-fields
-
-Migrations to Run:
-1. 20251112_add_indexes
-2. 20251113_fix_references
-3. 20251115_add-audit-fields
-
-Starting Migration...
-✅ 20251112_add_indexes (234ms)
-✅ 20251113_fix_references (567ms)
-✅ 20251115_add-audit-fields (123ms)
-
-Migration Complete!
-Documents Modified: 5,678
-New Version: 20251115_add-audit-fields
+// Verify migration applied
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("schema_versions").find().sort({version: -1}).limit(1)
+  `
+})
 ```
 
-### /rollback-migration [service] [version]
-Rollback to a previous migration version.
+### Rollback Migration
+```javascript
+// Backup before rollback
+execute({
+  action: 'bash',
+  content: 'mongodump --db=clenergize_organization --out=backups/pre-rollback_$(date +%Y%m%d_%H%M%S)'
+})
 
-**Usage**: `/rollback-migration organization-service 20251110_initial_schema`
+// Rollback migration
+execute({
+  action: 'migration',
+  content: 'rollback',
+  options: {
+    service: 'organization-service',
+    db: 'clenergize_organization',
+    targetVersion: '20251110_initial_schema'
+  }
+})
 
-**Confirmation Required**:
-```
-⚠️ ROLLBACK WARNING
-This will rollback 3 migrations:
-- 20251115_add-audit-fields
-- 20251113_fix_references
-- 20251112_add_indexes
-
-Data loss may occur!
-Type 'confirm-rollback' to proceed:
+// Verify rollback
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("schema_versions").find().sort({version: -1}).limit(1)
+  `
+})
 ```
 
 ## Data Transformation Commands
 
-### /transform-dates [service] [format]
-Standardize date formats across services.
-
-**Usage**: `/transform-dates calculation-service ISO8601`
-
-**Transformations**:
+### Transform Dates
 ```javascript
-// Various formats found:
-"2025-11-15"           → "2025-11-15T00:00:00.000Z"
-"15/11/2025"          → "2025-11-15T00:00:00.000Z"
-"Nov 15, 2025"        → "2025-11-15T00:00:00.000Z"
-1731657600000         → "2025-11-15T10:00:00.000Z"
-"2025-11-15 10:00"    → "2025-11-15T10:00:00.000Z"
+// Standardize date formats
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_calculation").collection("activities").updateMany(
+      { calculationDate: { $type: "string" } },
+      [{
+        $set: {
+          calculationDate: { $toDate: "$calculationDate" }
+        }
+      }]
+    )
+  `
+})
 
-Fields Updated:
-- createdAt: 12,345 documents
-- updatedAt: 12,345 documents
-- calculationDate: 8,901 documents
-- reportingPeriod: 567 documents
+// Verify transformation
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_calculation").collection("activities").aggregate([
+      {$group: {
+        _id: {$type: "$calculationDate"},
+        count: {$sum: 1}
+      }}
+    ])
+  `
+})
 ```
 
-### /fix-references [service]
-Fix broken references between services.
+### Fix Broken References
+```javascript
+// Find broken references
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("projects").aggregate([
+      {$lookup: {
+        from: "clenergize_identity.users",
+        localField: "createdBy",
+        foreignField: "_id",
+        as: "user"
+      }},
+      {$match: {user: {$size: 0}}},
+      {$project: {_id: 1, createdBy: 1}}
+    ])
+  `
+})
 
-**Usage**: `/fix-references organization-service`
-
-**Analysis**:
+// Fix references
+execute({
+  action: 'migration',
+  content: 'fix-references',
+  options: {
+    db: 'clenergize_organization',
+    collection: 'projects',
+    referenceField: 'createdBy',
+    targetDb: 'clenergize_identity',
+    targetCollection: 'users',
+    fallbackValue: 'system-user-id'
+  }
+})
 ```
-Scanning References...
 
-Broken References Found:
-1. projects.organizationId
-   - Invalid: 23 (pointing to deleted orgs)
-   - Action: Set to default org or null
+### Merge Duplicates
+```javascript
+// Detect duplicates
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_reference").collection("emission_factors").aggregate([
+      {$group: {
+        _id: {$toLower: "$name"},
+        ids: {$push: "$_id"},
+        count: {$sum: 1}
+      }},
+      {$match: {count: {$gt: 1}}}
+    ])
+  `
+})
 
-2. projects.createdBy
-   - Invalid: 45 (pointing to deleted users)
-   - Action: Set to system user
-
-3. activities.projectId
-   - Invalid: 0 ✅
-
-Auto-fix available: Yes
-Manual review needed: 23 organizational assignments
-```
-
-### /merge-duplicates [entity] [key]
-Merge duplicate records based on key.
-
-**Usage**: `/merge-duplicates emission-factors name`
-
-**Detection**:
-```
-Duplicate Detection Report:
-Key: name (case-insensitive)
-
-Duplicates Found:
-1. "Electricity - Grid" (3 variants)
-   - ID: ef-001 (created: 2024-01-01)
-   - ID: ef-045 (created: 2024-06-15)
-   - ID: ef-089 (created: 2024-11-01)
-
-   Merge Strategy:
-   - Keep newest (ef-089)
-   - Update all references
-   - Archive others
-
-2. "Natural Gas" (2 variants)
-   - ID: ef-002 (345 references)
-   - ID: ef-067 (12 references)
-
-   Merge Strategy:
-   - Keep most referenced (ef-002)
-   - Migrate 12 references
-   - Delete ef-067
-
-Total Duplicates: 15 groups (38 records)
-Space Saved: ~234 KB
+// Merge duplicates
+execute({
+  action: 'migration',
+  content: 'merge-duplicates',
+  options: {
+    db: 'clenergize_reference',
+    collection: 'emission_factors',
+    matchField: 'name',
+    strategy: 'keep-newest', // or 'keep-most-referenced'
+    updateReferences: true
+  }
+})
 ```
 
 ## Backup & Recovery Commands
 
-### /backup-before-migration [service]
-Create backup before migration.
+### Create Backup Before Migration
+```javascript
+// Create backup
+execute({
+  action: 'bash',
+  content: 'mongodump --db=clenergize_organization --out=backups/organization_$(date +%Y%m%d_%H%M%S) --gzip'
+})
 
-**Usage**: `/backup-before-migration organization-service`
+// Verify backup
+execute({
+  action: 'bash',
+  content: 'ls -lh backups/ && du -sh backups/organization_*'
+})
 
-**Output**:
-```
-Creating Backup...
-Service: organization-service
-Database: clenergize_organization
-Collections: 8
-Documents: 45,678
-Size: 234 MB
-
-Backup Created:
-File: backups/organization_20251115_103045.archive
-Format: MongoDB Archive
-Compressed: Yes (67 MB)
-Encryption: AES-256
-Location: S3://clenergize-backups/migrations/
-
-Restore Command:
-/restore-from-backup organization_20251115_103045.archive
+// Upload to S3 (optional)
+execute({
+  action: 'aws',
+  content: 's3 cp backups/organization_20251115_103045 s3://clenergize-backups/migrations/ --recursive'
+})
 ```
 
-### /restore-from-backup [file]
-Restore service from backup.
+### Restore from Backup
+```javascript
+// Restore backup
+execute({
+  action: 'bash',
+  content: 'mongorestore --db=clenergize_organization --drop backups/organization_20251115_103045/clenergize_organization --gzip'
+})
 
-**Usage**: `/restore-from-backup organization_20251115_103045.archive`
-
-**Process**:
-```
-Restore Process:
-1. Verify backup integrity ✅
-2. Stop service containers
-3. Clear target database
-4. Restore from archive
-5. Rebuild indexes
-6. Verify document counts
-7. Restart services
-
-⚠️ WARNING: This will replace all current data!
-Confirm by typing the backup filename:
+// Verify restore
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").stats()
+  `
+})
 ```
 
-### /migration-status
-Show overall migration progress.
+### Migration Status
+```javascript
+// Get overall migration status
+execute({
+  action: 'migration',
+  content: 'status',
+  options: {
+    services: 'all'
+  }
+})
 
-**Usage**: `/migration-status`
-
-**Dashboard**:
-```
-Migration Progress Dashboard
-═══════════════════════════════════════
-
-Service Migration Status:
-✅ identity-service       100% (Phase 3: Complete)
-✅ organization-service    100% (Phase 3: Complete)
-🔄 reference-service       75% (Phase 2: Data Transfer)
-🔄 activity-service        60% (Phase 2: Data Transfer)
-⏸️ calculation-service     40% (Phase 1: Schema Design)
-📅 reporting-service        0% (Scheduled: Sprint 2)
-📅 audit-service           0% (Scheduled: Sprint 3)
-
-Data Migration:
-├─ Users: 12,345/12,345 ✅
-├─ Organizations: 567/567 ✅
-├─ Projects: 1,234/1,234 ✅
-├─ Hierarchies: 45/234 🔄
-├─ Activities: 456,789/1,234,567 🔄
-└─ Calculations: 0/890,123 📅
-
-Issues:
-❌ Hierarchy cloning (C3): In Progress
-✅ JWT verification (C1): Fixed
-✅ Infinite loops (C2): Fixed
-
-Time Remaining: ~14 days
-Next Milestone: Complete reference-service (2 days)
+// Get detailed service status
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("schema_versions").find().sort({appliedAt: -1})
+  `
+})
 ```
 
 ## Performance Commands
 
-### /optimize-migration [operation]
-Optimize slow migration operations.
-
-**Usage**: `/optimize-migration bulk-insert`
-
-**Optimizations Applied**:
+### Optimize Migration Performance
 ```javascript
-// Before: Individual inserts (45 min)
-for (const doc of documents) {
-  await collection.insertOne(doc);
-}
-
-// After: Bulk operations (3 min)
-const chunks = _.chunk(documents, 1000);
-for (const chunk of chunks) {
-  await collection.insertMany(chunk, {
+// Use bulk operations
+execute({
+  action: 'migration',
+  content: 'optimize-bulk-insert',
+  options: {
+    db: 'clenergize_activity',
+    collection: 'activities',
+    batchSize: 1000,
     ordered: false,
     writeConcern: { w: 1 }
-  });
-}
+  }
+})
 
-Performance Improvement:
-- Time: 45 min → 3 min (93% faster)
-- CPU: 78% → 23%
-- Memory: 2.3 GB → 890 MB
+// Monitor performance
+execute({
+  action: 'mongodb',
+  content: `
+    db.currentOp({
+      $or: [
+        { op: "insert" },
+        { op: "update" }
+      ]
+    })
+  `
+})
 ```
 
-### /parallel-migration [services]
-Run parallel migrations for multiple services.
+### Parallel Migration
+```javascript
+// Run migrations in parallel
+execute({
+  action: 'migration',
+  content: 'parallel',
+  options: {
+    services: ['identity', 'reference'],
+    maxWorkers: 3,
+    memoryLimit: '6GB',
+    cpuCores: 3
+  }
+})
 
-**Usage**: `/parallel-migration "identity,organization,reference"`
-
-**Execution Plan**:
+// Monitor parallel execution
+execute({
+  action: 'bash',
+  content: 'ps aux | grep migration && docker stats'
+})
 ```
-Parallel Migration Orchestrator
-═══════════════════════════════
 
-Dependency Analysis:
-- identity: No dependencies ✅
-- organization: Requires identity ⚠️
-- reference: No dependencies ✅
+## Quick Reference
 
-Execution Order:
-Wave 1: [identity, reference] (parallel)
-Wave 2: [organization] (after identity)
+| Task | Command |
+|------|---------|
+| Migrate hierarchies | `execute({ action: 'migration', content: 'extract-unique-hierarchies', options: {...}})` |
+| Export OLD data | `execute({ action: 'bash', content: 'mongoexport --db=old --collection=users --out=exports/users.json' })` |
+| Import to NEW | `execute({ action: 'migration', content: 'import-transformed', options: {...}})` |
+| Validate migration | `execute({ action: 'migration', content: 'validate-integrity', options: {...}})` |
+| Create backup | `execute({ action: 'bash', content: 'mongodump --db=dbname --out=backups/...' })` |
+| Run migration | `execute({ action: 'migration', content: 'run', options: {...}})` |
+| Rollback | `execute({ action: 'migration', content: 'rollback', options: {...}})` |
+| Fix references | `execute({ action: 'migration', content: 'fix-references', options: {...}})` |
 
-Resource Allocation:
-- CPU Cores: 8 available, 3 allocated
-- Memory: 16 GB available, 6 GB allocated
-- Workers: 3 processes
-
-Starting Wave 1...
-[identity    ] ████████░░ 80%
-[reference   ] ██████░░░░ 60%
-
-Wave 1 Complete: 12 minutes
-Starting Wave 2...
-```
+Remember: Always backup before migration and validate after!

@@ -790,12 +790,51 @@ jobs:
 - [ ] Error boundary tests
 
 ## Commands
-- `/run-tests [service]` - Run tests for service
-- `/coverage-report` - Generate coverage report
-- `/e2e-test [scenario]` - Run E2E test scenario
-- `/load-test [endpoint]` - Run load test
-- `/security-scan` - Run security tests
-- `/quality-check` - Run all quality gates
+
+```javascript
+// Run tests for specific service
+execute({
+  action: 'test',
+  content: 'all',
+  options: { service: 'identity' }
+})
+
+// Generate coverage report
+execute({
+  action: 'test',
+  content: 'coverage',
+  options: { service: 'identity', threshold: 80 }
+})
+
+// Run E2E test scenario
+execute({
+  action: 'bash',
+  content: 'cd NEW/frontend && npm run cypress:run -- --spec "cypress/e2e/user-registration.cy.ts"'
+})
+
+// Run load test on endpoint
+execute({
+  action: 'bash',
+  content: 'k6 run --vus 100 --duration 5m tests/performance/auth-endpoint.js'
+})
+
+// Run security scan
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm audit && npm run lint:security'
+})
+
+// Run all quality gates
+execute({
+  action: 'bash',
+  content: `
+    cd NEW/identity-service &&
+    npm run lint &&
+    npm test -- --coverage &&
+    npm audit
+  `
+})
+```
 
 ## Success Metrics
 - 80% unit test coverage achieved

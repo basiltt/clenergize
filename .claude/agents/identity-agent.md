@@ -508,11 +508,83 @@ describe('Authentication Flow', () => {
 ```
 
 ## Commands
-- `/create-user [email] [role]` - Create new user
-- `/reset-password [userId]` - Force password reset
-- `/unlock-account [userId]` - Unlock locked account
-- `/revoke-sessions [userId]` - Revoke all user sessions
-- `/audit-user [userId]` - Show user audit trail
+
+```javascript
+// Create new user
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_identity").collection("users").insertOne({
+      email: "user@example.com",
+      passwordHash: await bcrypt.hash("SecurePass123!", 10),
+      roles: ["data-entry"],
+      status: "active",
+      createdAt: new Date()
+    })
+  `
+})
+
+// Force password reset
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_identity").collection("users").updateOne(
+      { _id: ObjectId("userId") },
+      {
+        $set: {
+          passwordResetRequired: true,
+          passwordResetToken: crypto.randomBytes(32).toString('hex'),
+          passwordResetExpires: new Date(Date.now() + 3600000)
+        }
+      }
+    )
+  `
+})
+
+// Unlock locked account
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_identity").collection("users").updateOne(
+      { _id: ObjectId("userId") },
+      {
+        $set: {
+          "security.loginAttempts": 0,
+          "security.lockedUntil": null,
+          status: "active"
+        }
+      }
+    )
+  `
+})
+
+// Revoke all user sessions
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_identity").collection("sessions").updateMany(
+      { userId: ObjectId("userId"), revokedAt: null },
+      {
+        $set: {
+          revokedAt: new Date(),
+          revokedBy: "admin",
+          revokedReason: "Security reset"
+        }
+      }
+    )
+  `
+})
+
+// Show user audit trail
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_audit").collection("auth_events").find({
+      userId: ObjectId("userId")
+    }).sort({ timestamp: -1 }).limit(50)
+  `
+})
+```
 
 ## Success Metrics
 - JWT verification implemented (not just decode)

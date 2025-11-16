@@ -27,6 +27,74 @@ Clenergize V3 is an enterprise carbon footprint management platform being rebuil
 3. ❗ Infinite SQS polling loops causing system instability
 4. ❗ Missing authentication on write endpoints
 
+## 🔧 MCP EXECUTOR USAGE (NEW - Optimized Approach)
+
+As of Sprint 0.1, we use a single MCP executor following Anthropic's code execution pattern.
+This reduces context usage from 249k to ~30k tokens.
+
+### How to Use MCP Commands
+
+All operations now go through the single `execute` command:
+
+#### File Operations (replaces filesystem MCP)
+```javascript
+// Read file
+execute({ action: 'file', content: 'read', options: { path: 'path/to/file' }})
+
+// Write file
+execute({ action: 'file', content: 'write', options: { path: 'path/to/file', data: 'content' }})
+
+// List directory
+execute({ action: 'file', content: 'list', options: { path: 'directory/path' }})
+```
+
+#### MongoDB Operations (replaces all mongodb-* MCPs)
+```javascript
+// Access any database
+execute({ action: 'mongodb', content: 'db("clenergize_identity").collection("users").find({})' })
+
+// Insert document
+execute({ action: 'mongodb', content: 'db("clenergize_identity").collection("users").insertOne({name: "test"})' })
+
+// Update document
+execute({ action: 'mongodb', content: 'db("clenergize_identity").collection("users").updateOne({_id: "123"}, {$set: {status: "active"}})' })
+```
+
+#### Git Operations (replaces github MCP)
+```javascript
+// Create branch
+execute({ action: 'git', content: 'checkout -b feature/SCRUM-101' })
+
+// Commit
+execute({ action: 'bash', content: 'git add . && git commit -m "feat: implement JWT"' })
+
+// Push
+execute({ action: 'git', content: 'push origin feature/SCRUM-101' })
+```
+
+#### Jira Operations (replaces atlassian MCP)
+```javascript
+// Update ticket status
+execute({ action: 'jira', content: 'SCRUM-101', options: { status: 'In Progress' }})
+
+// Add comment
+execute({ action: 'jira', content: 'SCRUM-101', options: { comment: 'JWT implementation started' }})
+```
+
+#### Service Generation
+```javascript
+// Generate complete service
+execute({ action: 'generate-service', content: 'identity', options: { port: 3001 }})
+```
+
+#### Testing
+```javascript
+// Run tests
+execute({ action: 'test', content: 'unit', options: { service: 'identity' }})
+execute({ action: 'test', content: 'e2e', options: { service: 'identity' }})
+execute({ action: 'test', content: 'security', options: { service: 'identity' }})
+```
+
 ## 🤖 AGENT ROLE DEFINITIONS
 
 ### You Are One of These Agents:
@@ -35,18 +103,18 @@ Clenergize V3 is an enterprise carbon footprint management platform being rebuil
 - **Model**: Claude Sonnet (Standard)
 - **Trigger**: Tasks involving cross-service coordination, sprint planning
 - **Context Files**: All PHASE*.md files, SPRINT_*.md files
-- **Primary Tools**: Jira MCP, GitHub MCP, Slack MCP
+- **Primary Tools**: `execute` with jira, git, and context actions
 - **Key Decisions**: Architecture choices, task allocation, integration points
 
 #### 2. Architecture Agent
 - **Model**: Claude Sonnet (Opus 4.1 for complex decisions only)
-- **Use Opus 4.1 When**: 
+- **Use Opus 4.1 When**:
   - Resolving service circular dependencies
   - Designing distributed transaction patterns
   - Major refactoring decisions
   - Performance bottleneck solutions
 - **Context Files**: PHASE2_*.md, PHASE3_Service_Spec_*.md
-- **Primary Tools**: OpenAPI generator, PlantUML
+- **Primary Tools**: `execute` with code and file actions
 - **Key Decisions**: Service boundaries, event schemas, API versioning
 
 #### 3. Security Agent
@@ -57,7 +125,7 @@ Clenergize V3 is an enterprise carbon footprint management platform being rebuil
   - Threat model analysis
   - Zero-trust architecture planning
 - **Context Files**: CLNZ-101 through CLNZ-108 security stories
-- **Primary Tools**: OWASP scanner, JWT libraries, AWS Secrets Manager
+- **Primary Tools**: `execute` with test and security scan actions
 - **Key Decisions**: Cryptographic choices, security policies
 
 #### 4-10. Service Agents (Identity, Organization, Reference, Activity, Calculation, Reporting, Audit)
@@ -66,7 +134,7 @@ Clenergize V3 is an enterprise carbon footprint management platform being rebuil
   - Use Opus 4.1 for complex emission algorithms
   - Use Opus 4.1 for aggregation optimization
 - **Context Files**: Service-specific specs in PHASE3_Service_Spec_*.md
-- **Primary Tools**: NestJS, TypeORM, MongoDB driver
+- **Primary Tools**: `execute` with service-specific actions
 - **Port Assignment**:
   - Identity: 3001
   - Organization: 3002
@@ -80,21 +148,21 @@ Clenergize V3 is an enterprise carbon footprint management platform being rebuil
 - **Model**: Claude Sonnet (Standard)
 - **Trigger**: UI components, state management, user experience
 - **Context Files**: PHASE9_Frontend_Adaptation_Plan.md
-- **Primary Tools**: Next.js, React, Redux Toolkit, Ant Design
+- **Primary Tools**: `execute` with file and test actions
 - **Key Focus**: Accessibility (WCAG 2.1 Level AA)
 
 #### 12. DevOps/Infrastructure Agent
 - **Model**: Claude Sonnet (Standard)
 - **Trigger**: Docker, AWS, CI/CD, monitoring
 - **Context Files**: LOCAL_DEV_ENVIRONMENT_Updates.md
-- **Primary Tools**: Docker, LocalStack, GitHub Actions
+- **Primary Tools**: `execute` with docker and aws actions
 - **Current Priority**: Docker Compose environment setup
 
 #### 13. Testing Agent
 - **Model**: Claude Sonnet (Standard)
 - **Trigger**: Test strategies, E2E tests, quality metrics
 - **Context Files**: PHASE5_SDLC_Quality_Strategy.md
-- **Primary Tools**: Jest, Supertest, Cypress
+- **Primary Tools**: `execute` with test actions
 - **Coverage Targets**: 80% unit, 70% integration
 
 #### 14. Migration Agent
@@ -105,7 +173,7 @@ Clenergize V3 is an enterprise carbon footprint management platform being rebuil
   - Complex ETL pipeline design
   - Data validation algorithm creation
 - **Context Files**: Current vs Target architecture docs
-- **Primary Tools**: MongoDB migration tools, validation scripts
+- **Primary Tools**: `execute` with mongodb and migration actions
 - **Critical Issue**: Hierarchy cloning to references conversion
 
 ## 🛠️ DEVELOPMENT ENVIRONMENT
@@ -135,6 +203,8 @@ ClenergizeV3/
 │   ├── frontend/             # Rebuilt Next.js app
 │   └── shared/               # Contracts & utilities
 │
+├── mcp-servers/
+│   └── clenergize-executor/  # Single MCP executor
 ├── docker-compose.dev.yml
 ├── Makefile
 └── Docs/                     # All documentation

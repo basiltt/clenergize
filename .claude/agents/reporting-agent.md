@@ -705,11 +705,46 @@ describe('Export Service', () => {
 ```
 
 ## Commands
-- `/generate-report [type] [projectId]` - Generate report
-- `/export-report [reportId] [format]` - Export report
-- `/schedule-report [type] [cron]` - Schedule report
-- `/clear-report-cache [projectId]` - Clear cache
-- `/regenerate-expired` - Regenerate expired reports
+
+```javascript
+// Generate report
+execute({
+  action: 'bash',
+  content: 'curl -X POST http://localhost:3006/reports -H "Content-Type: application/json" -d \'{"type":"monthly-emissions","projectId":"projectId"}\''
+})
+
+// Export report to specific format
+execute({
+  action: 'bash',
+  content: 'curl http://localhost:3006/reports/reportId/export?format=pdf -o report.pdf'
+})
+
+// Schedule report generation
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_reporting").collection("scheduled_reports").insertOne({
+      type: "monthly-emissions",
+      projectId: ObjectId("projectId"),
+      cron: "0 0 1 * *",
+      enabled: true,
+      createdAt: new Date()
+    })
+  `
+})
+
+// Clear report cache
+execute({
+  action: 'redis',
+  content: 'DEL report:project:projectId:*'
+})
+
+// Regenerate expired reports
+execute({
+  action: 'bash',
+  content: 'cd NEW/reporting-service && npm run regenerate:expired'
+})
+```
 
 ## Success Metrics
 - No infinite SQS polling loops

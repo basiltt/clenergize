@@ -755,11 +755,48 @@ describe('Aggregation Engine', () => {
 ```
 
 ## Commands
-- `/calculate [activityId]` - Calculate emissions
-- `/recalculate [projectId]` - Recalculate project
-- `/aggregate [projectId] [level]` - Run aggregation
-- `/clear-cache [projectId]` - Clear calculation cache
-- `/validate-formulas` - Validate custom formulas
+
+```javascript
+// Calculate emissions for specific activity
+execute({
+  action: 'bash',
+  content: 'curl -X POST http://localhost:3005/calculations -H "Content-Type: application/json" -d \'{"activityId":"activityId"}\''
+})
+
+// Recalculate entire project
+execute({
+  action: 'bash',
+  content: 'cd NEW/calculation-service && npm run recalculate -- --projectId=projectId'
+})
+
+// Run aggregation at specific hierarchy level
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_calculation").collection("emissions").aggregate([
+      {$match: {projectId: ObjectId("projectId")}},
+      {$group: {
+        _id: "$hierarchyLevel",
+        totalEmissions: {$sum: "$co2e"},
+        count: {$sum: 1}
+      }},
+      {$sort: {totalEmissions: -1}}
+    ])
+  `
+})
+
+// Clear calculation cache for project
+execute({
+  action: 'redis',
+  content: 'DEL calculation:project:projectId:*'
+})
+
+// Validate custom formulas
+execute({
+  action: 'bash',
+  content: 'cd NEW/calculation-service && npm run validate:formulas'
+})
+```
 
 ## Success Metrics
 - No V1 folder duplication issues

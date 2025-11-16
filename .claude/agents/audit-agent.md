@@ -721,11 +721,53 @@ describe('Audit Service', () => {
 ```
 
 ## Commands
-- `/audit-trail [userId] [period]` - Get user audit trail
-- `/compliance-report [standard]` - Generate compliance report
-- `/gdpr-export [userId]` - Export user data
-- `/security-scan [period]` - Run security analysis
-- `/retention-cleanup` - Manually run retention
+
+```javascript
+// Get user audit trail
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_audit").collection("audit_logs").find({
+      userId: ObjectId("userId"),
+      timestamp: {$gte: new Date(Date.now() - 30*24*60*60*1000)}
+    }).sort({timestamp: -1})
+  `
+})
+
+// Generate compliance report (ISO 14064, GHG Protocol, etc.)
+execute({
+  action: 'bash',
+  content: 'cd NEW/audit-service && npm run compliance:report -- --standard=ISO14064'
+})
+
+// Export user data for GDPR request
+execute({
+  action: 'bash',
+  content: 'cd NEW/audit-service && npm run gdpr:export -- --userId=userId --format=json'
+})
+
+// Run security analysis for period
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_audit").collection("security_events").aggregate([
+      {$match: {timestamp: {$gte: new Date(Date.now() - 7*24*60*60*1000)}}},
+      {$group: {
+        _id: "$event",
+        count: {$sum: 1},
+        users: {$addToSet: "$userId"}
+      }},
+      {$sort: {count: -1}}
+    ])
+  `
+})
+
+// Manually run retention cleanup
+execute({
+  action: 'bash',
+  content: 'cd NEW/audit-service && npm run retention:cleanup'
+})
+```
 
 ## Success Metrics
 - 100% event capture rate
