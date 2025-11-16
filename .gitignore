@@ -456,3 +456,6 @@ OLD/
 
 # Ignore .idea directory
 .idea/
+
+# Ignore lock files
+*lock.json
