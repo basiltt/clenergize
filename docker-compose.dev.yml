@@ -1,0 +1,471 @@
+version: '3.8'
+
+services:
+  # ===========================================
+  # Infrastructure Services
+  # ===========================================
+
+  # MongoDB - Single instance with multiple databases for development
+  mongodb:
+    image: mongo:7.0
+    container_name: clenergize-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: localdev123
+    volumes:
+      - mongodb-data:/data/db
+      - ./init-scripts/mongo:/docker-entrypoint-initdb.d:ro
+    networks:
+      - clenergize-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # Redis - Cache and Pub/Sub
+  redis:
+    image: redis:7-alpine
+    container_name: clenergize-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - clenergize-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # LocalStack - AWS Services Simulation
+  localstack:
+    image: localstack/localstack:latest
+    container_name: clenergize-localstack
+    restart: unless-stopped
+    ports:
+      - "4566:4566"  # Main endpoint
+      - "4571:4571"  # ElasticSearch
+      - "4510-4559:4510-4559"  # External service ports
+    environment:
+      - SERVICES=secretsmanager,sqs,s3,cognito-idp,eventbridge,ses,lambda
+      - DEFAULT_REGION=us-east-1
+      - EDGE_PORT=4566
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - LAMBDA_EXECUTOR=docker-reuse
+      - DEBUG=1
+    volumes:
+      - localstack-data:/var/lib/localstack
+      - ./init-scripts/aws:/docker-entrypoint-initaws.d:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - clenergize-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Mailhog - Email Testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: clenergize-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    networks:
+      - clenergize-network
+
+  # ===========================================
+  # Microservices - Development Mode
+  # ===========================================
+
+  # Identity Service
+  identity-service:
+    build:
+      context: ./NEW/identity-service
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_VERSION: 24-alpine
+    container_name: clenergize-identity-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+      - "9001:9229"  # Debug port
+    environment:
+      - NODE_ENV=development
+      - SERVICE_NAME=identity-service
+      - PORT=3001
+      - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_identity?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - JWT_ISSUER=http://localhost:3001
+      - JWT_AUDIENCE=clenergize-v3
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - MAIL_HOST=mailhog
+      - MAIL_PORT=1025
+    volumes:
+      - ./NEW/identity-service:/app
+      - ./OLD/clenergizeV3-user-management-ms-dev:/reference:ro
+      - /app/node_modules
+    networks:
+      - clenergize-network
+    depends_on:
+      - mongodb
+      - redis
+      - localstack
+      - mailhog
+    command: npm run start:dev
+
+  # Organization Service
+  organization-service:
+    build:
+      context: ./NEW/organization-service
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_VERSION: 24-alpine
+    container_name: clenergize-organization-service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+      - "9002:9229"  # Debug port
+    environment:
+      - NODE_ENV=development
+      - SERVICE_NAME=organization-service
+      - PORT=3002
+      - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_organization?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - ./NEW/organization-service:/app
+      - ./OLD/clenergizeV3-project-management-ms-dev:/reference:ro
+      - /app/node_modules
+    networks:
+      - clenergize-network
+    depends_on:
+      - mongodb
+      - redis
+      - localstack
+    command: npm run start:dev
+
+  # Reference Service
+  reference-service:
+    build:
+      context: ./NEW/reference-service
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_VERSION: 24-alpine
+    container_name: clenergize-reference-service
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+      - "9003:9229"  # Debug port
+    environment:
+      - NODE_ENV=development
+      - SERVICE_NAME=reference-service
+      - PORT=3003
+      - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_reference?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - ./NEW/reference-service:/app
+      - ./OLD/clenergizeV3-master-data-ms-dev:/reference:ro
+      - /app/node_modules
+    networks:
+      - clenergize-network
+    depends_on:
+      - mongodb
+      - redis
+      - localstack
+    command: npm run start:dev
+
+  # Activity Service
+  activity-service:
+    build:
+      context: ./NEW/activity-service
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_VERSION: 24-alpine
+    container_name: clenergize-activity-service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+      - "9004:9229"  # Debug port
+    environment:
+      - NODE_ENV=development
+      - SERVICE_NAME=activity-service
+      - PORT=3004
+      - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_activity?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - ./NEW/activity-service:/app
+      - ./OLD/clenergizeV3-carbon-footprint-ms-dev:/reference:ro
+      - /app/node_modules
+    networks:
+      - clenergize-network
+    depends_on:
+      - mongodb
+      - redis
+      - localstack
+    command: npm run start:dev
+
+  # Calculation Service
+  calculation-service:
+    build:
+      context: ./NEW/calculation-service
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_VERSION: 24-alpine
+    container_name: clenergize-calculation-service
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+      - "9005:9229"  # Debug port
+    environment:
+      - NODE_ENV=development
+      - SERVICE_NAME=calculation-service
+      - PORT=3005
+      - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_calculation?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - ./NEW/calculation-service:/app
+      - ./OLD/clenergizeV3-carbon-footprint-ms-dev:/reference:ro
+      - /app/node_modules
+    networks:
+      - clenergize-network
+    depends_on:
+      - mongodb
+      - redis
+      - localstack
+      - activity-service
+    command: npm run start:dev
+
+  # Reporting Service
+  reporting-service:
+    build:
+      context: ./NEW/reporting-service
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_VERSION: 24-alpine
+    container_name: clenergize-reporting-service
+    restart: unless-stopped
+    ports:
+      - "3006:3006"
+      - "9006:9229"  # Debug port
+    environment:
+      - NODE_ENV=development
+      - SERVICE_NAME=reporting-service
+      - PORT=3006
+      - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_reporting?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - ./NEW/reporting-service:/app
+      - ./OLD/clenergizeV3-backend-ms-dev:/reference:ro
+      - /app/node_modules
+    networks:
+      - clenergize-network
+    depends_on:
+      - mongodb
+      - redis
+      - localstack
+      - calculation-service
+    command: npm run start:dev
+
+  # Audit Service
+  audit-service:
+    build:
+      context: ./NEW/audit-service
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_VERSION: 24-alpine
+    container_name: clenergize-audit-service
+    restart: unless-stopped
+    ports:
+      - "3007:3007"
+      - "9007:9229"  # Debug port
+    environment:
+      - NODE_ENV=development
+      - SERVICE_NAME=audit-service
+      - PORT=3007
+      - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_audit?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - ./NEW/audit-service:/app
+      - /app/node_modules
+    networks:
+      - clenergize-network
+    depends_on:
+      - mongodb
+      - redis
+      - localstack
+    command: npm run start:dev
+
+  # ===========================================
+  # Frontend Application
+  # ===========================================
+
+  frontend:
+    build:
+      context: ./NEW/frontend
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_VERSION: 24-alpine
+    container_name: clenergize-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:80/api
+      - NEXT_PUBLIC_IDENTITY_URL=http://localhost:3001
+      - NEXT_PUBLIC_ORGANIZATION_URL=http://localhost:3002
+      - NEXT_PUBLIC_REFERENCE_URL=http://localhost:3003
+      - NEXT_PUBLIC_ACTIVITY_URL=http://localhost:3004
+      - NEXT_PUBLIC_CALCULATION_URL=http://localhost:3005
+      - NEXT_PUBLIC_REPORTING_URL=http://localhost:3006
+      - NEXT_PUBLIC_AUDIT_URL=http://localhost:3007
+    volumes:
+      - ./NEW/frontend:/app
+      - ./OLD/clenergizeV3-frontend-dev:/reference:ro
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - clenergize-network
+    depends_on:
+      - identity-service
+      - organization-service
+    command: npm run dev
+
+  # ===========================================
+  # API Gateway / Reverse Proxy
+  # ===========================================
+
+  nginx:
+    image: nginx:alpine
+    container_name: clenergize-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - clenergize-network
+    depends_on:
+      - identity-service
+      - organization-service
+      - reference-service
+      - activity-service
+      - calculation-service
+      - reporting-service
+      - audit-service
+      - frontend
+
+  # ===========================================
+  # Development Tools
+  # ===========================================
+
+  # Swagger UI - API Documentation
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    container_name: clenergize-swagger
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SWAGGER_JSON=/api-docs/swagger.json
+      - BASE_URL=/swagger
+    volumes:
+      - ./docs/api:/api-docs:ro
+    networks:
+      - clenergize-network
+
+  # Mongo Express - MongoDB Web UI
+  mongo-express:
+    image: mongo-express:latest
+    container_name: clenergize-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=localdev123
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
+    networks:
+      - clenergize-network
+    depends_on:
+      - mongodb
+
+  # Redis Commander - Redis Web UI
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: clenergize-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8082:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    networks:
+      - clenergize-network
+    depends_on:
+      - redis
+
+# ===========================================
+# Volumes
+# ===========================================
+
+volumes:
+  mongodb-data:
+    driver: local
+  redis-data:
+    driver: local
+  localstack-data:
+    driver: local
+
+# ===========================================
+# Networks
+# ===========================================
+
+networks:
+  clenergize-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
