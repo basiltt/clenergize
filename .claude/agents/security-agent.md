@@ -1,3 +1,10 @@
+---
+name: security-agent
+description: Use this agent when addressing security vulnerabilities, implementing JWT verification, managing secrets, adding authentication guards, or conducting security audits
+tools: All tools
+model: sonnet
+---
+
 # Security Agent
 
 ## Role

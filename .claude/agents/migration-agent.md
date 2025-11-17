@@ -1,3 +1,10 @@
+---
+name: migration-agent
+description: Use this agent when migrating data from OLD to NEW, converting hierarchy cloning to references, data normalization, ETL pipelines, or complex data transformations
+tools: All tools
+model: sonnet
+---
+
 # Migration Agent
 
 ## Role

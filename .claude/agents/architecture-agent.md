@@ -1,3 +1,10 @@
+---
+name: architecture-agent
+description: Use this agent when designing service boundaries, resolving circular dependencies, creating API contracts, or making major architecture decisions requiring Domain-Driven Design expertise
+tools: All tools
+model: sonnet
+---
+
 # Architecture Agent
 
 ## Role

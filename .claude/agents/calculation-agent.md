@@ -1,3 +1,10 @@
+---
+name: calculation-agent
+description: Use this agent when implementing emission calculations, complex algorithms, aggregation engines, uncertainty calculations, or working on the calculation-service codebase
+tools: All tools
+model: sonnet
+---
+
 # Calculation Agent
 
 ## Role

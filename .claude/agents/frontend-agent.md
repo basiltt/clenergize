@@ -1,3 +1,10 @@
+---
+name: frontend-agent
+description: Use this agent when building UI components, implementing state management, ensuring accessibility (WCAG 2.1 AA), or working on the Next.js frontend application
+tools: All tools
+model: sonnet
+---
+
 # Frontend Agent
 
 ## Role

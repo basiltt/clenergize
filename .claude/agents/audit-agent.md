@@ -1,3 +1,10 @@
+---
+name: audit-agent
+description: Use this agent when implementing audit logging, compliance tracking, GDPR requests, event sourcing, security monitoring, or working on the audit-service codebase
+tools: All tools
+model: sonnet
+---
+
 # Audit Agent
 
 ## Role

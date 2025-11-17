@@ -1,3 +1,10 @@
+---
+name: devops-agent
+description: Use this agent when setting up Docker environments, configuring LocalStack, creating CI/CD pipelines, adding health checks, or managing infrastructure
+tools: All tools
+model: sonnet
+---
+
 # DevOps Agent
 
 ## Role
