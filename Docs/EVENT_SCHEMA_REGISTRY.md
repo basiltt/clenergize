@@ -118,7 +118,11 @@ export type IdentityEvent =
   | UserRoleAssignedEvent
   | UserRoleRevokedEvent
   | UserActivatedEvent
-  | UserDeactivatedEvent;
+  | UserDeactivatedEvent
+  | SessionCreatedEvent
+  | SessionExpiredEvent
+  | TwoFactorEnabledEvent
+  | TwoFactorDisabledEvent;
 ```
 
 ### User Created Event
@@ -237,6 +241,194 @@ export interface UserRoleAssignedEvent extends DomainEvent {
 }
 ```
 
+### User Updated Event
+
+```typescript
+export interface UserUpdatedEvent extends DomainEvent {
+  type: 'identity.user.updated.v1';
+  aggregateType: 'User';
+  data: {
+    userId: string;
+    changes: {
+      field: string;
+      oldValue: any;
+      newValue: any;
+    }[];
+    updatedBy: string;
+    reason?: string;
+    timestamp: string;
+  };
+}
+```
+
+### User Deleted Event
+
+```typescript
+export interface UserDeletedEvent extends DomainEvent {
+  type: 'identity.user.deleted.v1';
+  aggregateType: 'User';
+  data: {
+    userId: string;
+    email: string;
+    deletionType: 'SOFT' | 'HARD';
+    deletedBy: string;
+    reason: string;
+    gdprCompliant: boolean;
+    timestamp: string;
+  };
+}
+```
+
+### User Authentication Failed Event
+
+```typescript
+export interface UserAuthenticationFailedEvent extends DomainEvent {
+  type: 'identity.user.authentication-failed.v1';
+  aggregateType: 'User';
+  data: {
+    email: string;
+    ipAddress: string;
+    userAgent: string;
+    failureReason: 'INVALID_CREDENTIALS' | 'ACCOUNT_LOCKED' | 'ACCOUNT_SUSPENDED' | 'MFA_FAILED';
+    attemptCount: number;
+    timestamp: string;
+  };
+}
+```
+
+### Password Reset Completed Event
+
+```typescript
+export interface PasswordResetCompletedEvent extends DomainEvent {
+  type: 'identity.password.reset-completed.v1';
+  aggregateType: 'User';
+  data: {
+    userId: string;
+    email: string;
+    resetToken: string;
+    resetFrom: string; // IP address
+    timestamp: string;
+  };
+}
+```
+
+### User Role Revoked Event
+
+```typescript
+export interface UserRoleRevokedEvent extends DomainEvent {
+  type: 'identity.user.role-revoked.v1';
+  aggregateType: 'User';
+  data: {
+    userId: string;
+    role: string;
+    scope?: {
+      organizationId?: string;
+      projectId?: string;
+    };
+    revokedBy: string;
+    reason: string;
+    timestamp: string;
+  };
+}
+```
+
+### User Activated Event
+
+```typescript
+export interface UserActivatedEvent extends DomainEvent {
+  type: 'identity.user.activated.v1';
+  aggregateType: 'User';
+  data: {
+    userId: string;
+    email: string;
+    activatedBy: string;
+    activationMethod: 'EMAIL_VERIFICATION' | 'ADMIN_APPROVAL' | 'AUTO';
+    timestamp: string;
+  };
+}
+```
+
+### User Deactivated Event
+
+```typescript
+export interface UserDeactivatedEvent extends DomainEvent {
+  type: 'identity.user.deactivated.v1';
+  aggregateType: 'User';
+  data: {
+    userId: string;
+    email: string;
+    deactivatedBy: string;
+    reason: string;
+    suspensionDuration?: number; // days, null = permanent
+    timestamp: string;
+  };
+}
+```
+
+### Session Created Event
+
+```typescript
+export interface SessionCreatedEvent extends DomainEvent {
+  type: 'identity.session.created.v1';
+  aggregateType: 'Session';
+  data: {
+    sessionId: string;
+    userId: string;
+    ipAddress: string;
+    userAgent: string;
+    expiresAt: string;
+    refreshToken?: string;
+    timestamp: string;
+  };
+}
+```
+
+### Session Expired Event
+
+```typescript
+export interface SessionExpiredEvent extends DomainEvent {
+  type: 'identity.session.expired.v1';
+  aggregateType: 'Session';
+  data: {
+    sessionId: string;
+    userId: string;
+    reason: 'TIMEOUT' | 'LOGOUT' | 'FORCE_LOGOUT' | 'TOKEN_REVOKED';
+    timestamp: string;
+  };
+}
+```
+
+### Two-Factor Authentication Enabled Event
+
+```typescript
+export interface TwoFactorEnabledEvent extends DomainEvent {
+  type: 'identity.2fa.enabled.v1';
+  aggregateType: 'User';
+  data: {
+    userId: string;
+    method: 'TOTP' | 'SMS' | 'EMAIL';
+    backupCodesGenerated: boolean;
+    enabledBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Two-Factor Authentication Disabled Event
+
+```typescript
+export interface TwoFactorDisabledEvent extends DomainEvent {
+  type: 'identity.2fa.disabled.v1';
+  aggregateType: 'User';
+  data: {
+    userId: string;
+    disabledBy: string;
+    reason: string;
+    timestamp: string;
+  };
+}
+```
+
 ---
 
 ## Organization Service Events
@@ -251,14 +443,27 @@ export type OrganizationEvent =
   | ProjectCreatedEvent
   | ProjectUpdatedEvent
   | ProjectDeletedEvent
+  | ProjectArchivedEvent
+  | ProjectRestoredEvent
   | HierarchyCreatedEvent
   | HierarchyUpdatedEvent
   | HierarchyNodeAddedEvent
   | HierarchyNodeRemovedEvent
+  | HierarchyNodeMovedEvent
   | PermissionGrantedEvent
   | PermissionRevokedEvent
   | UserAddedToOrganizationEvent
-  | UserRemovedFromOrganizationEvent;
+  | UserRemovedFromOrganizationEvent
+  | ReportingYearCreatedEvent
+  | ReportingYearLockedEvent
+  | ModuleEnabledEvent
+  | ModuleDisabledEvent
+  | TeamCreatedEvent
+  | TeamMemberAddedEvent
+  | TeamMemberRemovedEvent
+  | EntityCreatedEvent
+  | EntityUpdatedEvent
+  | EntityDeletedEvent;
 ```
 
 ### Project Created Event
@@ -368,6 +573,433 @@ export interface UserAddedToOrganizationEvent extends DomainEvent {
 }
 ```
 
+### Organization Created Event
+
+```typescript
+export interface OrganizationCreatedEvent extends DomainEvent {
+  type: 'organization.organization.created.v1';
+  aggregateType: 'Organization';
+  data: {
+    organizationId: string;
+    name: string;
+    industry?: string;
+    size?: 'SMALL' | 'MEDIUM' | 'LARGE' | 'ENTERPRISE';
+    country: string;
+    ownerId: string;
+    subscriptionTier: 'FREE' | 'PRO' | 'ENTERPRISE';
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Organization Updated Event
+
+```typescript
+export interface OrganizationUpdatedEvent extends DomainEvent {
+  type: 'organization.organization.updated.v1';
+  aggregateType: 'Organization';
+  data: {
+    organizationId: string;
+    changes: {
+      field: string;
+      oldValue: any;
+      newValue: any;
+    }[];
+    updatedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Organization Deleted Event
+
+```typescript
+export interface OrganizationDeletedEvent extends DomainEvent {
+  type: 'organization.organization.deleted.v1';
+  aggregateType: 'Organization';
+  data: {
+    organizationId: string;
+    name: string;
+    deletedBy: string;
+    reason: string;
+    dataRetentionPolicy: 'IMMEDIATE' | 'ARCHIVE_30_DAYS' | 'ARCHIVE_90_DAYS';
+    timestamp: string;
+  };
+}
+```
+
+### Project Updated Event
+
+```typescript
+export interface ProjectUpdatedEvent extends DomainEvent {
+  type: 'organization.project.updated.v1';
+  aggregateType: 'Project';
+  data: {
+    projectId: string;
+    changes: {
+      field: string;
+      oldValue: any;
+      newValue: any;
+    }[];
+    updatedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Project Deleted Event
+
+```typescript
+export interface ProjectDeletedEvent extends DomainEvent {
+  type: 'organization.project.deleted.v1';
+  aggregateType: 'Project';
+  data: {
+    projectId: string;
+    name: string;
+    deletedBy: string;
+    cascadeDelete: boolean;
+    affectedRecords: {
+      activityData: number;
+      calculations: number;
+      reports: number;
+    };
+    timestamp: string;
+  };
+}
+```
+
+### Project Archived Event
+
+```typescript
+export interface ProjectArchivedEvent extends DomainEvent {
+  type: 'organization.project.archived.v1';
+  aggregateType: 'Project';
+  data: {
+    projectId: string;
+    archivedBy: string;
+    reason?: string;
+    archiveDate: string;
+    readOnlyMode: boolean;
+    timestamp: string;
+  };
+}
+```
+
+### Project Restored Event
+
+```typescript
+export interface ProjectRestoredEvent extends DomainEvent {
+  type: 'organization.project.restored.v1';
+  aggregateType: 'Project';
+  data: {
+    projectId: string;
+    restoredBy: string;
+    originalArchiveDate: string;
+    timestamp: string;
+  };
+}
+```
+
+### Hierarchy Created Event
+
+```typescript
+export interface HierarchyCreatedEvent extends DomainEvent {
+  type: 'organization.hierarchy.created.v1';
+  aggregateType: 'Hierarchy';
+  data: {
+    hierarchyId: string;
+    projectId: string;
+    name: string;
+    templateId?: string;
+    rootNode: {
+      nodeId: string;
+      nodeType: 'COMPANY' | 'ENTITY' | 'SUBSIDIARY' | 'LOCATION';
+      name: string;
+    };
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Hierarchy Node Added Event
+
+```typescript
+export interface HierarchyNodeAddedEvent extends DomainEvent {
+  type: 'organization.hierarchy.node-added.v1';
+  aggregateType: 'Hierarchy';
+  data: {
+    hierarchyId: string;
+    nodeId: string;
+    nodeType: 'COMPANY' | 'ENTITY' | 'SUBSIDIARY' | 'LOCATION';
+    nodeName: string;
+    parentNodeId: string;
+    level: number;
+    metadata?: Record<string, any>;
+    addedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Hierarchy Node Removed Event
+
+```typescript
+export interface HierarchyNodeRemovedEvent extends DomainEvent {
+  type: 'organization.hierarchy.node-removed.v1';
+  aggregateType: 'Hierarchy';
+  data: {
+    hierarchyId: string;
+    nodeId: string;
+    nodeName: string;
+    cascadeDelete: boolean;
+    affectedChildren: number;
+    removedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Hierarchy Node Moved Event
+
+```typescript
+export interface HierarchyNodeMovedEvent extends DomainEvent {
+  type: 'organization.hierarchy.node-moved.v1';
+  aggregateType: 'Hierarchy';
+  data: {
+    hierarchyId: string;
+    nodeId: string;
+    oldParentId: string;
+    newParentId: string;
+    movedBy: string;
+    reason?: string;
+    timestamp: string;
+  };
+}
+```
+
+### User Removed from Organization Event
+
+```typescript
+export interface UserRemovedFromOrganizationEvent extends DomainEvent {
+  type: 'organization.user.removed.v1';
+  aggregateType: 'Organization';
+  data: {
+    organizationId: string;
+    userId: string;
+    removedBy: string;
+    reason: string;
+    reassignWork: boolean;
+    reassignedToUserId?: string;
+    timestamp: string;
+  };
+}
+```
+
+### Permission Revoked Event
+
+```typescript
+export interface PermissionRevokedEvent extends DomainEvent {
+  type: 'organization.permission.revoked.v1';
+  aggregateType: 'Permission';
+  data: {
+    permissionId: string;
+    userId: string;
+    resourceType: 'ORGANIZATION' | 'PROJECT' | 'HIERARCHY' | 'REPORT';
+    resourceId: string;
+    revokedPermissions: ('READ' | 'WRITE' | 'DELETE' | 'ADMIN')[];
+    revokedBy: string;
+    reason: string;
+    timestamp: string;
+  };
+}
+```
+
+### Reporting Year Created Event
+
+```typescript
+export interface ReportingYearCreatedEvent extends DomainEvent {
+  type: 'organization.reporting-year.created.v1';
+  aggregateType: 'ReportingYear';
+  data: {
+    yearId: string;
+    projectId: string;
+    year: number;
+    startDate: string;
+    endDate: string;
+    fiscalYearOffset?: number;
+    status: 'DRAFT' | 'ACTIVE' | 'LOCKED' | 'REPORTED';
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Reporting Year Locked Event
+
+```typescript
+export interface ReportingYearLockedEvent extends DomainEvent {
+  type: 'organization.reporting-year.locked.v1';
+  aggregateType: 'ReportingYear';
+  data: {
+    yearId: string;
+    projectId: string;
+    year: number;
+    lockedBy: string;
+    lockReason: 'AUDIT' | 'COMPLIANCE' | 'FINAL_REPORT';
+    allowsRecalculation: boolean;
+    timestamp: string;
+  };
+}
+```
+
+### Module Enabled Event
+
+```typescript
+export interface ModuleEnabledEvent extends DomainEvent {
+  type: 'organization.module.enabled.v1';
+  aggregateType: 'Project';
+  data: {
+    projectId: string;
+    module: 'STATIONARY_COMBUSTION' | 'MOBILE_COMBUSTION' | 'ELECTRICITY' | 'WASTE' | 'WATER' | 'TRAVEL' | 'PURCHASED_GOODS';
+    enabledBy: string;
+    configuration?: Record<string, any>;
+    timestamp: string;
+  };
+}
+```
+
+### Module Disabled Event
+
+```typescript
+export interface ModuleDisabledEvent extends DomainEvent {
+  type: 'organization.module.disabled.v1';
+  aggregateType: 'Project';
+  data: {
+    projectId: string;
+    module: string;
+    disabledBy: string;
+    reason: string;
+    archiveExistingData: boolean;
+    timestamp: string;
+  };
+}
+```
+
+### Team Created Event
+
+```typescript
+export interface TeamCreatedEvent extends DomainEvent {
+  type: 'organization.team.created.v1';
+  aggregateType: 'Team';
+  data: {
+    teamId: string;
+    organizationId: string;
+    name: string;
+    description?: string;
+    leaderId: string;
+    members: string[];
+    permissions: string[];
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Team Member Added Event
+
+```typescript
+export interface TeamMemberAddedEvent extends DomainEvent {
+  type: 'organization.team.member-added.v1';
+  aggregateType: 'Team';
+  data: {
+    teamId: string;
+    userId: string;
+    role: 'MEMBER' | 'LEAD' | 'CONTRIBUTOR';
+    addedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Team Member Removed Event
+
+```typescript
+export interface TeamMemberRemovedEvent extends DomainEvent {
+  type: 'organization.team.member-removed.v1';
+  aggregateType: 'Team';
+  data: {
+    teamId: string;
+    userId: string;
+    removedBy: string;
+    reason?: string;
+    timestamp: string;
+  };
+}
+```
+
+### Entity Created Event
+
+```typescript
+export interface EntityCreatedEvent extends DomainEvent {
+  type: 'organization.entity.created.v1';
+  aggregateType: 'Entity';
+  data: {
+    entityId: string;
+    hierarchyId: string;
+    name: string;
+    entityType: 'COMPANY' | 'ENTITY' | 'SUBSIDIARY' | 'LOCATION';
+    parentEntityId?: string;
+    metadata: {
+      address?: string;
+      country?: string;
+      employeeCount?: number;
+      floorArea?: number;
+      revenue?: number;
+    };
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Entity Updated Event
+
+```typescript
+export interface EntityUpdatedEvent extends DomainEvent {
+  type: 'organization.entity.updated.v1';
+  aggregateType: 'Entity';
+  data: {
+    entityId: string;
+    changes: {
+      field: string;
+      oldValue: any;
+      newValue: any;
+    }[];
+    updatedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Entity Deleted Event
+
+```typescript
+export interface EntityDeletedEvent extends DomainEvent {
+  type: 'organization.entity.deleted.v1';
+  aggregateType: 'Entity';
+  data: {
+    entityId: string;
+    name: string;
+    deletedBy: string;
+    cascadeDelete: boolean;
+    affectedActivityData: number;
+    timestamp: string;
+  };
+}
+```
+
 ---
 
 ## Reference Service Events
@@ -383,7 +1015,14 @@ export type ReferenceEvent =
   | UnitUpdatedEvent
   | ConversionRuleCreatedEvent
   | ReferenceDataImportedEvent
-  | ReferenceDataVersionedEvent;
+  | ReferenceDataVersionedEvent
+  | ParameterCreatedEvent
+  | ParameterUpdatedEvent
+  | CategoryCreatedEvent
+  | ReferenceDataSyncedEvent
+  | ReferenceDataValidatedEvent
+  | EmissionFactorRegionMappedEvent
+  | CustomEmissionFactorCreatedEvent;
 ```
 
 ### Emission Factor Created Event
@@ -435,6 +1074,272 @@ export interface ReferenceDataVersionedEvent extends DomainEvent {
 }
 ```
 
+### Emission Factor Updated Event
+
+```typescript
+export interface EmissionFactorUpdatedEvent extends DomainEvent {
+  type: 'reference.emission-factor.updated.v1';
+  aggregateType: 'EmissionFactor';
+  data: {
+    emissionFactorId: string;
+    changes: {
+      field: string;
+      oldValue: any;
+      newValue: any;
+    }[];
+    newVersion: string;
+    updatedBy: string;
+    recalculationRequired: boolean;
+    affectedProjects?: string[];
+    timestamp: string;
+  };
+}
+```
+
+### Emission Factor Deprecated Event
+
+```typescript
+export interface EmissionFactorDeprecatedEvent extends DomainEvent {
+  type: 'reference.emission-factor.deprecated.v1';
+  aggregateType: 'EmissionFactor';
+  data: {
+    emissionFactorId: string;
+    deprecationReason: string;
+    replacementFactorId?: string;
+    effectiveDate: string;
+    deprecatedBy: string;
+    notifyProjects: string[];
+    timestamp: string;
+  };
+}
+```
+
+### Unit Created Event
+
+```typescript
+export interface UnitCreatedEvent extends DomainEvent {
+  type: 'reference.unit.created.v1';
+  aggregateType: 'Unit';
+  data: {
+    unitId: string;
+    name: string;
+    symbol: string;
+    type: 'MASS' | 'VOLUME' | 'ENERGY' | 'DISTANCE' | 'AREA' | 'COUNT';
+    baseUnit?: string;
+    conversionFactor?: number;
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Unit Updated Event
+
+```typescript
+export interface UnitUpdatedEvent extends DomainEvent {
+  type: 'reference.unit.updated.v1';
+  aggregateType: 'Unit';
+  data: {
+    unitId: string;
+    changes: {
+      field: string;
+      oldValue: any;
+      newValue: any;
+    }[];
+    updatedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Conversion Rule Created Event
+
+```typescript
+export interface ConversionRuleCreatedEvent extends DomainEvent {
+  type: 'reference.conversion.created.v1';
+  aggregateType: 'ConversionRule';
+  data: {
+    ruleId: string;
+    fromUnit: string;
+    toUnit: string;
+    factor: number;
+    formula?: string;
+    source: string;
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Reference Data Imported Event
+
+```typescript
+export interface ReferenceDataImportedEvent extends DomainEvent {
+  type: 'reference.data.imported.v1';
+  aggregateType: 'ReferenceDataSet';
+  data: {
+    importId: string;
+    dataType: 'EMISSION_FACTOR' | 'UNIT' | 'CONVERSION_RULE' | 'PARAMETER';
+    source: string;
+    fileName?: string;
+    totalRecords: number;
+    successfulRecords: number;
+    failedRecords: number;
+    version: string;
+    importedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Parameter Created Event
+
+```typescript
+export interface ParameterCreatedEvent extends DomainEvent {
+  type: 'reference.parameter.created.v1';
+  aggregateType: 'Parameter';
+  data: {
+    parameterId: string;
+    name: string;
+    category: string;
+    subcategory?: string;
+    scope: 1 | 2 | 3;
+    allowedUnits: string[];
+    description?: string;
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Parameter Updated Event
+
+```typescript
+export interface ParameterUpdatedEvent extends DomainEvent {
+  type: 'reference.parameter.updated.v1';
+  aggregateType: 'Parameter';
+  data: {
+    parameterId: string;
+    changes: {
+      field: string;
+      oldValue: any;
+      newValue: any;
+    }[];
+    updatedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Category Created Event
+
+```typescript
+export interface CategoryCreatedEvent extends DomainEvent {
+  type: 'reference.category.created.v1';
+  aggregateType: 'Category';
+  data: {
+    categoryId: string;
+    name: string;
+    scope: 1 | 2 | 3;
+    description?: string;
+    parentCategoryId?: string;
+    icon?: string;
+    color?: string;
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Reference Data Synced Event
+
+```typescript
+export interface ReferenceDataSyncedEvent extends DomainEvent {
+  type: 'reference.data.synced.v1';
+  aggregateType: 'ReferenceDataSet';
+  data: {
+    syncId: string;
+    dataSource: 'DEFRA' | 'EPA' | 'IPCC' | 'CUSTOM';
+    syncType: 'FULL' | 'INCREMENTAL';
+    recordsAdded: number;
+    recordsUpdated: number;
+    recordsDeprecated: number;
+    syncedAt: string;
+    nextSyncScheduled?: string;
+  };
+}
+```
+
+### Reference Data Validated Event
+
+```typescript
+export interface ReferenceDataValidatedEvent extends DomainEvent {
+  type: 'reference.data.validated.v1';
+  aggregateType: 'ReferenceDataSet';
+  data: {
+    validationId: string;
+    dataType: string;
+    totalRecords: number;
+    validRecords: number;
+    invalidRecords: number;
+    warnings: number;
+    errors: {
+      recordId: string;
+      field: string;
+      message: string;
+      severity: 'ERROR' | 'WARNING';
+    }[];
+    validatedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Emission Factor Region Mapping Created Event
+
+```typescript
+export interface EmissionFactorRegionMappedEvent extends DomainEvent {
+  type: 'reference.emission-factor.region-mapped.v1';
+  aggregateType: 'EmissionFactor';
+  data: {
+    mappingId: string;
+    emissionFactorId: string;
+    region: string;
+    country: string;
+    gridIntensity?: number;
+    validFrom: string;
+    validTo?: string;
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Custom Emission Factor Created Event
+
+```typescript
+export interface CustomEmissionFactorCreatedEvent extends DomainEvent {
+  type: 'reference.custom-emission-factor.created.v1';
+  aggregateType: 'EmissionFactor';
+  data: {
+    factorId: string;
+    organizationId: string;
+    name: string;
+    value: number;
+    unit: string;
+    scope: 1 | 2 | 3;
+    justification: string;
+    approvedBy?: string;
+    validityPeriod: {
+      from: string;
+      to: string;
+    };
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
 ---
 
 ## Activity Service Events
@@ -446,11 +1351,18 @@ export type ActivityEvent =
   | ActivityDataIngestedEvent
   | ActivityDataValidatedEvent
   | ActivityDataValidationFailedEvent
+  | ActivityDataVerifiedEvent
   | ActivityDataUpdatedEvent
   | ActivityDataDeletedEvent
   | BulkImportStartedEvent
   | BulkImportCompletedEvent
-  | BulkImportFailedEvent;
+  | BulkImportFailedEvent
+  | CarbonScopeCreatedEvent
+  | CarbonScopeUpdatedEvent
+  | ActivityCommentAddedEvent
+  | FileAttachedEvent
+  | DataQualityFlaggedEvent
+  | DataQualityResolvedEvent;
 ```
 
 ### Activity Data Ingested Event
@@ -520,6 +1432,206 @@ export interface BulkImportCompletedEvent extends DomainEvent {
 }
 ```
 
+### Activity Data Validated Event
+
+```typescript
+export interface ActivityDataValidatedEvent extends DomainEvent {
+  type: 'activity.data.validated.v1';
+  aggregateType: 'ActivityData';
+  data: {
+    activityDataId: string;
+    validatedBy: string;
+    validationResult: 'PASS' | 'PASS_WITH_WARNINGS' | 'FAIL';
+    dataQualityScore: number; // 1-4 (GHG Protocol)
+    validatedAt: string;
+  };
+}
+```
+
+### Activity Data Verified Event
+
+```typescript
+export interface ActivityDataVerifiedEvent extends DomainEvent {
+  type: 'activity.data.verified.v1';
+  aggregateType: 'ActivityData';
+  data: {
+    activityDataId: string;
+    verifiedBy: string;
+    verificationMethod: 'MANUAL' | 'AUTOMATED';
+    confidence: number; // 0-100
+    timestamp: string;
+  };
+}
+```
+
+### Activity Data Updated Event
+
+```typescript
+export interface ActivityDataUpdatedEvent extends DomainEvent {
+  type: 'activity.data.updated.v1';
+  aggregateType: 'ActivityData';
+  data: {
+    activityDataId: string;
+    changes: { field: string; oldValue: any; newValue: any }[];
+    updatedBy: string;
+    reason?: string;
+    requiresRecalculation: boolean;
+    timestamp: string;
+  };
+}
+```
+
+### Activity Data Deleted Event
+
+```typescript
+export interface ActivityDataDeletedEvent extends DomainEvent {
+  type: 'activity.data.deleted.v1';
+  aggregateType: 'ActivityData';
+  data: {
+    activityDataId: string;
+    deletedBy: string;
+    reason: string;
+    cascadeDeleteCalculations: boolean;
+    timestamp: string;
+  };
+}
+```
+
+### Bulk Import Started Event
+
+```typescript
+export interface BulkImportStartedEvent extends DomainEvent {
+  type: 'activity.bulk-import.started.v1';
+  aggregateType: 'BulkImport';
+  data: {
+    importId: string;
+    projectId: string;
+    fileName: string;
+    fileSize: number;
+    estimatedRecords: number;
+    importedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Bulk Import Failed Event
+
+```typescript
+export interface BulkImportFailedEvent extends DomainEvent {
+  type: 'activity.bulk-import.failed.v1';
+  aggregateType: 'BulkImport';
+  data: {
+    importId: string;
+    errorMessage: string;
+    failureReason: 'VALIDATION_ERROR' | 'FILE_FORMAT_ERROR' | 'SYSTEM_ERROR';
+    timestamp: string;
+  };
+}
+```
+
+### Carbon Scope Created Event
+
+```typescript
+export interface CarbonScopeCreatedEvent extends DomainEvent {
+  type: 'activity.carbon-scope.created.v1';
+  aggregateType: 'CarbonScope';
+  data: {
+    carbonScopeId: string;
+    projectId: string;
+    entityId: string;
+    year: number;
+    modules: string[];
+    status: 'ACTIVE' | 'INACTIVE';
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Carbon Scope Updated Event
+
+```typescript
+export interface CarbonScopeUpdatedEvent extends DomainEvent {
+  type: 'activity.carbon-scope.updated.v1';
+  aggregateType: 'CarbonScope';
+  data: {
+    carbonScopeId: string;
+    changes: { field: string; oldValue: any; newValue: any }[];
+    updatedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Activity Comment Added Event
+
+```typescript
+export interface ActivityCommentAddedEvent extends DomainEvent {
+  type: 'activity.comment.added.v1';
+  aggregateType: 'ActivityData';
+  data: {
+    commentId: string;
+    activityDataId: string;
+    comment: string;
+    addedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### File Attached Event
+
+```typescript
+export interface FileAttachedEvent extends DomainEvent {
+  type: 'activity.file.attached.v1';
+  aggregateType: 'ActivityData';
+  data: {
+    fileId: string;
+    activityDataId: string;
+    fileName: string;
+    fileSize: number;
+    fileType: string;
+    s3Key: string;
+    uploadedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Data Quality Flagged Event
+
+```typescript
+export interface DataQualityFlaggedEvent extends DomainEvent {
+  type: 'activity.data-quality.flagged.v1';
+  aggregateType: 'ActivityData';
+  data: {
+    activityDataId: string;
+    flagType: 'OUTLIER' | 'MISSING_DATA' | 'INCONSISTENT' | 'LOW_QUALITY';
+    flaggedBy: string;
+    description: string;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH';
+    timestamp: string;
+  };
+}
+```
+
+### Data Quality Resolved Event
+
+```typescript
+export interface DataQualityResolvedEvent extends DomainEvent {
+  type: 'activity.data-quality.resolved.v1';
+  aggregateType: 'ActivityData';
+  data: {
+    activityDataId: string;
+    flagId: string;
+    resolution: string;
+    resolvedBy: string;
+    timestamp: string;
+  };
+}
+```
+
 ---
 
 ## Calculation Service Events
@@ -534,7 +1646,8 @@ export type CalculationEvent =
   | EmissionCalculatedEvent
   | RollupStartedEvent
   | RollupCompletedEvent
-  | RecalculationTriggeredEvent;
+  | RecalculationTriggeredEvent
+  | AllocationCreatedEvent;
 ```
 
 ### Emission Calculated Event
@@ -655,6 +1768,93 @@ export interface RecalculationTriggeredEvent extends DomainEvent {
 }
 ```
 
+### Calculation Started Event
+
+```typescript
+export interface CalculationStartedEvent extends DomainEvent {
+  type: 'calculation.calculation.started.v1';
+  aggregateType: 'Calculation';
+  data: {
+    calculationId: string;
+    activityDataId: string;
+    projectId: string;
+    startedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Calculation Completed Event
+
+```typescript
+export interface CalculationCompletedEvent extends DomainEvent {
+  type: 'calculation.calculation.completed.v1';
+  aggregateType: 'Calculation';
+  data: {
+    calculationId: string;
+    activityDataId: string;
+    emission: number;
+    duration: number; // ms
+    timestamp: string;
+  };
+}
+```
+
+### Calculation Failed Event
+
+```typescript
+export interface CalculationFailedEvent extends DomainEvent {
+  type: 'calculation.calculation.failed.v1';
+  aggregateType: 'Calculation';
+  data: {
+    calculationId: string;
+    activityDataId: string;
+    errorMessage: string;
+    errorCode: string;
+    retry: boolean;
+    timestamp: string;
+  };
+}
+```
+
+### Rollup Started Event
+
+```typescript
+export interface RollupStartedEvent extends DomainEvent {
+  type: 'calculation.rollup.started.v1';
+  aggregateType: 'Rollup';
+  data: {
+    rollupId: string;
+    hierarchyNodeId: string;
+    year: number;
+    startedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Allocation Created Event
+
+```typescript
+export interface AllocationCreatedEvent extends DomainEvent {
+  type: 'calculation.allocation.created.v1';
+  aggregateType: 'Allocation';
+  data: {
+    allocationId: string;
+    emissionSourceId: string;
+    allocationType: 'HEADCOUNT' | 'REVENUE' | 'FLOOR_AREA' | 'CUSTOM';
+    totalEmission: number;
+    targets: {
+      entityId: string;
+      allocationValue: number;
+      allocatedEmission: number;
+    }[];
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
 ---
 
 ## Reporting Service Events
@@ -668,7 +1868,9 @@ export type ReportingEvent =
   | ReportGenerationFailedEvent
   | ReportScheduledEvent
   | ReportExportedEvent
-  | DashboardRefreshedEvent;
+  | DashboardRefreshedEvent
+  | ExportStartedEvent
+  | ExportCompletedEvent;
 ```
 
 ### Report Generation Completed Event
@@ -711,6 +1913,105 @@ export interface ReportExportedEvent extends DomainEvent {
     error?: string;
     exportedBy: string;
     exportedAt: string;
+  };
+}
+```
+
+### Report Generation Started Event
+
+```typescript
+export interface ReportGenerationStartedEvent extends DomainEvent {
+  type: 'reporting.report.generation-started.v1';
+  aggregateType: 'Report';
+  data: {
+    reportId: string;
+    reportType: string;
+    projectId: string;
+    startedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Report Generation Failed Event
+
+```typescript
+export interface ReportGenerationFailedEvent extends DomainEvent {
+  type: 'reporting.report.generation-failed.v1';
+  aggregateType: 'Report';
+  data: {
+    reportId: string;
+    errorMessage: string;
+    errorCode: string;
+    timestamp: string;
+  };
+}
+```
+
+### Report Scheduled Event
+
+```typescript
+export interface ReportScheduledEvent extends DomainEvent {
+  type: 'reporting.report.scheduled.v1';
+  aggregateType: 'ReportSchedule';
+  data: {
+    scheduleId: string;
+    reportType: string;
+    frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'ANNUALLY';
+    nextRunAt: string;
+    recipients: string[];
+    createdBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Dashboard Refreshed Event
+
+```typescript
+export interface DashboardRefreshedEvent extends DomainEvent {
+  type: 'reporting.dashboard.refreshed.v1';
+  aggregateType: 'Dashboard';
+  data: {
+    dashboardId: string;
+    projectId: string;
+    refreshedAt: string;
+    cacheKey: string;
+    dataSources: string[];
+  };
+}
+```
+
+### Export Started Event
+
+```typescript
+export interface ExportStartedEvent extends DomainEvent {
+  type: 'reporting.export.started.v1';
+  aggregateType: 'Export';
+  data: {
+    exportId: string;
+    exportType: 'ACTIVITY_DATA' | 'CALCULATIONS' | 'AGGREGATED';
+    format: 'CSV' | 'EXCEL' | 'JSON';
+    estimatedRows: number;
+    startedBy: string;
+    timestamp: string;
+  };
+}
+```
+
+### Export Completed Event
+
+```typescript
+export interface ExportCompletedEvent extends DomainEvent {
+  type: 'reporting.export.completed.v1';
+  aggregateType: 'Export';
+  data: {
+    exportId: string;
+    fileUrl: string;
+    fileSize: number;
+    totalRows: number;
+    duration: number; // ms
+    timestamp: string;
   };
 }
 ```
@@ -794,6 +2095,29 @@ export interface SecurityEventDetectedEvent extends DomainEvent {
     details: Record<string, any>;
     detectedAt: string;
     responseActions: string[];
+  };
+}
+```
+
+### Data Access Logged Event
+
+```typescript
+export interface DataAccessLoggedEvent extends DomainEvent {
+  type: 'audit.data-access.logged.v1';
+  aggregateType: 'DataAccessLog';
+  data: {
+    accessLogId: string;
+    userId: string;
+    resourceType: string;
+    resourceId: string;
+    action: 'READ' | 'WRITE' | 'DELETE' | 'EXPORT';
+    accessMethod: 'UI' | 'API' | 'DIRECT_DATABASE';
+    ipAddress: string;
+    userAgent: string;
+    success: boolean;
+    dataClassification: 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL' | 'RESTRICTED';
+    recordCount?: number;
+    timestamp: string;
   };
 }
 ```
@@ -1286,12 +2610,111 @@ export type AllEvents =
   | AuditEvent;
 
 export const EVENT_TYPE_MAP: Record<string, z.ZodSchema> = {
+  // Identity Service (15 events)
   'identity.user.created.v1': UserCreatedEventSchema,
+  'identity.user.updated.v1': UserUpdatedEventSchema,
+  'identity.user.deleted.v1': UserDeletedEventSchema,
   'identity.user.authenticated.v1': UserAuthenticatedEventSchema,
+  'identity.user.authentication-failed.v1': UserAuthenticationFailedEventSchema,
+  'identity.password.reset-requested.v1': PasswordResetRequestedEventSchema,
+  'identity.password.reset-completed.v1': PasswordResetCompletedEventSchema,
+  'identity.user.role-assigned.v1': UserRoleAssignedEventSchema,
+  'identity.user.role-revoked.v1': UserRoleRevokedEventSchema,
+  'identity.user.activated.v1': UserActivatedEventSchema,
+  'identity.user.deactivated.v1': UserDeactivatedEventSchema,
+  'identity.session.created.v1': SessionCreatedEventSchema,
+  'identity.session.expired.v1': SessionExpiredEventSchema,
+  'identity.2fa.enabled.v1': TwoFactorEnabledEventSchema,
+  'identity.2fa.disabled.v1': TwoFactorDisabledEventSchema,
+
+  // Organization Service (27 events)
+  'organization.organization.created.v1': OrganizationCreatedEventSchema,
+  'organization.organization.updated.v1': OrganizationUpdatedEventSchema,
+  'organization.organization.deleted.v1': OrganizationDeletedEventSchema,
   'organization.project.created.v1': ProjectCreatedEventSchema,
+  'organization.project.updated.v1': ProjectUpdatedEventSchema,
+  'organization.project.deleted.v1': ProjectDeletedEventSchema,
+  'organization.project.archived.v1': ProjectArchivedEventSchema,
+  'organization.project.restored.v1': ProjectRestoredEventSchema,
+  'organization.hierarchy.created.v1': HierarchyCreatedEventSchema,
+  'organization.hierarchy.updated.v1': HierarchyUpdatedEventSchema,
+  'organization.hierarchy.node-added.v1': HierarchyNodeAddedEventSchema,
+  'organization.hierarchy.node-removed.v1': HierarchyNodeRemovedEventSchema,
+  'organization.hierarchy.node-moved.v1': HierarchyNodeMovedEventSchema,
   'organization.permission.granted.v1': PermissionGrantedEventSchema,
+  'organization.permission.revoked.v1': PermissionRevokedEventSchema,
+  'organization.user.added.v1': UserAddedToOrganizationEventSchema,
+  'organization.user.removed.v1': UserRemovedFromOrganizationEventSchema,
+  'organization.reporting-year.created.v1': ReportingYearCreatedEventSchema,
+  'organization.reporting-year.locked.v1': ReportingYearLockedEventSchema,
+  'organization.module.enabled.v1': ModuleEnabledEventSchema,
+  'organization.module.disabled.v1': ModuleDisabledEventSchema,
+  'organization.team.created.v1': TeamCreatedEventSchema,
+  'organization.team.member-added.v1': TeamMemberAddedEventSchema,
+  'organization.team.member-removed.v1': TeamMemberRemovedEventSchema,
+  'organization.entity.created.v1': EntityCreatedEventSchema,
+  'organization.entity.updated.v1': EntityUpdatedEventSchema,
+  'organization.entity.deleted.v1': EntityDeletedEventSchema,
+
+  // Reference Service (15 events)
+  'reference.emission-factor.created.v1': EmissionFactorCreatedEventSchema,
+  'reference.emission-factor.updated.v1': EmissionFactorUpdatedEventSchema,
+  'reference.emission-factor.deprecated.v1': EmissionFactorDeprecatedEventSchema,
+  'reference.unit.created.v1': UnitCreatedEventSchema,
+  'reference.unit.updated.v1': UnitUpdatedEventSchema,
+  'reference.conversion.created.v1': ConversionRuleCreatedEventSchema,
+  'reference.data.imported.v1': ReferenceDataImportedEventSchema,
+  'reference.data.versioned.v1': ReferenceDataVersionedEventSchema,
+  'reference.parameter.created.v1': ParameterCreatedEventSchema,
+  'reference.parameter.updated.v1': ParameterUpdatedEventSchema,
+  'reference.category.created.v1': CategoryCreatedEventSchema,
+  'reference.data.synced.v1': ReferenceDataSyncedEventSchema,
+  'reference.data.validated.v1': ReferenceDataValidatedEventSchema,
+  'reference.emission-factor.region-mapped.v1': EmissionFactorRegionMappedEventSchema,
+  'reference.custom-emission-factor.created.v1': CustomEmissionFactorCreatedEventSchema,
+
+  // Activity Service (15 events)
+  'activity.data.ingested.v1': ActivityDataIngestedEventSchema,
+  'activity.data.validated.v1': ActivityDataValidatedEventSchema,
+  'activity.data.validation-failed.v1': ActivityDataValidationFailedEventSchema,
+  'activity.data.verified.v1': ActivityDataVerifiedEventSchema,
+  'activity.data.updated.v1': ActivityDataUpdatedEventSchema,
+  'activity.data.deleted.v1': ActivityDataDeletedEventSchema,
+  'activity.bulk-import.started.v1': BulkImportStartedEventSchema,
+  'activity.bulk-import.completed.v1': BulkImportCompletedEventSchema,
+  'activity.bulk-import.failed.v1': BulkImportFailedEventSchema,
+  'activity.carbon-scope.created.v1': CarbonScopeCreatedEventSchema,
+  'activity.carbon-scope.updated.v1': CarbonScopeUpdatedEventSchema,
+  'activity.comment.added.v1': ActivityCommentAddedEventSchema,
+  'activity.file.attached.v1': FileAttachedEventSchema,
+  'activity.data-quality.flagged.v1': DataQualityFlaggedEventSchema,
+  'activity.data-quality.resolved.v1': DataQualityResolvedEventSchema,
+
+  // Calculation Service (8 events)
+  'calculation.calculation.started.v1': CalculationStartedEventSchema,
+  'calculation.calculation.completed.v1': CalculationCompletedEventSchema,
+  'calculation.calculation.failed.v1': CalculationFailedEventSchema,
   'calculation.emission.calculated.v1': EmissionCalculatedEventSchema,
-  // ... all other event schemas
+  'calculation.rollup.started.v1': RollupStartedEventSchema,
+  'calculation.rollup.completed.v1': RollupCompletedEventSchema,
+  'calculation.recalculation.triggered.v1': RecalculationTriggeredEventSchema,
+  'calculation.allocation.created.v1': AllocationCreatedEventSchema,
+
+  // Reporting Service (8 events)
+  'reporting.report.generation-started.v1': ReportGenerationStartedEventSchema,
+  'reporting.report.generation-completed.v1': ReportGenerationCompletedEventSchema,
+  'reporting.report.generation-failed.v1': ReportGenerationFailedEventSchema,
+  'reporting.report.scheduled.v1': ReportScheduledEventSchema,
+  'reporting.report.exported.v1': ReportExportedEventSchema,
+  'reporting.dashboard.refreshed.v1': DashboardRefreshedEventSchema,
+  'reporting.export.started.v1': ExportStartedEventSchema,
+  'reporting.export.completed.v1': ExportCompletedEventSchema,
+
+  // Audit Service (4 events)
+  'audit.log.created.v1': AuditLogCreatedEventSchema,
+  'audit.compliance.check-completed.v1': ComplianceCheckCompletedEventSchema,
+  'audit.security.event-detected.v1': SecurityEventDetectedEventSchema,
+  'audit.data-access.logged.v1': DataAccessLoggedEventSchema
 };
 ```
 
@@ -1299,14 +2722,14 @@ export const EVENT_TYPE_MAP: Record<string, z.ZodSchema> = {
 
 | Service | Event Types | Avg Events/Day | Peak Events/Hour |
 |---------|-------------|----------------|------------------|
-| Identity | 11 | 500 | 100 |
-| Organization | 14 | 1,200 | 300 |
-| Reference | 8 | 50 | 10 |
-| Activity | 8 | 5,000 | 1,000 |
-| Calculation | 7 | 10,000 | 2,500 |
-| Reporting | 6 | 200 | 50 |
+| Identity | 15 | 500 | 100 |
+| Organization | 27 | 1,200 | 300 |
+| Reference | 15 | 50 | 10 |
+| Activity | 15 | 5,000 | 1,000 |
+| Calculation | 8 | 10,000 | 2,500 |
+| Reporting | 8 | 200 | 50 |
 | Audit | 4 | 2,000 | 500 |
-| **Total** | **58** | **19,000** | **4,460** |
+| **Total** | **92** | **19,000** | **4,460** |
 
 ---
 
