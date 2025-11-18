@@ -32,6 +32,32 @@ Clenergize V3 is an enterprise carbon footprint management platform being rebuil
 As of Sprint 0.1, we use a single MCP executor following Anthropic's code execution pattern.
 This reduces context usage from 249k to ~30k tokens.
 
+> **🚨 CRITICAL SECURITY WARNING**
+>
+> The MCP executor implementation MUST follow secure coding practices:
+>
+> **NEVER use `eval()` for MongoDB queries** - This creates code injection vulnerabilities!
+> - ❌ WRONG: `const result = await eval(client.${query});`
+> - ✅ CORRECT: Use Function constructor with input sanitization
+>
+> **ALWAYS use environment variables** - Never hardcode paths or credentials!
+> - ❌ WRONG: `this.projectRoot = 'C:\\Users\\...'`
+> - ✅ CORRECT: `this.projectRoot = process.env.PROJECT_ROOT`
+>
+> **REQUIRED Environment Variables**:
+> - `PROJECT_ROOT` - Absolute path to project root
+> - `MONGODB_URI` - MongoDB connection string
+> - `JIRA_API_TOKEN` - Jira API authentication token
+> - `JIRA_EMAIL` - Jira user email
+>
+> **Input Sanitization Requirements**:
+> - Maintain allowlist of permitted MongoDB operations
+> - Block dangerous patterns: `require()`, `import()`, `eval()`, `process.exit`
+> - Validate all user input before execution
+> - Use timeout limits on all operations
+>
+> See `Docs/MCP_EXECUTOR_GUIDE.md` for complete security implementation details.
+
 ### How to Use MCP Commands
 
 All operations now go through the single `execute` command:
@@ -50,7 +76,7 @@ execute({ action: 'file', content: 'list', options: { path: 'directory/path' }})
 
 #### MongoDB Operations (replaces all mongodb-* MCPs)
 ```javascript
-// Access any database
+// Access any database (queries are sanitized by MCP executor)
 execute({ action: 'mongodb', content: 'db("clenergize_identity").collection("users").find({})' })
 
 // Insert document
@@ -58,6 +84,10 @@ execute({ action: 'mongodb', content: 'db("clenergize_identity").collection("use
 
 // Update document
 execute({ action: 'mongodb', content: 'db("clenergize_identity").collection("users").updateOne({_id: "123"}, {$set: {status: "active"}})' })
+
+// NOTE: The MCP executor automatically sanitizes these queries to prevent code injection.
+// Only allowlisted MongoDB operations (find, insertOne, updateOne, etc.) are permitted.
+// Dangerous patterns like require(), eval(), or process.exit are blocked.
 ```
 
 #### Git Operations (replaces github MCP)
@@ -260,24 +290,29 @@ LocalStack:      4566
 
 ### MCP Server Connections
 
+> **Important**: All connection strings MUST use environment variables.
+> See `Docs/ENVIRONMENT_CONFIGURATION_GUIDE.md` for complete .env setup.
+
 ```javascript
 // MongoDB connections (use service-specific DB)
-const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+// REQUIRED: Set MONGODB_URI environment variable
+const mongoUri = process.env.MONGODB_URI || 'mongodb://admin:localdev123@localhost:27017/?authSource=admin';
 const dbName = `clenergize_${serviceName}`;
 
 // Redis connections
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 const redisClient = {
-  cache: 'redis://localhost:6379/0',
-  pubsub: 'redis://localhost:6379/1'
+  cache: `${redisUrl}/0`,
+  pubsub: `${redisUrl}/1`
 };
 
-// LocalStack (AWS services)
+// LocalStack (AWS services - for local development only)
 const awsConfig = {
-  endpoint: 'http://localhost:4566',
-  region: 'us-east-1',
+  endpoint: process.env.LOCALSTACK_ENDPOINT || 'http://localhost:4566',
+  region: process.env.AWS_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: 'test',
-    secretAccessKey: 'test'
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'test',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'test'
   }
 };
 ```

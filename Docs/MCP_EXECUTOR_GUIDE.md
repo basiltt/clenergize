@@ -769,11 +769,364 @@ execute({ action: 'docker', content: 'logs --tail 50 container-name' })
 
 ## Security Best Practices
 
-1. **Never hardcode secrets** - Use environment variables
-2. **Validate all inputs** before execution
-3. **Use parameterized queries** for MongoDB
-4. **Implement rate limiting** on APIs
-5. **Run security scans** after each implementation
+### 🚨 Critical Security Requirements
+
+The MCP Executor handles powerful operations that require strict security controls to prevent code injection, unauthorized access, and data breaches.
+
+### 1. Input Sanitization
+
+**NEVER use `eval()` for MongoDB queries**
+
+```javascript
+// ❌ DANGEROUS - DO NOT USE
+async executeMongo(query) {
+  const result = await eval(`client.${query}`);  // CODE INJECTION RISK!
+  return result;
+}
+
+// ✅ SAFE - Use Function constructor with sanitization
+async executeMongo(queryString) {
+  const client = await this.connectMongo();
+
+  try {
+    // Sanitize query first
+    const sanitized = this.sanitizeMongoQuery(queryString);
+
+    // Use Function constructor (more controlled than eval)
+    const executor = new Function('client', `return ${sanitized}`);
+    const result = await executor(client);
+
+    // Serialize result safely
+    return {
+      success: true,
+      result: JSON.parse(JSON.stringify(result)),
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+```
+
+### 2. Query Sanitization Implementation
+
+**Maintain an allowlist of permitted operations**
+
+```javascript
+sanitizeMongoQuery(queryString) {
+  // Block dangerous patterns
+  const forbidden = [
+    'require(',
+    'import(',
+    'eval(',
+    'Function(',
+    'process.exit',
+    'child_process',
+    '__dirname',
+    '__filename',
+    'fs.readFile',
+    'fs.writeFile'
+  ];
+
+  for (const pattern of forbidden) {
+    if (queryString.includes(pattern)) {
+      throw new Error(`Forbidden operation detected: ${pattern}`);
+    }
+  }
+
+  // Only allow specific MongoDB operations
+  const allowedOperations = [
+    'db(',
+    'collection(',
+    'find(',
+    'findOne(',
+    'insertOne(',
+    'insertMany(',
+    'updateOne(',
+    'updateMany(',
+    'deleteOne(',
+    'deleteMany(',
+    'aggregate(',
+    'countDocuments(',
+    'distinct(',
+    'createIndex(',
+    'dropIndex('
+  ];
+
+  const hasAllowedOp = allowedOperations.some(op => queryString.includes(op));
+  if (!hasAllowedOp) {
+    throw new Error('Query must use allowed MongoDB operations');
+  }
+
+  return queryString;
+}
+```
+
+### 3. Environment Variables
+
+**NEVER hardcode paths, credentials, or configuration**
+
+```javascript
+// ❌ WRONG - Hardcoded values
+class ClenergizeExecutor {
+  constructor() {
+    this.projectRoot = 'C:\\Users\\ttbasil\\Desktop\\...';  // OS-specific!
+    this.jiraToken = 'ATATTxxx...';  // Exposed secret!
+    this.jiraEmail = 'user@example.com';  // Exposed!
+  }
+}
+
+// ✅ CORRECT - Use environment variables
+class ClenergizeExecutor {
+  constructor() {
+    this.projectRoot = process.env.PROJECT_ROOT || path.join(process.cwd(), '../..');
+    this.jiraToken = process.env.JIRA_API_TOKEN;
+    this.jiraEmail = process.env.JIRA_EMAIL;
+    this.mongoUri = process.env.MONGODB_URI;
+  }
+
+  // Validate required environment variables
+  validateEnvironment() {
+    const required = ['PROJECT_ROOT', 'MONGODB_URI'];
+    const missing = required.filter(key => !process.env[key]);
+
+    if (missing.length > 0) {
+      throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+    }
+  }
+}
+```
+
+### 4. Required Environment Variables
+
+Create `.env` file in `mcp-servers/clenergize-executor/`:
+
+```bash
+# Project Configuration
+PROJECT_ROOT=/absolute/path/to/ClenergizeV3
+NODE_ENV=development
+
+# MongoDB
+MONGODB_URI=mongodb://admin:localdev123@localhost:27017/?authSource=admin
+
+# Jira Integration (optional)
+JIRA_EMAIL=your-email@example.com
+JIRA_API_TOKEN=your_jira_api_token_here
+JIRA_BASE_URL=https://yourcompany.atlassian.net
+
+# Execution Limits
+EXEC_TIMEOUT_MS=30000
+MAX_QUERY_LENGTH=5000
+```
+
+### 5. Timeout Protection
+
+**Always set timeouts to prevent infinite loops**
+
+```javascript
+async executeNode(code) {
+  const tmpDir = path.join(this.projectRoot, '.tmp');
+  await fs.mkdir(tmpDir, { recursive: true });
+
+  const tmpFile = path.join(tmpDir, `exec_${Date.now()}.js`);
+  await fs.writeFile(tmpFile, code);
+
+  try {
+    const { stdout, stderr } = await execAsync(`node ${tmpFile}`, {
+      cwd: this.projectRoot,
+      timeout: parseInt(process.env.EXEC_TIMEOUT_MS) || 30000  // 30 second timeout
+    });
+    return { success: true, output: stdout, error: stderr };
+  } catch (error) {
+    if (error.killed) {
+      return { success: false, error: 'Execution timeout exceeded' };
+    }
+    return { success: false, error: error.message };
+  } finally {
+    await fs.unlink(tmpFile).catch(() => {});  // Cleanup
+  }
+}
+```
+
+### 6. Secure Credential Handling
+
+**Use secure authentication for external services**
+
+```javascript
+async updateJiraTicket(ticketId, status) {
+  // Check credentials are configured
+  if (!this.jiraToken || !this.jiraEmail) {
+    return {
+      success: false,
+      error: 'JIRA credentials not configured. Set JIRA_API_TOKEN and JIRA_EMAIL.'
+    };
+  }
+
+  try {
+    // Build auth header at runtime (never store encoded)
+    const auth = Buffer.from(`${this.jiraEmail}:${this.jiraToken}`).toString('base64');
+
+    const response = await fetch(
+      `${process.env.JIRA_BASE_URL}/rest/api/3/issue/${ticketId}/transitions`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ transition: { id: status } })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Jira API error: ${response.status}`);
+    }
+
+    return { success: true, ticketId, status };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+```
+
+### 7. Input Validation
+
+**Validate all user inputs before processing**
+
+```javascript
+async execute(action, content, options = {}) {
+  // Validate action type
+  const validActions = ['code', 'bash', 'mongodb', 'git', 'jira', 'docker', 'test', 'file'];
+  if (!validActions.includes(action)) {
+    throw new Error(`Invalid action: ${action}`);
+  }
+
+  // Validate content length
+  const maxLength = parseInt(process.env.MAX_QUERY_LENGTH) || 5000;
+  if (content.length > maxLength) {
+    throw new Error(`Content exceeds maximum length of ${maxLength} characters`);
+  }
+
+  // Validate content is not empty
+  if (!content || content.trim().length === 0) {
+    throw new Error('Content cannot be empty');
+  }
+
+  // Action-specific validation
+  switch (action) {
+    case 'mongodb':
+      return await this.executeMongo(content);
+    case 'bash':
+      // Prevent dangerous bash commands
+      if (content.includes('rm -rf /') || content.includes(':(){ :|:& };:')) {
+        throw new Error('Dangerous bash command detected');
+      }
+      return await this.executeBash(content);
+    // ... other cases
+  }
+}
+```
+
+### 8. File System Security
+
+**Restrict file operations to project directory**
+
+```javascript
+async readFile(filePath) {
+  // Resolve to absolute path
+  const absolutePath = path.resolve(this.projectRoot, filePath);
+
+  // Ensure path is within project directory (prevent path traversal)
+  if (!absolutePath.startsWith(this.projectRoot)) {
+    throw new Error('Access denied: Path outside project directory');
+  }
+
+  // Check file exists
+  try {
+    await fs.access(absolutePath, fs.constants.R_OK);
+  } catch {
+    throw new Error(`File not accessible: ${filePath}`);
+  }
+
+  // Read with size limit
+  const stats = await fs.stat(absolutePath);
+  if (stats.size > 10 * 1024 * 1024) {  // 10MB limit
+    throw new Error('File too large to read');
+  }
+
+  return await fs.readFile(absolutePath, 'utf-8');
+}
+```
+
+### 9. Security Testing
+
+**Run security scans regularly**
+
+```javascript
+// Test MCP security
+execute({
+  action: 'test',
+  content: 'security',
+  options: { service: 'mcp-executor' }
+})
+
+// Test for code injection vulnerabilities
+execute({
+  action: 'mongodb',
+  content: 'require("child_process").exec("echo hacked")'  // Should fail!
+})
+
+// Test timeout protection
+execute({
+  action: 'code',
+  content: 'while(true) {}'  // Should timeout and fail
+})
+
+// Test path traversal protection
+execute({
+  action: 'file',
+  content: 'read',
+  options: { path: '../../etc/passwd' }  // Should fail!
+})
+```
+
+### 10. Security Checklist
+
+Before deploying the MCP Executor:
+
+- [ ] All eval() replaced with Function constructor + sanitization
+- [ ] Forbidden patterns list implemented (require, import, eval, etc.)
+- [ ] Allowlist of MongoDB operations enforced
+- [ ] All credentials moved to environment variables
+- [ ] No hardcoded paths or configuration
+- [ ] Timeout limits set on all operations (30s default)
+- [ ] File operations restricted to project directory
+- [ ] Input validation on all user-provided content
+- [ ] Bash command sanitization implemented
+- [ ] Security tests written and passing
+- [ ] Environment variable validation on startup
+- [ ] Error messages don't expose sensitive information
+- [ ] Logging redacts credentials and tokens
+
+### 11. Incident Response
+
+**If a security issue is discovered:**
+
+1. **Immediate**: Disable the MCP executor
+2. **Assess**: Determine scope of vulnerability
+3. **Fix**: Implement patch following secure patterns above
+4. **Test**: Run full security test suite
+5. **Deploy**: Update executor with fix
+6. **Document**: Record in security changelog
+7. **Review**: Update this guide with lessons learned
+
+### Reference Implementation
+
+See `IMMEDIATE_FIXES_GUIDE.md` (lines 32-327) for complete secure implementation of the MCP Executor with all security controls.
 
 ## Conclusion
 

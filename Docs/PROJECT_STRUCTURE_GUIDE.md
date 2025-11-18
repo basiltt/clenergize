@@ -268,6 +268,627 @@ NEW/shared/
     └── package.json
 ```
 
+### Shared Packages Setup Instructions
+
+The shared packages provide common functionality across all microservices using NPM workspaces for efficient dependency management.
+
+#### Step 1: Initialize Monorepo Structure
+
+```bash
+cd NEW
+
+# Create root package.json with workspaces
+cat > package.json << 'EOF'
+{
+  "name": "clenergize-v3",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "shared/packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "build:shared": "npm run build --workspaces --if-present",
+    "test:shared": "npm test --workspaces --if-present",
+    "lint": "eslint . --ext .ts,.tsx",
+    "clean": "npm run clean --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.3.0"
+  }
+}
+EOF
+
+# Create base TypeScript configuration
+cat > tsconfig.base.json << 'EOF'
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022"],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node"
+  },
+  "exclude": ["node_modules", "dist"]
+}
+EOF
+
+# Create shared packages directory structure
+mkdir -p shared/packages/{common,contracts,security,database}
+```
+
+#### Step 2: Create @clenergize/common Package
+
+```bash
+cd shared/packages/common
+
+# Package configuration
+cat > package.json << 'EOF'
+{
+  "name": "@clenergize/common",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "jest",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "pino": "^8.16.0",
+    "zod": "^3.22.0",
+    "nanoid": "^5.0.0",
+    "mongodb": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0"
+  }
+}
+EOF
+
+# TypeScript configuration
+cat > tsconfig.json << 'EOF'
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"]
+}
+EOF
+
+# Create source structure
+mkdir -p src/{logger,errors,utils,types}
+
+# Logger implementation
+cat > src/logger/index.ts << 'EOF'
+import pino from 'pino';
+
+export interface LoggerConfig {
+  serviceName: string;
+  level?: string;
+  redact?: string[];
+}
+
+export const createLogger = (config: LoggerConfig) => {
+  return pino({
+    name: config.serviceName,
+    level: config.level || process.env.LOG_LEVEL || 'info',
+    formatters: {
+      level: (label) => ({ level: label }),
+    },
+    timestamp: pino.stdTimeFunctions.isoTime,
+    redact: {
+      paths: [
+        'req.headers.authorization',
+        'req.headers.cookie',
+        '*.password',
+        '*.token',
+        '*.secret',
+        ...(config.redact || [])
+      ],
+      remove: true
+    },
+    serializers: {
+      req: pino.stdSerializers.req,
+      res: pino.stdSerializers.res,
+      err: pino.stdSerializers.err
+    }
+  });
+};
+
+export type Logger = ReturnType<typeof createLogger>;
+EOF
+
+# Error classes
+cat > src/errors/index.ts << 'EOF'
+export class DomainError extends Error {
+  constructor(
+    public code: string,
+    message: string,
+    public statusCode: number = 500,
+    public context?: Record<string, any>
+  ) {
+    super(message);
+    this.name = this.constructor.name;
+    Error.captureStackTrace(this, this.constructor);
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      code: this.code,
+      message: this.message,
+      statusCode: this.statusCode,
+      context: this.context
+    };
+  }
+}
+
+export class ValidationError extends DomainError {
+  constructor(message: string, context?: Record<string, any>) {
+    super('VALIDATION_ERROR', message, 400, context);
+  }
+}
+
+export class UnauthorizedError extends DomainError {
+  constructor(message: string = 'Unauthorized') {
+    super('UNAUTHORIZED', message, 401);
+  }
+}
+
+export class ForbiddenError extends DomainError {
+  constructor(message: string = 'Forbidden') {
+    super('FORBIDDEN', message, 403);
+  }
+}
+
+export class NotFoundError extends DomainError {
+  constructor(resource: string, id: string) {
+    super('NOT_FOUND', `${resource} with id ${id} not found`, 404);
+  }
+}
+
+export class ConflictError extends DomainError {
+  constructor(message: string, context?: Record<string, any>) {
+    super('CONFLICT', message, 409, context);
+  }
+}
+
+export class InternalServerError extends DomainError {
+  constructor(message: string = 'Internal server error', context?: Record<string, any>) {
+    super('INTERNAL_ERROR', message, 500, context);
+  }
+}
+EOF
+
+# Utility functions
+cat > src/utils/index.ts << 'EOF'
+import { nanoid } from 'nanoid';
+import { ObjectId } from 'mongodb';
+
+export const generateId = () => nanoid();
+
+export const toObjectId = (id: string | ObjectId): ObjectId => {
+  if (typeof id === 'string') {
+    return new ObjectId(id);
+  }
+  return id;
+};
+
+export const isValidObjectId = (id: string): boolean => {
+  return ObjectId.isValid(id);
+};
+
+export const sleep = (ms: number): Promise<void> => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
+
+export const retry = async <T>(
+  fn: () => Promise<T>,
+  retries: number = 3,
+  delay: number = 1000
+): Promise<T> => {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries > 0) {
+      await sleep(delay);
+      return retry(fn, retries - 1, delay * 2);
+    }
+    throw error;
+  }
+};
+EOF
+
+# Main export
+cat > src/index.ts << 'EOF'
+export * from './logger';
+export * from './errors';
+export * from './utils';
+EOF
+
+# Install and build
+npm install
+npm run build
+```
+
+#### Step 3: Create @clenergize/contracts Package
+
+```bash
+cd ../contracts
+
+cat > package.json << 'EOF'
+{
+  "name": "@clenergize/contracts",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "jest"
+  },
+  "dependencies": {
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}
+EOF
+
+cat > tsconfig.json << 'EOF'
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"]
+}
+EOF
+
+mkdir -p src/events
+
+# Base event schema
+cat > src/events/base.ts << 'EOF'
+import { z } from 'zod';
+
+export const BaseEventSchema = z.object({
+  eventId: z.string().uuid(),
+  eventType: z.string(),
+  version: z.string().regex(/^\d+\.\d+$/),
+  timestamp: z.string().datetime(),
+  source: z.string(),
+  correlationId: z.string().uuid(),
+  metadata: z.object({
+    userId: z.string().optional(),
+    tenantId: z.string().optional()
+  }).optional()
+});
+
+export type BaseEvent = z.infer<typeof BaseEventSchema>;
+EOF
+
+# Example event schemas
+cat > src/events/user.events.ts << 'EOF'
+import { z } from 'zod';
+import { BaseEventSchema } from './base';
+
+export const UserRegisteredEventSchema = BaseEventSchema.extend({
+  eventType: z.literal('UserRegistered'),
+  payload: z.object({
+    userId: z.string(),
+    email: z.string().email(),
+    firstName: z.string(),
+    lastName: z.string()
+  })
+});
+
+export type UserRegisteredEvent = z.infer<typeof UserRegisteredEventSchema>;
+
+export const UserAuthenticatedEventSchema = BaseEventSchema.extend({
+  eventType: z.literal('UserAuthenticated'),
+  payload: z.object({
+    userId: z.string(),
+    sessionId: z.string(),
+    ipAddress: z.string()
+  })
+});
+
+export type UserAuthenticatedEvent = z.infer<typeof UserAuthenticatedEventSchema>;
+EOF
+
+cat > src/index.ts << 'EOF'
+export * from './events/base';
+export * from './events/user.events';
+EOF
+
+npm install
+npm run build
+```
+
+#### Step 4: Create @clenergize/security Package
+
+```bash
+cd ../security
+
+cat > package.json << 'EOF'
+{
+  "name": "@clenergize/security",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "jest"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.0",
+    "jwks-rsa": "^3.0.0",
+    "@clenergize/common": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/jsonwebtoken": "^9.0.0",
+    "typescript": "^5.3.0"
+  }
+}
+EOF
+
+cat > tsconfig.json << 'EOF'
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"]
+}
+EOF
+
+mkdir -p src
+
+cat > src/jwt.middleware.ts << 'EOF'
+import jwt from 'jsonwebtoken';
+import jwksRsa from 'jwks-rsa';
+import { UnauthorizedError } from '@clenergize/common';
+
+export interface JWTConfig {
+  jwksUri: string;
+  issuer: string;
+  audience: string;
+}
+
+export class JWTVerifier {
+  private jwksClient: jwksRsa.JwksClient;
+
+  constructor(private config: JWTConfig) {
+    this.jwksClient = jwksRsa({
+      jwksUri: config.jwksUri,
+      cache: true,
+      rateLimit: true
+    });
+  }
+
+  async verify(token: string) {
+    try {
+      const decoded = jwt.decode(token, { complete: true });
+      if (!decoded || !decoded.header.kid) {
+        throw new UnauthorizedError('Invalid token format');
+      }
+
+      const key = await this.jwksClient.getSigningKey(decoded.header.kid);
+      const signingKey = key.getPublicKey();
+
+      return jwt.verify(token, signingKey, {
+        algorithms: ['RS256'],
+        issuer: this.config.issuer,
+        audience: this.config.audience
+      });
+    } catch (error) {
+      throw new UnauthorizedError('Token verification failed');
+    }
+  }
+}
+EOF
+
+cat > src/index.ts << 'EOF'
+export * from './jwt.middleware';
+EOF
+
+npm install
+npm run build
+```
+
+#### Step 5: Create @clenergize/database Package
+
+```bash
+cd ../database
+
+cat > package.json << 'EOF'
+{
+  "name": "@clenergize/database",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "jest"
+  },
+  "dependencies": {
+    "mongodb": "^6.0.0",
+    "@clenergize/common": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}
+EOF
+
+cat > tsconfig.json << 'EOF'
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"]
+}
+EOF
+
+mkdir -p src
+
+cat > src/repository.base.ts << 'EOF'
+import { Collection, ClientSession, Document } from 'mongodb';
+
+export interface IRepository<T extends Document> {
+  findById(id: string): Promise<T | null>;
+  findAll(filter?: Partial<T>): Promise<T[]>;
+  create(entity: T): Promise<T>;
+  update(id: string, entity: Partial<T>): Promise<T>;
+  delete(id: string): Promise<void>;
+}
+
+export abstract class BaseRepository<T extends Document> implements IRepository<T> {
+  constructor(protected collection: Collection<T>) {}
+
+  async findById(id: string): Promise<T | null> {
+    return this.collection.findOne({ _id: id } as any);
+  }
+
+  async findAll(filter?: Partial<T>): Promise<T[]> {
+    return this.collection.find(filter || {}).toArray();
+  }
+
+  async create(entity: T): Promise<T> {
+    const result = await this.collection.insertOne(entity);
+    return { ...entity, _id: result.insertedId };
+  }
+
+  async update(id: string, entity: Partial<T>): Promise<T> {
+    const result = await this.collection.findOneAndUpdate(
+      { _id: id } as any,
+      { $set: entity },
+      { returnDocument: 'after' }
+    );
+    return result!;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.collection.deleteOne({ _id: id } as any);
+  }
+
+  protected async withTransaction<R>(
+    fn: (session: ClientSession) => Promise<R>
+  ): Promise<R> {
+    const session = this.collection.client.startSession();
+    try {
+      return await session.withTransaction(fn);
+    } finally {
+      await session.endSession();
+    }
+  }
+}
+EOF
+
+cat > src/index.ts << 'EOF'
+export * from './repository.base';
+EOF
+
+npm install
+npm run build
+```
+
+#### Step 6: Install All Workspaces
+
+```bash
+# Return to NEW directory
+cd ../../../
+
+# Install all dependencies
+npm install
+
+# Build all shared packages
+npm run build:shared
+
+# Verify workspace setup
+npm ls --workspaces
+```
+
+#### Step 7: Use Shared Packages in Services
+
+In each service's `package.json`:
+
+```json
+{
+  "name": "@clenergize/identity-service",
+  "version": "1.0.0",
+  "dependencies": {
+    "@clenergize/common": "workspace:*",
+    "@clenergize/contracts": "workspace:*",
+    "@clenergize/security": "workspace:*",
+    "@clenergize/database": "workspace:*",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/common": "^10.0.0",
+    "mongoose": "^8.0.0"
+  }
+}
+```
+
+Then in service code:
+
+```typescript
+// identity-service/src/main.ts
+import { createLogger } from '@clenergize/common';
+import { JWTVerifier } from '@clenergize/security';
+import { UserRegisteredEventSchema } from '@clenergize/contracts';
+
+const logger = createLogger({ serviceName: 'identity-service' });
+logger.info('Service starting...');
+
+const jwtVerifier = new JWTVerifier({
+  jwksUri: process.env.JWKS_URI!,
+  issuer: process.env.JWT_ISSUER!,
+  audience: process.env.JWT_AUDIENCE!
+});
+```
+
+#### Verification Checklist
+
+- [ ] Root `package.json` created with workspaces config
+- [ ] `tsconfig.base.json` created
+- [ ] `@clenergize/common` package created and built
+- [ ] `@clenergize/contracts` package created and built
+- [ ] `@clenergize/security` package created and built
+- [ ] `@clenergize/database` package created and built
+- [ ] `npm install` runs successfully
+- [ ] `npm run build:shared` builds all packages
+- [ ] Services can import from shared packages
+- [ ] TypeScript types are resolved correctly
+
 ## Git Repository Strategy
 
 ### Monorepo vs Multi-repo Decision

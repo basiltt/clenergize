@@ -138,9 +138,24 @@ CMD ["npm", "run", "dev"]
 
 - [ ] Create Dockerfile.dev for each service
 - [ ] Configure hot-reload with nodemon/ts-node-dev
-- [ ] Set up health check endpoints
+- [ ] Set up health check endpoints (`/health/ready` and `/health/live`)
+- [ ] Add Docker health check configuration:
+  ```yaml
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:3001/health/ready"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 40s
+  ```
+- [ ] Implement health check responses with:
+  - Database connectivity status
+  - Redis connectivity status
+  - Service version and uptime
+  - Dependency health checks
 - [ ] Configure logging to stdout
 - [ ] Test container builds
+- [ ] Verify health checks work in docker-compose
 
 ### Task 0.5: Makefile for Developer Experience
 **Owner**: Tech Lead
@@ -167,9 +182,126 @@ reset:
 
 - [ ] Create developer-friendly Makefile
 - [ ] Add commands for common operations
-- [ ] Create seed data scripts
 - [ ] Document all commands in README
 - [ ] Test all workflows
+
+### Task 0.6: Create Test Data Seeders
+**Owner**: Developer 2 + Testing Agent
+**Duration**: 3 hours
+**Story Points**: 3
+**Day**: 2-3
+
+Create MongoDB initialization scripts for consistent test data across all services.
+
+**Seeder Scripts** (See `Docs/TEST_DATA_SEEDING_GUIDE.md`):
+
+```
+init-scripts/mongo/
+├── 01-create-databases.js      # Create all 8 service databases
+├── 02-create-users.js           # Create service-specific DB users
+├── 03-seed-reference-data.js    # Emission factors, units, templates
+├── 04-seed-test-users.js        # Test user accounts (4 users)
+├── 05-seed-organizations.js     # Test organization with hierarchy
+├── 06-seed-activities.js        # Sample activity data
+└── 07-seed-calculations.js      # Pre-calculated emissions
+```
+
+- [ ] Create MongoDB init scripts directory structure
+- [ ] Implement 01-create-databases.js (all 8 databases)
+- [ ] Implement 02-create-users.js (service users with permissions)
+- [ ] Implement 03-seed-reference-data.js:
+  - [ ] 4+ emission factors (Scope 1, 2, 3)
+  - [ ] 4+ units and conversions
+  - [ ] 2+ hierarchy templates
+- [ ] Implement 04-seed-test-users.js:
+  - [ ] admin@clenergize.test (role: admin)
+  - [ ] manager@clenergize.test (role: manager)
+  - [ ] analyst@clenergize.test (role: analyst)
+  - [ ] viewer@clenergize.test (role: viewer)
+  - [ ] Password: "password123" (hashed with bcrypt)
+- [ ] Implement 05-seed-organizations.js:
+  - [ ] Test organization "Acme Manufacturing Corp"
+  - [ ] 3-level hierarchy (Corp → Division → Site)
+  - [ ] Test project "2024 Carbon Footprint Assessment"
+- [ ] Implement 06-seed-activities.js (3+ sample activities)
+- [ ] Implement 07-seed-calculations.js (emissions calculations)
+- [ ] Mount init scripts in docker-compose.yml:
+  ```yaml
+  mongodb:
+    volumes:
+      - ./init-scripts/mongo:/docker-entrypoint-initdb.d:ro
+  ```
+- [ ] Test seeders execute on container startup
+- [ ] Verify data created correctly in all databases
+- [ ] Document seeder execution in README
+
+### Task 0.7: Environment Variable Validation
+**Owner**: Developer 3 + Security Agent
+**Duration**: 2 hours
+**Story Points**: 2
+**Day**: 3
+
+Implement environment variable validation using Zod schemas.
+
+**Files to Create**:
+- `NEW/.env.example` - Template with all required variables
+- `shared/packages/common/src/config/env-validator.ts` - Zod validation
+
+**Implementation**:
+
+```typescript
+// env-validator.ts
+import { z } from 'zod';
+
+export const BaseEnvSchema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'staging', 'production']),
+  SERVICE_NAME: z.string().min(1),
+  PORT: z.string().regex(/^\d+$/),
+  MONGODB_URI: z.string().url(),
+  REDIS_URL: z.string().url(),
+  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
+  JWT_ISSUER: z.string().url(),
+  JWT_AUDIENCE: z.string().min(1),
+});
+
+export function validateEnv<T extends z.ZodSchema>(schema: T): z.infer<T> {
+  try {
+    return schema.parse(process.env);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('❌ Environment validation failed:');
+      error.errors.forEach(err => {
+        console.error(`  - ${err.path.join('.')}: ${err.message}`);
+      });
+      process.exit(1);
+    }
+    throw error;
+  }
+}
+```
+
+**Tasks**:
+- [ ] Create `NEW/.env.example` with all required variables (see ENVIRONMENT_CONFIGURATION_GUIDE.md)
+- [ ] Create `shared/packages/common/src/config/env-validator.ts`
+- [ ] Implement BaseEnvSchema with common variables
+- [ ] Implement validateEnv() function
+- [ ] Create service-specific schemas:
+  - [ ] IdentityServiceEnvSchema (includes JWT_SECRET)
+  - [ ] JWKSServiceEnvSchema (includes JWKS_URI)
+- [ ] Add validation to each service startup:
+  ```typescript
+  // main.ts
+  import { validateEnv, IdentityServiceEnvSchema } from '@clenergize/common';
+
+  async function bootstrap() {
+    const env = validateEnv(IdentityServiceEnvSchema);
+    // ...rest of startup
+  }
+  ```
+- [ ] Test validation fails with missing required variables
+- [ ] Test validation passes with all variables set
+- [ ] Add .env to .gitignore (if not already)
+- [ ] Document in ENVIRONMENT_CONFIGURATION_GUIDE.md
 
 ---
 
