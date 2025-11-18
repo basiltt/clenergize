@@ -669,32 +669,145 @@ jobs:
 
 ---
 
+## Story: Architecture Foundation (11 points) 🆕
+
+### Task 0.8: Shared Package Specification
+**Owner**: Architecture Agent
+**Duration**: 4 hours
+**Story Points**: 3
+**Day**: 2-3
+
+Create comprehensive shared TypeScript package specification for `@clenergize/common`.
+
+**Deliverables**:
+- [ ] Document complete package structure in `Docs/SHARED_PACKAGES_SPECIFICATION.md`
+- [ ] Define value objects (Email, UserId, DateRange, Money)
+- [ ] Specify domain error taxonomy (6 error classes)
+- [ ] Define base repository pattern with MongoDB implementation
+- [ ] Specify HTTP client with circuit breaker & retry policy
+- [ ] Document structured logger with correlation IDs
+- [ ] Create usage examples for each shared component
+- [ ] Review with team for feedback
+
+**Dependencies**: None
+**Blockers**: None
+
+---
+
+### Task 0.9: Event Schema Registry
+**Owner**: Architecture Agent + Master Coordinator
+**Duration**: 6 hours
+**Story Points**: 5
+**Day**: 3-4
+
+Define complete event schema registry for all microservices communication.
+
+**Deliverables**:
+- [ ] Create `Docs/EVENT_SCHEMA_REGISTRY.md`
+- [ ] Define base DomainEvent interface with Zod validation
+- [ ] Document Identity Service events (11 types)
+- [ ] Document Organization Service events (14 types)
+- [ ] Document Reference Service events (8 types)
+- [ ] Document Activity Service events (8 types)
+- [ ] Document Calculation Service events (7 types)
+- [ ] Document Reporting Service events (6 types)
+- [ ] Document Audit Service events (4 types)
+- [ ] Create event publishing patterns (batch, transactional)
+- [ ] Define event versioning strategy
+- [ ] Provide migration examples from OLD string-based to NEW typed events
+
+**Dependencies**: Task 0.8 (base event interface uses common package)
+**Blockers**: None
+
+---
+
+### Task 0.10: Correlation ID Implementation
+**Owner**: Security Agent
+**Duration**: 3 hours
+**Story Points**: 3
+**Day**: 3
+
+Implement correlation ID middleware for distributed tracing.
+
+**Deliverables**:
+- [ ] Create `CorrelationIdMiddleware` using AsyncLocalStorage
+- [ ] Update `StructuredLogger` to include correlation IDs
+- [ ] Update `BaseHttpClient` to propagate correlation IDs
+- [ ] Update `EventBus` to include correlation IDs in events
+- [ ] Add correlation ID to all service templates
+- [ ] Test correlation ID propagation across service boundaries
+- [ ] Document usage in `Docs/SHARED_PACKAGES_SPECIFICATION.md`
+- [ ] Create pattern document in `.claude/patterns/correlation-id-implementation.md`
+
+**Dependencies**: Task 0.8 (uses shared package logger)
+**Blockers**: None
+
+---
+
 ## Daily Standup Topics
+
+### Daily Health Check Ritual (10 minutes at start of standup)
+
+**Code Quality Check**:
+- [ ] All commits follow conventional commits (feat:, fix:, chore:)
+- [ ] No TypeScript 'any' types added today
+- [ ] ESLint passing with 0 warnings
+- [ ] Test coverage ≥ 80%
+
+**Security Check**:
+- [ ] No secrets in code (scanned)
+- [ ] `npm audit` shows 0 high/critical vulnerabilities
+- [ ] OWASP Top 10 review completed for new code
+- [ ] Environment variables properly configured
+
+**Coordination Check**:
+- [ ] Integration map updated (if cross-service work done)
+- [ ] Jira tickets status current
+- [ ] Blockers identified and escalated
+- [ ] Handoffs documented (if transitioning work)
+
+**Infrastructure Check**:
+- [ ] Docker services healthy (`make health-check`)
+- [ ] MongoDB accessible and responsive
+- [ ] Redis responding (< 5ms latency)
+- [ ] LocalStack services up (if using AWS simulation)
+
+**Team Pulse** (quick emoji check):
+- 😊 Confident (green) - On track, no issues
+- 😐 Okay but need help (yellow) - Minor blockers or questions
+- 😟 Blocked or struggling (red) - Need immediate assistance
+
+---
 
 ### Day 1
 - Environment setup complete?
 - Any blockers with AWS access?
 - JWT audit findings
+- **Health Check**: Code quality baseline established?
 
 ### Day 2
 - JWKS implementation progress
 - Secrets Manager setup status
 - VPC design review
+- **Task 0.8**: Shared package spec reviewed by team?
 
 ### Day 3
 - JWT verifier testing
 - Network implementation
 - Any security concerns found?
+- **Tasks 0.9 & 0.10**: Event schemas and correlation IDs on track?
 
 ### Day 4
 - JWT story completion
 - MongoDB Atlas setup
 - Infrastructure deployment status
+- **Integration**: Are all new tasks integrated with existing work?
 
 ### Day 5
 - All critical security fixes done?
 - CI/CD pipeline working?
 - Sprint goal achieved?
+- **New Tasks**: Tasks 0.8, 0.9, 0.10 completed and documented?
 
 ---
 
@@ -806,6 +919,9 @@ jobs:
 5. Basic CI pipeline is running
 6. All code is in Git with proper structure
 7. Team can run `make up` and have full dev environment
+8. **NEW**: Shared packages specification documented (Task 0.8)
+9. **NEW**: Event schema registry defined for all services (Task 0.9)
+10. **NEW**: Correlation ID middleware implemented and tested (Task 0.10)
 
 ⚠️ **Acceptable Partial Success**:
 - JWT and Secrets complete (critical security)

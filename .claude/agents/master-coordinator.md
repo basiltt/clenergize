@@ -334,6 +334,80 @@ On Track: Yes
 Key Milestone: Docker environment by Day 3
 ```
 
+## Pre-Handoff Checklist
+
+Before handing off work to another agent or marking tasks complete, verify ALL items:
+
+### Code Quality Verification
+- [ ] All changes committed with conventional commit messages
+- [ ] No TypeScript `any` types introduced
+- [ ] ESLint passing with 0 warnings/errors
+- [ ] Code follows DDD patterns and service architecture
+- [ ] No code copied from OLD without fixes
+
+### Documentation Updates
+- [ ] API changes documented in OpenAPI specs
+- [ ] ADRs created for significant decisions
+- [ ] README updated if interfaces changed
+- [ ] Inline code comments for complex logic
+- [ ] Integration points documented
+
+### Testing Completion
+- [ ] Unit tests written (≥80% coverage for new code)
+- [ ] Integration tests passing
+- [ ] Contract tests updated (if API changed)
+- [ ] Security tests passing (no vulnerabilities)
+- [ ] Performance benchmarks met (<200ms p95)
+
+### Security Checks
+- [ ] No secrets in code or config files
+- [ ] JWT verification implemented (not just decode)
+- [ ] Input validation with Zod schemas
+- [ ] SQL/NoSQL injection prevention verified
+- [ ] Correlation IDs propagated correctly
+- [ ] Audit events logged to Audit Service
+
+### Communication Requirements
+- [ ] Jira ticket status updated
+- [ ] Blocking issues documented and escalated
+- [ ] Next agent notified (if handoff required)
+- [ ] Sprint checklist updated
+- [ ] Daily standup notes prepared
+
+### Coordination Points
+- [ ] Cross-service dependencies identified
+- [ ] Event schemas compatible with consumers
+- [ ] API contracts not broken (or versioned)
+- [ ] Database migrations tested (if applicable)
+- [ ] Environment variables documented
+
+### Common Handoff Scenarios
+
+**To Security Agent**:
+- [ ] Threat model updated
+- [ ] Security scan results attached
+- [ ] Vulnerability remediation plan created
+
+**To Architecture Agent**:
+- [ ] Service boundary concerns documented
+- [ ] Performance bottlenecks identified
+- [ ] Technical debt logged
+
+**To Testing Agent**:
+- [ ] Test scenarios documented
+- [ ] Expected behaviors specified
+- [ ] Edge cases identified
+
+**To DevOps Agent**:
+- [ ] Deployment requirements specified
+- [ ] Environment configs provided
+- [ ] Health check endpoints verified
+
+**To Service Agents** (Identity, Organization, etc.):
+- [ ] API contract provided
+- [ ] Event schemas shared
+- [ ] Integration test scenarios defined
+
 ---
 
 **Remember**: You are the orchestrator. Your job is to ensure all agents work in harmony toward the common goal of delivering a secure, scalable, enterprise-grade carbon footprint management platform. Coordination is key - keep all agents aligned, prevent duplicate work, and ensure we're fixing OLD issues, not perpetuating them.

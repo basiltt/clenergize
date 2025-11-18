@@ -257,6 +257,572 @@ describe('POST /api/v1/activities', () => {
 - Authentication/authorization
 - Error responses
 
+#### 2.5. Contract Testing
+
+**Framework**: Pact (Consumer-Driven Contracts)
+**Coverage**: All inter-service API dependencies
+
+Contract testing ensures that microservices can communicate correctly without requiring full integration testing. Using **consumer-driven contracts**, we verify that:
+1. **Consumers** (services making requests) define what they expect
+2. **Providers** (services receiving requests) honor those expectations
+
+This approach catches breaking changes early and enables independent service deployment.
+
+##### Why Contract Testing for Clenergize V3?
+
+With 7 microservices communicating via REST APIs and events, we face several challenges:
+- Integration tests are slow and brittle
+- Services developed by different teams/agents
+- Need to deploy services independently
+- Breaking changes can go undetected until runtime
+
+Contract testing solves these by:
+- Testing service boundaries in isolation
+- Detecting breaking changes before deployment
+- Enabling parallel development
+- Reducing need for full integration environments
+
+##### Consumer-Driven Contract Workflow
+
+```mermaid
+graph LR
+    A[Consumer writes contract] --> B[Consumer tests pass]
+    B --> C[Publish contract to Pact Broker]
+    C --> D[Provider verifies contract]
+    D --> E{Verification passes?}
+    E -->|Yes| F[Safe to deploy]
+    E -->|No| G[Fix provider or negotiate contract]
+    G --> D
+```
+
+##### Implementation: Consumer Side
+
+**Example**: Organization Service consuming Identity Service's `/users/:id` endpoint
+
+```typescript
+// test/contracts/identity-service.pact.spec.ts
+import { pactWith } from 'jest-pact';
+import { Matchers } from '@pact-foundation/pact';
+import { IdentityClient } from '@/clients/identity.client';
+
+const { like, term, uuid } = Matchers;
+
+pactWith(
+  {
+    consumer: 'OrganizationService',
+    provider: 'IdentityService',
+    port: 8080,
+    log: path.resolve(process.cwd(), 'logs', 'pact.log'),
+    dir: path.resolve(process.cwd(), 'pacts'),
+    logLevel: 'warn'
+  },
+  (provider) => {
+    let identityClient: IdentityClient;
+
+    beforeEach(() => {
+      identityClient = new IdentityClient(provider.mockService.baseUrl);
+    });
+
+    describe('GET /v1/users/:userId', () => {
+      describe('when user exists', () => {
+        beforeEach(() => {
+          return provider.addInteraction({
+            state: 'user with ID user-123 exists',
+            uponReceiving: 'a request for user details',
+            withRequest: {
+              method: 'GET',
+              path: '/v1/users/user-123',
+              headers: {
+                Authorization: term({
+                  matcher: '^Bearer .+$',
+                  generate: 'Bearer valid-token'
+                }),
+                'X-Correlation-ID': like('req-abc-123')
+              }
+            },
+            willRespondWith: {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Correlation-ID': like('req-abc-123')
+              },
+              body: {
+                id: 'user-123',
+                email: like('user@example.com'),
+                firstName: like('John'),
+                lastName: like('Doe'),
+                role: term({
+                  matcher: '^(ADMIN|USER|VIEWER)$',
+                  generate: 'ADMIN'
+                }),
+                organizationId: uuid(),
+                createdAt: term({
+                  matcher: '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}',
+                  generate: '2024-01-01T10:00:00'
+                })
+              }
+            }
+          });
+        });
+
+        it('returns user details with correct structure', async () => {
+          const user = await identityClient.getUserById('user-123');
+
+          expect(user).toMatchObject({
+            id: 'user-123',
+            email: expect.any(String),
+            role: expect.stringMatching(/^(ADMIN|USER|VIEWER)$/),
+            organizationId: expect.any(String)
+          });
+        });
+      });
+
+      describe('when user does not exist', () => {
+        beforeEach(() => {
+          return provider.addInteraction({
+            state: 'user with ID unknown-user does not exist',
+            uponReceiving: 'a request for non-existent user',
+            withRequest: {
+              method: 'GET',
+              path: '/v1/users/unknown-user',
+              headers: {
+                Authorization: term({
+                  matcher: '^Bearer .+$',
+                  generate: 'Bearer valid-token'
+                })
+              }
+            },
+            willRespondWith: {
+              status: 404,
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: {
+                error: {
+                  code: 'USER_NOT_FOUND',
+                  message: like('User not found'),
+                  timestamp: like('2024-01-01T10:00:00Z')
+                }
+              }
+            }
+          });
+        });
+
+        it('returns 404 error with correct structure', async () => {
+          await expect(identityClient.getUserById('unknown-user'))
+            .rejects
+            .toMatchObject({
+              status: 404,
+              code: 'USER_NOT_FOUND'
+            });
+        });
+      });
+    });
+
+    describe('POST /v1/users/:userId/permissions', () => {
+      beforeEach(() => {
+        return provider.addInteraction({
+          state: 'user exists and can receive permissions',
+          uponReceiving: 'a request to add permissions',
+          withRequest: {
+            method: 'POST',
+            path: '/v1/users/user-123/permissions',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer valid-token'
+            },
+            body: {
+              permissions: ['project:read', 'project:write']
+            }
+          },
+          willRespondWith: {
+            status: 200,
+            body: {
+              userId: 'user-123',
+              permissions: like(['project:read', 'project:write']),
+              updatedAt: like('2024-01-01T10:00:00Z')
+            }
+          }
+        });
+      });
+
+      it('adds permissions to user', async () => {
+        const result = await identityClient.addPermissions('user-123', [
+          'project:read',
+          'project:write'
+        ]);
+
+        expect(result.permissions).toContain('project:read');
+        expect(result.permissions).toContain('project:write');
+      });
+    });
+  }
+);
+```
+
+##### Publishing Contracts
+
+```typescript
+// package.json scripts
+{
+  "scripts": {
+    "test:pact": "jest --testMatch='**/*.pact.spec.ts'",
+    "pact:publish": "pact-broker publish ./pacts --consumer-app-version=$GIT_COMMIT --broker-base-url=$PACT_BROKER_URL --broker-token=$PACT_BROKER_TOKEN"
+  }
+}
+```
+
+```yaml
+# CI/CD Pipeline (GitHub Actions)
+name: Consumer Contract Tests
+
+on: [push, pull_request]
+
+jobs:
+  contract-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run contract tests
+        run: npm run test:pact
+
+      - name: Publish contracts
+        if: github.ref == 'refs/heads/main'
+        env:
+          PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+          GIT_COMMIT: ${{ github.sha }}
+        run: npm run pact:publish
+```
+
+##### Implementation: Provider Side
+
+**Example**: Identity Service verifying contracts from consumers
+
+```typescript
+// test/contracts/provider.pact.spec.ts
+import { Verifier } from '@pact-foundation/pact';
+import path from 'path';
+import { INestApplication } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { AppModule } from '@/app.module';
+
+describe('Pact Provider Verification', () => {
+  let app: INestApplication;
+  const port = 3001;
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule]
+    }).compile();
+
+    app = moduleRef.createNestApplication();
+    await app.listen(port);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('validates contracts from all consumers', async () => {
+    const opts = {
+      provider: 'IdentityService',
+      providerBaseUrl: `http://localhost:${port}`,
+
+      // Fetch contracts from Pact Broker
+      pactBrokerUrl: process.env.PACT_BROKER_URL,
+      pactBrokerToken: process.env.PACT_BROKER_TOKEN,
+
+      // Verify only contracts for deployed consumer versions
+      consumerVersionSelectors: [
+        { mainBranch: true },
+        { deployedOrReleased: true }
+      ],
+
+      // Publish verification results
+      publishVerificationResult: process.env.CI === 'true',
+      providerVersion: process.env.GIT_COMMIT,
+      providerVersionBranch: process.env.GIT_BRANCH,
+
+      // State handlers for provider states
+      stateHandlers: {
+        'user with ID user-123 exists': async () => {
+          // Setup test data
+          await setupTestUser({
+            id: 'user-123',
+            email: 'test@example.com',
+            role: 'ADMIN'
+          });
+        },
+
+        'user with ID unknown-user does not exist': async () => {
+          // Ensure user doesn't exist
+          await cleanupTestUser('unknown-user');
+        },
+
+        'user exists and can receive permissions': async () => {
+          await setupTestUser({
+            id: 'user-123',
+            email: 'test@example.com',
+            role: 'ADMIN'
+          });
+        }
+      },
+
+      // Request filter to add authentication
+      requestFilter: (req, res, next) => {
+        // Add valid JWT for test environment
+        if (req.headers.authorization?.startsWith('Bearer')) {
+          req.headers.authorization = `Bearer ${generateTestToken()}`;
+        }
+        next();
+      }
+    };
+
+    const verifier = new Verifier(opts);
+    return verifier.verifyProvider();
+  });
+});
+
+// Helper functions
+async function setupTestUser(userData: any) {
+  // Insert test user into database
+  await userRepository.create(userData);
+}
+
+async function cleanupTestUser(userId: string) {
+  // Remove test user from database
+  await userRepository.delete(userId);
+}
+
+function generateTestToken(): string {
+  // Generate valid JWT for testing
+  return jwt.sign({ sub: 'test-user' }, process.env.JWT_SECRET);
+}
+```
+
+##### Provider Verification in CI/CD
+
+```yaml
+# CI/CD Pipeline (GitHub Actions)
+name: Provider Contract Verification
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+  repository_dispatch:
+    types: [pact-changed]  # Triggered when consumer publishes new contract
+
+jobs:
+  verify-contracts:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start service
+        run: npm run start:test &
+        env:
+          MONGODB_URI: mongodb://localhost:27017/test
+          JWT_SECRET: test-secret
+
+      - name: Wait for service
+        run: npx wait-on http://localhost:3001/health
+
+      - name: Verify provider contracts
+        env:
+          PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+          GIT_COMMIT: ${{ github.sha }}
+          GIT_BRANCH: ${{ github.ref }}
+          CI: 'true'
+        run: npm run test:pact:verify
+
+      - name: Can I deploy?
+        env:
+          PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+        run: |
+          pact-broker can-i-deploy \
+            --pacticipant IdentityService \
+            --version ${{ github.sha }} \
+            --to-environment production
+```
+
+##### Pact Broker Configuration
+
+**Deploy Pact Broker** (Docker Compose for local development):
+
+```yaml
+# docker-compose.pact.yml
+version: '3'
+
+services:
+  pact-broker:
+    image: pactfoundation/pact-broker:latest
+    ports:
+      - "9292:9292"
+    environment:
+      PACT_BROKER_DATABASE_URL: postgresql://pact_broker:password@postgres/pact_broker
+      PACT_BROKER_BASIC_AUTH_USERNAME: pact_user
+      PACT_BROKER_BASIC_AUTH_PASSWORD: pact_password
+      PACT_BROKER_ALLOW_PUBLIC_READ: 'true'
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: pact_broker
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: pact_broker
+    volumes:
+      - pact-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  pact-postgres-data:
+```
+
+Start Pact Broker:
+```bash
+docker-compose -f docker-compose.pact.yml up -d
+```
+
+Access at: http://localhost:9292
+
+##### Breaking Change Detection
+
+Pact automatically detects breaking changes:
+
+**Scenario**: Identity Service changes response structure
+
+```typescript
+// OLD response (what Organization Service expects)
+{
+  "id": "user-123",
+  "email": "user@example.com",
+  "role": "ADMIN"  // String
+}
+
+// NEW response (breaking change!)
+{
+  "id": "user-123",
+  "email": "user@example.com",
+  "role": {        // Now an object!
+    "name": "ADMIN",
+    "permissions": ["read", "write"]
+  }
+}
+```
+
+**What happens**:
+1. Provider verification fails with clear error message
+2. CI/CD pipeline blocks deployment
+3. Team is notified of breaking change
+4. Options:
+   - Revert the change
+   - Coordinate with consumer teams
+   - Use API versioning (/v2/users)
+
+##### Can I Deploy?
+
+Before deploying to production, verify all contracts are satisfied:
+
+```bash
+# Check if IdentityService v1.2.3 can be deployed to production
+pact-broker can-i-deploy \
+  --pacticipant IdentityService \
+  --version 1.2.3 \
+  --to-environment production
+
+# Output:
+# Computer says yes \o/
+#
+# CONSUMER           | C.VERSION | PROVIDER        | P.VERSION | SUCCESS?
+# ------------------|-----------|-----------------|-----------|----------
+# OrganizationSvc   | 2.1.0     | IdentityService | 1.2.3     | true
+# ActivityService   | 1.5.2     | IdentityService | 1.2.3     | true
+# ReportingService  | 1.3.1     | IdentityService | 1.2.3     | true
+```
+
+##### Contract Testing Best Practices
+
+1. **Keep Contracts Focused**:
+   - One contract per consumer-provider pair
+   - Test actual usage scenarios, not every possible API call
+   - Use matchers for flexible validation
+
+2. **State Management**:
+   - Keep provider states simple and isolated
+   - Clean up after each test
+   - Use factories for test data creation
+
+3. **Versioning**:
+   - Tag contracts with consumer version
+   - Publish on every build (not just main branch)
+   - Use semantic versioning
+
+4. **CI/CD Integration**:
+   - Run consumer tests on every PR
+   - Run provider verification on every commit
+   - Block deployment if contracts fail
+
+5. **Documentation**:
+   - Contracts serve as living documentation
+   - Share Pact Broker URL with all teams
+   - Include contract tests in onboarding
+
+##### Contract Testing vs. Other Testing Types
+
+| Aspect | Contract Testing | Integration Testing | E2E Testing |
+|--------|-----------------|---------------------|-------------|
+| **Scope** | Single service boundary | Multiple services | Entire system |
+| **Speed** | Fast (seconds) | Slow (minutes) | Very slow (minutes) |
+| **Setup** | Mock provider | Real services | Full environment |
+| **Isolation** | High | Medium | Low |
+| **When to run** | Every commit | Nightly/on-demand | Pre-release |
+| **Flakiness** | Very low | Medium | High |
+
+##### Clenergize V3 Contract Matrix
+
+| Consumer Service | Provider Service | Contract Status |
+|-----------------|------------------|-----------------|
+| Organization | Identity | ✅ Active |
+| Organization | Reference | ✅ Active |
+| Activity | Organization | ✅ Active |
+| Activity | Reference | ✅ Active |
+| Calculation | Activity | ✅ Active |
+| Calculation | Reference | ✅ Active |
+| Reporting | Calculation | ✅ Active |
+| Reporting | Organization | ✅ Active |
+| Frontend | All Services | ⏳ Planned |
+
+**Total Contracts**: 13 active, 7 planned
+
 #### 3. End-to-End Testing
 
 **Framework**: Cypress / Playwright

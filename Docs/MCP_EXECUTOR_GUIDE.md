@@ -322,7 +322,83 @@ execute({
 })
 ```
 
-### 8. AWS/LocalStack Operations
+### 8. Health Check Operations 🆕
+Comprehensive service health monitoring:
+
+```javascript
+// Health check all services
+execute({
+  action: 'health-check',
+  content: 'all'
+})
+// Returns:
+// {
+//   mongodb: { status: 'healthy', latency: '12ms', connections: 5 },
+//   redis: { status: 'healthy', latency: '2ms', memory: '50MB' },
+//   identity: { status: 'healthy', latency: '45ms', uptime: '2h 15m' },
+//   organization: { status: 'degraded', latency: '1200ms', error: 'Database slow queries detected' },
+//   reference: { status: 'healthy', latency: '30ms' },
+//   activity: { status: 'unhealthy', error: 'Service not responding' },
+//   calculation: { status: 'healthy', latency: '120ms' },
+//   reporting: { status: 'healthy', latency: '80ms' },
+//   audit: { status: 'healthy', latency: '25ms' }
+// }
+
+// Health check specific service
+execute({
+  action: 'health-check',
+  content: 'identity',
+  options: { detailed: true }
+})
+
+// Add to Make file
+health:
+	@execute({action: 'health-check', content: 'all'})
+```
+
+### 9. Dry-Run Mode Operations 🆕
+Test destructive operations safely:
+
+```javascript
+// Dry-run: Delete operation
+execute({
+  action: 'mongodb',
+  content: 'db("clenergize_identity").collection("users").deleteMany({status: "inactive"})',
+  options: { dryRun: true }
+})
+// Returns: "Would delete 1,234 documents from users collection"
+// No actual deletion occurs!
+
+// Dry-run: Bash commands
+execute({
+  action: 'bash',
+  content: 'rm -rf node_modules',
+  options: { dryRun: true }
+})
+// Returns: "Would execute: rm -rf node_modules"
+```
+
+### 10. MongoDB Transaction Operations 🆕
+Multi-collection atomic transactions:
+
+```javascript
+// Transaction wrapper
+execute({
+  action: 'mongodb-transaction',
+  content: [
+    'db("clenergize_identity").collection("users").insertOne({email: "user@example.com"})',
+    'db("clenergize_organization").collection("projects").insertOne({name: "Project A", ownerId: "user-123"})',
+    'db("clenergize_audit").collection("events").insertOne({type: "USER_CREATED", userId: "user-123"})'
+  ],
+  options: {
+    timeout: 30000,
+    rollbackOnError: true
+  }
+})
+// Either ALL operations succeed, or ALL are rolled back
+```
+
+### 11. AWS/LocalStack Operations
 AWS services through LocalStack:
 
 ```javascript

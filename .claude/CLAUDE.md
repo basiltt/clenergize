@@ -451,6 +451,62 @@ async function getSecret(secretName: string) {
 const secret = process.env.JWT_SECRET || 'default-secret'; // ❌
 ```
 
+### Security Hardening Checklist (Sprint 0.2-0.3)
+
+Before deploying ANY service to production, ensure ALL items are checked:
+
+#### Authentication & Authorization
+- [ ] JWT signature verification implemented with JWKS
+- [ ] Token expiration enforced (max 1 hour for access tokens)
+- [ ] Refresh token rotation implemented
+- [ ] Role-based access control (RBAC) configured
+- [ ] All write endpoints require authentication
+- [ ] API rate limiting configured (per user/IP)
+
+#### Secrets & Configuration
+- [ ] No secrets in code or environment files
+- [ ] AWS Secrets Manager integrated for production
+- [ ] No default fallback values for secrets
+- [ ] Environment variables validated on startup
+- [ ] Secrets rotation policy configured (90 days)
+
+#### Input Validation
+- [ ] All API inputs validated with Zod schemas
+- [ ] SQL/NoSQL injection prevention verified
+- [ ] XSS prevention on all user inputs
+- [ ] File upload validation (type, size, content)
+- [ ] Request size limits enforced
+
+#### Data Protection
+- [ ] PII data encrypted at rest
+- [ ] TLS 1.3 enforced for all connections
+- [ ] Database connections use SSL/TLS
+- [ ] Sensitive fields redacted from logs
+- [ ] CORS configured with specific origins (no wildcards)
+
+#### Monitoring & Incident Response
+- [ ] Correlation IDs implemented (see below)
+- [ ] Security events logged to audit service
+- [ ] Failed authentication attempts monitored
+- [ ] Anomaly detection alerts configured
+- [ ] Incident response runbook documented
+
+#### Dependencies & Supply Chain
+- [ ] npm audit shows 0 high/critical vulnerabilities
+- [ ] Dependency scanning in CI/CD pipeline
+- [ ] Container images scanned (Trivy/Snyk)
+- [ ] Base images from trusted sources only
+- [ ] Software Bill of Materials (SBOM) generated
+
+#### Deployment Security
+- [ ] Non-root user in Docker containers
+- [ ] Read-only file systems where possible
+- [ ] Network policies configured (K8s)
+- [ ] Service mesh mTLS enabled (production)
+- [ ] Secrets never in container images
+
+**Security Sign-Off**: Requires approval from Security Agent before production deployment.
+
 ## 📊 DATABASE PATTERNS
 
 ### Repository Pattern
@@ -554,10 +610,10 @@ describe('UserService', () => {
     it('should create user with valid data', async () => {
       // Arrange
       const userData = { email: 'test@example.com', ... };
-      
+
       // Act
       const user = await userService.createUser(userData);
-      
+
       // Assert
       expect(user).toMatchObject({
         id: expect.any(String),
@@ -565,17 +621,69 @@ describe('UserService', () => {
         status: 'ACTIVE'
       });
     });
-    
+
     it('should publish UserCreated event', async () => {
       // Test event publishing
     });
-    
+
     it('should rollback on error', async () => {
       // Test transaction rollback
     });
   });
 });
 ```
+
+### Contract Testing (Sprint 0.4)
+
+Contract testing ensures API compatibility between microservices without requiring full integration tests. We use **Pact** for consumer-driven contract testing.
+
+**Quick Reference**:
+```typescript
+// Consumer (Organization Service) tests what it expects from Identity Service
+import { pactWith } from 'jest-pact';
+
+pactWith({ consumer: 'OrganizationService', provider: 'IdentityService' }, (provider) => {
+  describe('GET /users/:id', () => {
+    beforeEach(() => {
+      return provider.addInteraction({
+        state: 'user exists',
+        uponReceiving: 'a request for user details',
+        withRequest: {
+          method: 'GET',
+          path: '/v1/users/user-123',
+          headers: { Authorization: 'Bearer token' }
+        },
+        willRespondWith: {
+          status: 200,
+          body: {
+            id: 'user-123',
+            email: 'test@example.com',
+            role: 'ADMIN'
+          }
+        }
+      });
+    });
+
+    it('fetches user details', async () => {
+      const user = await organizationService.getUserDetails('user-123');
+      expect(user.email).toBe('test@example.com');
+    });
+  });
+});
+```
+
+**Provider Verification** (Identity Service):
+```bash
+# Verify that Identity Service actually satisfies the contract
+npm run test:pact:verify
+```
+
+**Complete Implementation Guide**: See [Docs/PHASE5_SDLC_Quality_Strategy.md](Docs/PHASE5_SDLC_Quality_Strategy.md#contract-testing-with-pact) for:
+- Consumer-driven contract workflow
+- Provider verification setup
+- CI/CD integration
+- Breaking change detection
+- Pact Broker configuration
 
 ## 📈 MONITORING & OBSERVABILITY
 
@@ -619,6 +727,243 @@ app.get('/health', (req, res) => {
   });
 });
 ```
+
+### Correlation ID Implementation (CRITICAL - Sprint 0.1)
+
+Correlation IDs enable request tracing across all microservices. Every request must carry a correlation ID from entry to exit.
+
+#### AsyncLocalStorage Pattern (Recommended)
+
+```typescript
+// src/shared/correlation/correlation.service.ts
+import { Injectable } from '@nestjs/common';
+import { AsyncLocalStorage } from 'async_hooks';
+
+export interface CorrelationContext {
+  correlationId: string;
+  causationId?: string;
+  userId?: string;
+  startTime: number;
+}
+
+@Injectable()
+export class CorrelationService {
+  private static storage = new AsyncLocalStorage<CorrelationContext>();
+
+  static getStorage() {
+    return this.storage;
+  }
+
+  getContext(): CorrelationContext | undefined {
+    return CorrelationService.storage.getStore();
+  }
+
+  getCorrelationId(): string {
+    return this.getContext()?.correlationId || 'UNKNOWN';
+  }
+
+  getCausationId(): string | undefined {
+    return this.getContext()?.causationId;
+  }
+
+  getUserId(): string | undefined {
+    return this.getContext()?.userId;
+  }
+}
+```
+
+#### Middleware Integration
+
+```typescript
+// src/infrastructure/http/middleware/correlation.middleware.ts
+import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Request, Response, NextFunction } from 'express';
+import { v4 as uuidv4 } from 'uuid';
+import { CorrelationService } from '@/shared/correlation/correlation.service';
+
+@Injectable()
+export class CorrelationMiddleware implements NestMiddleware {
+  use(req: Request, res: Response, next: NextFunction) {
+    const correlationId = req.headers['x-correlation-id'] as string || uuidv4();
+    const causationId = req.headers['x-causation-id'] as string;
+    const userId = req.user?.id;
+
+    const context = {
+      correlationId,
+      causationId,
+      userId,
+      startTime: Date.now()
+    };
+
+    // Store context for this async execution
+    CorrelationService.getStorage().run(context, () => {
+      // Add to response headers
+      res.setHeader('X-Correlation-Id', correlationId);
+      if (causationId) {
+        res.setHeader('X-Causation-Id', causationId);
+      }
+
+      next();
+    });
+  }
+}
+```
+
+#### Logger Integration
+
+```typescript
+// src/shared/logger/logger.service.ts
+import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
+import winston from 'winston';
+import { CorrelationService } from '@/shared/correlation/correlation.service';
+
+@Injectable()
+export class LoggerService implements NestLoggerService {
+  private logger: winston.Logger;
+
+  constructor(private correlationService: CorrelationService) {
+    this.logger = winston.createLogger({
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      ),
+      transports: [
+        new winston.transports.Console()
+      ]
+    });
+  }
+
+  private enrichWithContext(message: string, context?: any) {
+    return {
+      message,
+      correlationId: this.correlationService.getCorrelationId(),
+      causationId: this.correlationService.getCausationId(),
+      userId: this.correlationService.getUserId(),
+      service: process.env.SERVICE_NAME,
+      ...context
+    };
+  }
+
+  log(message: string, context?: any) {
+    this.logger.info(this.enrichWithContext(message, context));
+  }
+
+  error(message: string, trace?: string, context?: any) {
+    this.logger.error(this.enrichWithContext(message, { ...context, trace }));
+  }
+
+  warn(message: string, context?: any) {
+    this.logger.warn(this.enrichWithContext(message, context));
+  }
+
+  debug(message: string, context?: any) {
+    this.logger.debug(this.enrichWithContext(message, context));
+  }
+}
+```
+
+#### HTTP Client Integration
+
+```typescript
+// src/shared/http/base-api-client.ts
+import { Injectable } from '@nestjs/common';
+import { CorrelationService } from '@/shared/correlation/correlation.service';
+
+@Injectable()
+export class BaseAPIClient {
+  constructor(private correlationService: CorrelationService) {}
+
+  async request<T>(url: string, options: RequestInit = {}): Promise<T> {
+    const correlationId = this.correlationService.getCorrelationId();
+
+    const headers = {
+      ...options.headers,
+      'X-Correlation-Id': correlationId,
+      'X-Causation-Id': correlationId // Current request becomes cause of new request
+    };
+
+    const response = await fetch(url, { ...options, headers });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+}
+```
+
+#### Event Publishing Integration
+
+```typescript
+// src/infrastructure/messaging/event-bus.service.ts
+import { Injectable } from '@nestjs/common';
+import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge';
+import { DomainEvent } from '@/domain/events/base.event';
+import { CorrelationService } from '@/shared/correlation/correlation.service';
+
+@Injectable()
+export class EventBusService {
+  constructor(
+    private eventBridge: EventBridgeClient,
+    private correlationService: CorrelationService
+  ) {}
+
+  async publish(event: DomainEvent): Promise<void> {
+    // Automatically enrich event with correlation IDs
+    const enrichedEvent = {
+      ...event,
+      correlationId: this.correlationService.getCorrelationId(),
+      causationId: event.id, // This event becomes the cause of future events
+      userId: this.correlationService.getUserId()
+    };
+
+    await this.eventBridge.send(new PutEventsCommand({
+      Entries: [{
+        Source: `clenergize.${process.env.SERVICE_NAME}`,
+        DetailType: event.type,
+        Detail: JSON.stringify(enrichedEvent),
+        EventBusName: process.env.EVENT_BUS_NAME
+      }]
+    }));
+  }
+}
+```
+
+#### Cross-Service Tracing Example
+
+```typescript
+// Request Flow:
+// 1. Frontend → API Gateway (generates correlation ID: req-123)
+// 2. Gateway → Identity Service (passes correlation ID: req-123)
+// 3. Identity Service publishes UserAuthenticated event (causation ID: event-456)
+// 4. Organization Service consumes event (correlation: req-123, causation: event-456)
+// 5. Organization Service calls Reference Service (correlation: req-123, causation: event-456)
+
+// All logs across services will have the same correlation ID:
+{
+  "correlationId": "req-123",
+  "causationId": "event-456",
+  "service": "identity-service",
+  "message": "User authenticated successfully"
+}
+
+{
+  "correlationId": "req-123",
+  "causationId": "event-456",
+  "service": "organization-service",
+  "message": "Processing user authentication event"
+}
+
+{
+  "correlationId": "req-123",
+  "causationId": "event-456",
+  "service": "reference-service",
+  "message": "Fetching user permissions"
+}
+```
+
+**Implementation Pattern**: See [.claude/patterns/correlation-id-implementation.md](.claude/patterns/correlation-id-implementation.md) for complete implementation guide.
 
 ## 📝 DECISION RECORDS
 

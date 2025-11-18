@@ -132,6 +132,553 @@ class BaseAPIClient {
    - Preserve useful error details without exposing sensitive data
    - Always include correlation ID in errors
 
+### Detailed Retry Policy Implementation
+
+```typescript
+interface RetryPolicyConfig {
+  maxRetries: number;
+  backoffMs: number;
+  retryableStatuses: number[];
+  retryableErrors: string[];
+}
+
+class BaseAPIClient {
+  private readonly retryPolicy: RetryPolicyConfig = {
+    maxRetries: 3,
+    backoffMs: 1000,
+    retryableStatuses: [408, 429, 500, 502, 503, 504],
+    retryableErrors: [
+      'ECONNRESET',
+      'ETIMEDOUT',
+      'ECONNREFUSED',
+      'NETWORK_ERROR'
+    ]
+  };
+
+  async request<T>(config: RequestConfig): Promise<T> {
+    let lastError: Error;
+
+    for (let attempt = 0; attempt <= this.retryPolicy.maxRetries; attempt++) {
+      try {
+        const response = await fetch(config.url, {
+          ...config,
+          signal: AbortSignal.timeout(config.timeout || 30000) // 30s timeout
+        });
+
+        if (!response.ok) {
+          throw await this.handleHttpError(response);
+        }
+
+        return await response.json();
+      } catch (error) {
+        lastError = error as Error;
+
+        // Don't retry if this is the last attempt
+        if (attempt >= this.retryPolicy.maxRetries) {
+          throw this.transformError(error);
+        }
+
+        // Check if error is retryable
+        if (!this.isRetryable(error, attempt, config.method)) {
+          throw this.transformError(error);
+        }
+
+        // Exponential backoff with jitter
+        const delay = this.calculateBackoff(attempt);
+        await this.sleep(delay);
+
+        console.log(`Retrying request (attempt ${attempt + 1}/${this.retryPolicy.maxRetries})...`);
+      }
+    }
+
+    throw new MaxRetriesExceededError(lastError!);
+  }
+
+  private isRetryable(
+    error: any,
+    attempt: number,
+    method: string = 'GET'
+  ): boolean {
+    // Only retry GET requests (idempotent)
+    if (method !== 'GET') {
+      return false;
+    }
+
+    // Don't retry if max attempts reached
+    if (attempt >= this.retryPolicy.maxRetries) {
+      return false;
+    }
+
+    // Check HTTP status codes
+    if (error instanceof HttpError) {
+      return this.retryPolicy.retryableStatuses.includes(error.status);
+    }
+
+    // Check error messages
+    return this.retryPolicy.retryableErrors.some(code =>
+      error.message?.includes(code)
+    );
+  }
+
+  private calculateBackoff(attempt: number): number {
+    // Exponential backoff: 1s, 2s, 4s, 8s...
+    const exponentialDelay = this.retryPolicy.backoffMs * Math.pow(2, attempt);
+
+    // Add jitter to prevent thundering herd (±20%)
+    const jitter = exponentialDelay * 0.2 * (Math.random() - 0.5);
+
+    return exponentialDelay + jitter;
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private async handleHttpError(response: Response): Promise<HttpError> {
+    const body = await response.json().catch(() => ({}));
+
+    return new HttpError({
+      status: response.status,
+      code: body.code || 'UNKNOWN_ERROR',
+      message: body.message || response.statusText,
+      details: body.details,
+      correlationId: response.headers.get('X-Correlation-ID') || undefined
+    });
+  }
+
+  private transformError(error: unknown): APIError {
+    if (error instanceof HttpError) {
+      return {
+        category: this.categorizeHttpError(error.status),
+        message: error.message,
+        statusCode: error.status,
+        code: error.code,
+        correlationId: error.correlationId
+      };
+    }
+
+    if (error instanceof NetworkError) {
+      return {
+        category: ErrorCategory.NetworkError,
+        message: 'Network connection lost. Please check your internet.',
+        code: 'NETWORK_ERROR'
+      };
+    }
+
+    if (error instanceof MaxRetriesExceededError) {
+      return {
+        category: ErrorCategory.ServerError,
+        message: 'Service is experiencing issues. Please try again later.',
+        code: 'MAX_RETRIES_EXCEEDED'
+      };
+    }
+
+    return {
+      category: ErrorCategory.UnknownError,
+      message: 'An unexpected error occurred',
+      code: 'UNKNOWN_ERROR'
+    };
+  }
+
+  private categorizeHttpError(status: number): ErrorCategory {
+    if (status === 401 || status === 403) return ErrorCategory.AuthError;
+    if (status === 400) return ErrorCategory.ValidationError;
+    if (status === 404) return ErrorCategory.NotFoundError;
+    if (status === 409) return ErrorCategory.ConflictError;
+    if (status === 429) return ErrorCategory.RateLimitError;
+    if (status >= 500) return ErrorCategory.ServerError;
+    return ErrorCategory.UnknownError;
+  }
+}
+
+// Custom error classes
+export class HttpError extends Error {
+  constructor(public readonly params: {
+    status: number;
+    code: string;
+    message: string;
+    details?: any;
+    correlationId?: string;
+  }) {
+    super(params.message);
+    this.name = 'HttpError';
+  }
+
+  get status(): number {
+    return this.params.status;
+  }
+
+  get code(): string {
+    return this.params.code;
+  }
+
+  get correlationId(): string | undefined {
+    return this.params.correlationId;
+  }
+}
+
+export class NetworkError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NetworkError';
+  }
+}
+
+export class MaxRetriesExceededError extends Error {
+  constructor(public readonly originalError: Error) {
+    super('Maximum retry attempts exceeded');
+    this.name = 'MaxRetriesExceededError';
+  }
+}
+```
+
+### User-Friendly Error Messages
+
+```typescript
+export class ErrorMessageService {
+  /**
+   * Convert technical errors to user-friendly messages
+   */
+  getDisplayMessage(error: APIError): string {
+    switch (error.category) {
+      case ErrorCategory.AuthError:
+        if (error.code === 'AUTH_TOKEN_EXPIRED') {
+          return 'Your session has expired. Please log in again.';
+        }
+        if (error.code === 'AUTH_REQUIRED') {
+          return 'Please log in to continue';
+        }
+        if (error.code === 'PERMISSION_DENIED') {
+          return "You don't have permission to perform this action";
+        }
+        return 'Authentication failed. Please try again.';
+
+      case ErrorCategory.ValidationError:
+        return error.details?.message || 'Please check your input and try again';
+
+      case ErrorCategory.NotFoundError:
+        return 'The requested resource was not found';
+
+      case ErrorCategory.ConflictError:
+        return 'This action conflicts with existing data';
+
+      case ErrorCategory.RateLimitError:
+        return 'Too many requests. Please wait a moment and try again.';
+
+      case ErrorCategory.ServerError:
+        return 'Our servers are experiencing issues. Please try again later.';
+
+      case ErrorCategory.NetworkError:
+        return 'Network connection lost. Please check your internet connection.';
+
+      default:
+        return 'An unexpected error occurred. Please try again.';
+    }
+  }
+
+  /**
+   * Get error severity for UI display
+   */
+  getSeverity(error: APIError): 'error' | 'warning' | 'info' {
+    switch (error.category) {
+      case ErrorCategory.AuthError:
+      case ErrorCategory.ServerError:
+      case ErrorCategory.NetworkError:
+        return 'error';
+
+      case ErrorCategory.RateLimitError:
+      case ErrorCategory.ConflictError:
+        return 'warning';
+
+      default:
+        return 'info';
+    }
+  }
+
+  /**
+   * Determine if error should show retry button
+   */
+  canRetry(error: APIError): boolean {
+    return [
+      ErrorCategory.ServerError,
+      ErrorCategory.NetworkError,
+      ErrorCategory.RateLimitError
+    ].includes(error.category);
+  }
+}
+
+const errorMessageService = new ErrorMessageService();
+export default errorMessageService;
+```
+
+### React Error Boundary
+
+```typescript
+// components/ErrorBoundary.tsx
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import * as Sentry from '@sentry/react';
+import errorMessageService from '@/lib/api/error-message-service';
+import type { APIError } from '@/lib/api/types';
+
+interface Props {
+  children: ReactNode;
+  component?: string;
+  userId?: string;
+  fallback?: (error: Error, resetError: () => void) => ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+  displayMessage: string;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null,
+      displayMessage: ''
+    };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return {
+      hasError: true,
+      error,
+      displayMessage: error instanceof APIError
+        ? errorMessageService.getDisplayMessage(error)
+        : 'An unexpected error occurred'
+    };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log to error tracking service (Sentry)
+    Sentry.captureException(error, {
+      extra: errorInfo,
+      tags: {
+        component: this.props.component || 'unknown',
+        userId: this.props.userId
+      }
+    });
+
+    console.error('ErrorBoundary caught error:', error, errorInfo);
+  }
+
+  resetError = () => {
+    this.setState({
+      hasError: false,
+      error: null,
+      displayMessage: ''
+    });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback(this.state.error!, this.resetError);
+      }
+
+      return (
+        <div className="error-boundary-fallback">
+          <h2>Something went wrong</h2>
+          <p>{this.state.displayMessage}</p>
+          <button onClick={this.resetError}>Try Again</button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Usage:
+// <ErrorBoundary component="ProjectList" userId={user.id}>
+//   <ProjectList />
+// </ErrorBoundary>
+```
+
+### Optimistic Updates with Rollback
+
+```typescript
+// hooks/useOptimisticUpdate.ts
+import { useState, useCallback } from 'react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import type { APIError } from '@/lib/api/types';
+
+interface OptimisticUpdateOptions<T> {
+  /**
+   * Optimistic update to apply immediately
+   */
+  optimisticUpdate: (current: T) => T;
+
+  /**
+   * Async operation to perform
+   */
+  operation: () => Promise<T>;
+
+  /**
+   * Error handler
+   */
+  onError?: (error: APIError) => void;
+
+  /**
+   * Success handler
+   */
+  onSuccess?: (result: T) => void;
+}
+
+export function useOptimisticUpdate<T>() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<APIError | null>(null);
+
+  const execute = useCallback(async (
+    currentValue: T,
+    options: OptimisticUpdateOptions<T>
+  ): Promise<T | null> => {
+    // Store original value for rollback
+    const originalValue = currentValue;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Apply optimistic update immediately
+      const optimisticValue = options.optimisticUpdate(currentValue);
+
+      // Perform async operation
+      const result = await options.operation();
+
+      // Success - optimistic update confirmed
+      if (options.onSuccess) {
+        options.onSuccess(result);
+      }
+
+      return result;
+    } catch (err) {
+      // Rollback optimistic update
+      const apiError = err as APIError;
+      setError(apiError);
+
+      if (options.onError) {
+        options.onError(apiError);
+      }
+
+      // Return original value (rollback)
+      return originalValue;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return { execute, isLoading, error };
+}
+
+// Usage Example:
+export function ProjectList() {
+  const projects = useAppSelector(state => state.projects.items);
+  const { execute, isLoading } = useOptimisticUpdate<Project[]>();
+  const apiClient = useAPIClient();
+
+  const handleToggleArchive = async (projectId: string) => {
+    await execute(projects, {
+      // Optimistic UI update
+      optimisticUpdate: (current) =>
+        current.map(p =>
+          p.id === projectId
+            ? { ...p, archived: !p.archived }
+            : p
+        ),
+
+      // Actual API call
+      operation: async () => {
+        const project = projects.find(p => p.id === projectId)!;
+        return await apiClient.projects.update(projectId, {
+          archived: !project.archived
+        });
+      },
+
+      // Error handler - rollback happens automatically
+      onError: (error) => {
+        toast.error(errorMessageService.getDisplayMessage(error));
+      },
+
+      // Success handler
+      onSuccess: (result) => {
+        toast.success('Project updated successfully');
+      }
+    });
+  };
+
+  return (
+    <div>
+      {projects.map(project => (
+        <ProjectCard
+          key={project.id}
+          project={project}
+          onToggleArchive={() => handleToggleArchive(project.id)}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+### Network Error Handling
+
+```typescript
+// hooks/useNetworkStatus.ts
+import { useState, useEffect } from 'react';
+
+export function useNetworkStatus() {
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return isOnline;
+}
+
+// components/NetworkStatusBanner.tsx
+export function NetworkStatusBanner() {
+  const isOnline = useNetworkStatus();
+
+  if (isOnline) return null;
+
+  return (
+    <div className="network-status-banner offline">
+      <AlertIcon />
+      <span>No internet connection. Changes will be saved when you're back online.</span>
+    </div>
+  );
+}
+
+// Enhanced BaseAPIClient with network detection
+class BaseAPIClient {
+  async request<T>(config: RequestConfig): Promise<T> {
+    // Check network status before making request
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      throw new NetworkError('No internet connection');
+    }
+
+    // ... rest of request logic
+  }
+}
+```
+
 ## IdentityClient Implementation Blueprint
 
 ### Method Specifications
