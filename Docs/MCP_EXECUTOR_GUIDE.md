@@ -851,16 +851,19 @@ The MCP Executor handles powerful operations that require strict security contro
 
 ### 1. Input Sanitization
 
-**NEVER use `eval()` for MongoDB queries**
+**CRITICAL: NEVER use `eval()` for MongoDB queries - This creates code injection vulnerabilities!**
+
+> ⚠️ **WARNING**: The following anti-pattern must NEVER be implemented:
+> ```
+> // ❌ NEVER DO THIS - CRITICAL SECURITY VULNERABILITY
+> // await eval(`client.${query}`) // CODE INJECTION RISK!
+> ```
+> Using eval() allows arbitrary code execution and is a critical security vulnerability.
+> Always use the Function constructor with proper sanitization instead.
+
+**✅ CORRECT IMPLEMENTATION - Use Function constructor with sanitization:**
 
 ```javascript
-// ❌ DANGEROUS - DO NOT USE
-async executeMongo(query) {
-  const result = await eval(`client.${query}`);  // CODE INJECTION RISK!
-  return result;
-}
-
-// ✅ SAFE - Use Function constructor with sanitization
 async executeMongo(queryString) {
   const client = await this.connectMongo();
 
@@ -1187,8 +1190,197 @@ Before deploying the MCP Executor:
 - [ ] Environment variable validation on startup
 - [ ] Error messages don't expose sensitive information
 - [ ] Logging redacts credentials and tokens
+- [ ] Correlation IDs propagated through all operations
 
-### 11. Incident Response
+### 11. Correlation ID Support
+
+**CRITICAL: All MCP Executor operations must propagate correlation IDs for distributed tracing and debugging.**
+
+See `.claude/patterns/correlation-id-implementation.md` for complete implementation details.
+
+#### Why Correlation IDs Matter
+
+Correlation IDs allow you to trace a single user request across multiple services, making debugging distributed systems significantly easier. Without them, troubleshooting production issues becomes nearly impossible.
+
+#### Implementation in MCP Executor
+
+**1. Accept correlation ID from caller:**
+
+```javascript
+class ClenergizeExecutor {
+  constructor() {
+    this.correlationService = new CorrelationService();
+  }
+
+  async execute(action, content, options = {}) {
+    const correlationId = options.correlationId || uuidv4();
+
+    return await this.correlationService.run(correlationId, async () => {
+      const startTime = Date.now();
+
+      try {
+        const result = await this.executeAction(action, content, options);
+
+        this.logger.info('MCP operation completed', {
+          action,
+          correlationId,
+          duration: Date.now() - startTime
+        });
+
+        return result;
+      } catch (error) {
+        this.logger.error('MCP operation failed', {
+          action,
+          correlationId,
+          error: error.message,
+          duration: Date.now() - startTime
+        });
+        throw error;
+      }
+    });
+  }
+}
+```
+
+**2. Propagate through MongoDB operations:**
+
+```javascript
+async executeMongo(queryString, options = {}) {
+  const correlationId = this.correlationService.getCorrelationId();
+  const client = await this.connectMongo();
+
+  this.logger.info('MongoDB operation starting', {
+    query: queryString,
+    correlationId
+  });
+
+  try {
+    const sanitized = this.sanitizeMongoQuery(queryString);
+    const executor = new Function('client', `return ${sanitized}`);
+    const result = await executor(client);
+
+    this.logger.info('MongoDB operation succeeded', {
+      correlationId,
+      resultCount: result?.length || 0
+    });
+
+    return {
+      success: true,
+      result: JSON.parse(JSON.stringify(result)),
+      correlationId,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    this.logger.error('MongoDB operation failed', {
+      correlationId,
+      error: error.message
+    });
+
+    return {
+      success: false,
+      error: error.message,
+      correlationId,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+```
+
+**3. Propagate through HTTP requests (Jira, external APIs):**
+
+```javascript
+async executeJira(content, options = {}) {
+  const correlationId = this.correlationService.getCorrelationId();
+
+  const response = await fetch(`${this.jiraBaseUrl}/rest/api/3/${content}`, {
+    method: options.method || 'GET',
+    headers: {
+      'Authorization': `Basic ${this.jiraAuth}`,
+      'Content-Type': 'application/json',
+      'X-Correlation-ID': correlationId,  // Propagate to external service
+      'X-Request-ID': uuidv4()
+    },
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+
+  this.logger.info('Jira API call completed', {
+    endpoint: content,
+    status: response.status,
+    correlationId
+  });
+
+  return await response.json();
+}
+```
+
+**4. Include in all log messages:**
+
+```javascript
+class Logger {
+  constructor(correlationService) {
+    this.correlationService = correlationService;
+    this.winston = winston.createLogger({
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      )
+    });
+  }
+
+  info(message, meta = {}) {
+    this.winston.info(message, {
+      ...meta,
+      correlationId: this.correlationService.getCorrelationId(),
+      service: 'mcp-executor'
+    });
+  }
+
+  error(message, meta = {}) {
+    this.winston.error(message, {
+      ...meta,
+      correlationId: this.correlationService.getCorrelationId(),
+      service: 'mcp-executor'
+    });
+  }
+}
+```
+
+**5. Usage Example:**
+
+```javascript
+// Agent calling MCP Executor with correlation ID
+const result = await execute({
+  action: 'mongodb',
+  content: 'db("clenergize_identity").collection("users").find({})',
+  options: {
+    correlationId: 'req-12345-abc-67890'  // From incoming request
+  }
+});
+
+// All downstream operations will use this correlation ID
+// MongoDB query → correlationId: req-12345-abc-67890
+// Logs → correlationId: req-12345-abc-67890
+// Jira updates → X-Correlation-ID: req-12345-abc-67890
+```
+
+**6. CloudWatch/Grafana Query:**
+
+```
+// Find all operations for a specific correlation ID
+fields @timestamp, action, correlationId, message
+| filter correlationId = "req-12345-abc-67890"
+| sort @timestamp asc
+```
+
+**Benefits:**
+
+- ✅ Trace user requests across all services and MCP operations
+- ✅ Debug production issues by following correlation ID through logs
+- ✅ Measure end-to-end latency for operations
+- ✅ Identify bottlenecks in distributed workflows
+- ✅ Essential for production support and incident response
+
+### 12. Incident Response
 
 **If a security issue is discovered:**
 

@@ -641,7 +641,7 @@ GET    /intensity/project/:id  - Carbon intensity metrics
 ## Events Published
 
 ```typescript
-// Calculation.Emission.Calculated
+// calculation.emission.calculated.v1
 {
   calculationId: string;
   activityId: string;
@@ -654,7 +654,7 @@ GET    /intensity/project/:id  - Carbon intensity metrics
   timestamp: Date;
 }
 
-// Calculation.Rollup.Completed
+// calculation.rollup.completed.v1
 {
   projectId: string;
   period: Period;
@@ -664,7 +664,7 @@ GET    /intensity/project/:id  - Carbon intensity metrics
   timestamp: Date;
 }
 
-// Calculation.Project.Recalculated
+// calculation.recalculation.triggered.v1
 {
   projectId: string;
   totalActivities: number;
@@ -673,6 +673,66 @@ GET    /intensity/project/:id  - Carbon intensity metrics
   timestamp: Date;
 }
 ```
+
+## Events Consumed
+
+```typescript
+// activity.bulk-import.completed.v1
+// Triggered when activity data bulk import finishes
+// Action: Calculate emissions for all imported activities
+{
+  importId: string;
+  projectId: string;
+  totalActivities: number;
+  validActivities: number;
+  timestamp: Date;
+}
+
+// activity.data.ingested.v1
+// Triggered when individual activity data is ingested
+// Action: Calculate emissions for single activity
+{
+  activityId: string;
+  projectId: string;
+  activityType: string;
+  scope: string;
+  timestamp: Date;
+}
+
+// reference.emission-factor.updated.v1
+// Triggered when emission factors are updated
+// Action: Trigger recalculation for affected activities
+{
+  factorId: string;
+  oldValue: number;
+  newValue: number;
+  affectedActivities: number;
+  timestamp: Date;
+}
+
+// organization.project.created.v1
+// Triggered when a new project is created
+// Action: Initialize calculation context for project
+{
+  projectId: string;
+  organizationId: string;
+  hierarchyId: string;
+  timestamp: Date;
+}
+```
+
+## Integration Points
+
+### Provides to Other Services
+- Emission calculation results for reporting
+- Carbon footprint aggregations for dashboards
+- Calculation metadata for audit trails
+
+### Dependencies
+- **Activity Service**: Consumes activity data events
+- **Reference Service**: Consumes emission factor updates
+- **Organization Service**: Consumes project lifecycle events
+- **Audit Service**: All calculations logged
 
 ## Database Schema
 

@@ -334,23 +334,24 @@ export class MobileCombustionV2 implements CalculationAlgorithm {
 
 ### 8. ❌ No Config Validation
 
-**OLD (SCATTERED):**
+**OLD (SCATTERED - DO NOT USE):**
 ```typescript
-// Found throughout OLD services
-const mongoUri = process.env.MONGO_URI;  // What if undefined?
+// ❌ BAD - Found throughout OLD services with inconsistent naming
+const mongoUri = process.env.MONGO_URI;  // WRONG - use MONGODB_URI
 const port = process.env.PORT || 3000;  // Inconsistent defaults
 const secret = process.env.SECRET || 'default';  // Security risk!
 ```
 
-**NEW (VALIDATED):**
+**NEW (VALIDATED - CORRECT STANDARD):**
 ```typescript
-// NEW/shared/config/
+// ✅ CORRECT - NEW/shared/config/
 import { z } from 'zod';
 
 const ConfigSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']),
   PORT: z.number().min(1000).max(65535),
-  
+
+  // ✅ STANDARD: Always use MONGODB_URI (not MONGO_URI)
   MONGODB_URI: z.string().url(),
   MONGODB_DATABASE: z.string().min(1),
   
@@ -461,7 +462,7 @@ export abstract class DomainEvent {
 }
 
 export class UserCreatedEvent extends DomainEvent {
-  readonly type = 'Identity.User.Created';
+  readonly type = 'identity.user.created.v1';
   
   constructor(
     public readonly payload: {

@@ -649,7 +649,7 @@ echo "📋 Creating EventBridge rules..."
 aws --endpoint-url=http://localhost:4566 events put-rule \
   --name calculation-trigger \
   --event-bus-name clenergize-event-bus \
-  --event-pattern '{"source":["activity-service"],"detail-type":["Activity.Data.Ingested"]}' \
+  --event-pattern '{"source":["activity-service"],"detail-type":["activity.data.ingested.v1"]}' \
   --region us-east-1
 
 echo "✅ LocalStack initialization complete!"

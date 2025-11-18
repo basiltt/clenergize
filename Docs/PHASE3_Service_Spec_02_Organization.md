@@ -48,7 +48,7 @@
 
 #### Company Endpoints
 ```yaml
-POST /api/v1/companies
+POST /v1/companies
   Request:
     - name: string (required)
     - registrationNumber: string
@@ -66,11 +66,11 @@ POST /api/v1/companies
     - companyId: string
     - company: Company
 
-GET /api/v1/companies/:companyId
+GET /v1/companies/:companyId
   Response:
     - company: Company
 
-PUT /api/v1/companies/:companyId
+PUT /v1/companies/:companyId
   Request:
     - name: string
     - industry: string
@@ -79,12 +79,12 @@ PUT /api/v1/companies/:companyId
   Response:
     - company: Company
 
-DELETE /api/v1/companies/:companyId
+DELETE /v1/companies/:companyId
   Response:
     - success: boolean
     - message: string
 
-GET /api/v1/companies
+GET /v1/companies
   Query:
     - search: string
     - industry: string
@@ -98,7 +98,7 @@ GET /api/v1/companies
 
 #### Project Endpoints
 ```yaml
-POST /api/v1/projects
+POST /v1/projects
   Request:
     - companyId: string (required)
     - name: string (required)
@@ -117,11 +117,11 @@ POST /api/v1/projects
     - projectId: string
     - project: Project
 
-GET /api/v1/projects/:projectId
+GET /v1/projects/:projectId
   Response:
     - project: Project
 
-PUT /api/v1/projects/:projectId
+PUT /v1/projects/:projectId
   Request:
     - name: string
     - description: string
@@ -131,7 +131,7 @@ PUT /api/v1/projects/:projectId
   Response:
     - project: Project
 
-GET /api/v1/projects
+GET /v1/projects
   Query:
     - companyId: string
     - status: draft|active|closed
@@ -143,7 +143,7 @@ GET /api/v1/projects
     - projects: Project[]
     - total: number
 
-POST /api/v1/projects/:projectId/clone
+POST /v1/projects/:projectId/clone
   Request:
     - newName: string (required)
     - includeData: boolean
@@ -152,7 +152,7 @@ POST /api/v1/projects/:projectId/clone
     - projectId: string
     - project: Project
 
-DELETE /api/v1/projects/:projectId
+DELETE /v1/projects/:projectId
   Response:
     - success: boolean
     - archived: boolean
@@ -160,7 +160,7 @@ DELETE /api/v1/projects/:projectId
 
 #### Hierarchy Endpoints
 ```yaml
-POST /api/v1/hierarchies/entities
+POST /v1/hierarchies/entities
   Request:
     - companyId: string (required)
     - code: string (required, unique)
@@ -176,13 +176,13 @@ POST /api/v1/hierarchies/entities
     - entityId: string
     - entity: Entity
 
-GET /api/v1/hierarchies/entities/:entityId
+GET /v1/hierarchies/entities/:entityId
   Query:
     - asOf: ISO8601 (point-in-time query)
   Response:
     - entity: Entity
 
-PUT /api/v1/hierarchies/entities/:entityId
+PUT /v1/hierarchies/entities/:entityId
   Request:
     - name: string
     - description: string
@@ -191,7 +191,7 @@ PUT /api/v1/hierarchies/entities/:entityId
   Response:
     - entity: Entity
 
-POST /api/v1/hierarchies/subsidiaries
+POST /v1/hierarchies/subsidiaries
   Request:
     - entityId: string (required, parent)
     - code: string (required, unique within entity)
@@ -203,11 +203,11 @@ POST /api/v1/hierarchies/subsidiaries
     - subsidiaryId: string
     - subsidiary: Subsidiary
 
-GET /api/v1/hierarchies/subsidiaries/:subsidiaryId
+GET /v1/hierarchies/subsidiaries/:subsidiaryId
   Response:
     - subsidiary: Subsidiary
 
-POST /api/v1/hierarchies/locations
+POST /v1/hierarchies/locations
   Request:
     - subsidiaryId: string (required, parent)
     - code: string (required, unique within subsidiary)
@@ -223,11 +223,11 @@ POST /api/v1/hierarchies/locations
     - locationId: string
     - location: Location
 
-GET /api/v1/hierarchies/locations/:locationId
+GET /v1/hierarchies/locations/:locationId
   Response:
     - location: Location
 
-GET /api/v1/hierarchies/tree
+GET /v1/hierarchies/tree
   Query:
     - companyId: string (required)
     - projectId: string
@@ -237,7 +237,7 @@ GET /api/v1/hierarchies/tree
   Response:
     - hierarchy: HierarchyTree
 
-POST /api/v1/hierarchies/import
+POST /v1/hierarchies/import
   Request:
     - companyId: string (required)
     - format: csv|excel|json
@@ -252,7 +252,7 @@ POST /api/v1/hierarchies/import
         valid: number
         errors: array
 
-GET /api/v1/hierarchies/validate
+GET /v1/hierarchies/validate
   Request:
     - companyId: string (required)
     - structure: HierarchyStructure
@@ -264,7 +264,7 @@ GET /api/v1/hierarchies/validate
 
 #### Team Assignment Endpoints
 ```yaml
-POST /api/v1/projects/:projectId/assignments
+POST /v1/projects/:projectId/assignments
   Request:
     - userId: string (required)
     - roleId: string (required)
@@ -278,7 +278,7 @@ POST /api/v1/projects/:projectId/assignments
     - assignmentId: string
     - assignment: Assignment
 
-GET /api/v1/projects/:projectId/assignments
+GET /v1/projects/:projectId/assignments
   Query:
     - userId: string
     - roleId: string
@@ -288,7 +288,7 @@ GET /api/v1/projects/:projectId/assignments
     - assignments: Assignment[]
     - total: number
 
-PUT /api/v1/projects/:projectId/assignments/:assignmentId
+PUT /v1/projects/:projectId/assignments/:assignmentId
   Request:
     - roleId: string
     - scopes: array
@@ -296,12 +296,12 @@ PUT /api/v1/projects/:projectId/assignments/:assignmentId
   Response:
     - assignment: Assignment
 
-DELETE /api/v1/projects/:projectId/assignments/:assignmentId
+DELETE /v1/projects/:projectId/assignments/:assignmentId
   Response:
     - success: boolean
     - removedAt: ISO8601
 
-GET /api/v1/users/:userId/projects
+GET /v1/users/:userId/projects
   Query:
     - companyId: string
     - role: string
@@ -309,7 +309,7 @@ GET /api/v1/users/:userId/projects
   Response:
     - projects: ProjectAssignment[]
 
-GET /api/v1/permissions/effective
+GET /v1/permissions/effective
   Query:
     - userId: string (required)
     - projectId: string (required)
@@ -323,7 +323,7 @@ GET /api/v1/permissions/effective
 
 #### Invitation Endpoints
 ```yaml
-POST /api/v1/invitations
+POST /v1/invitations
   Request:
     - email: string (required)
     - projectId: string (required)
@@ -335,23 +335,23 @@ POST /api/v1/invitations
     - invitationId: string
     - invitation: Invitation
 
-GET /api/v1/invitations/:invitationId
+GET /v1/invitations/:invitationId
   Response:
     - invitation: Invitation
 
-POST /api/v1/invitations/:invitationId/accept
+POST /v1/invitations/:invitationId/accept
   Request:
     - userId: string (optional, if not logged in)
   Response:
     - assignmentId: string
     - project: Project
 
-POST /api/v1/invitations/:invitationId/resend
+POST /v1/invitations/:invitationId/resend
   Response:
     - success: boolean
     - resentAt: ISO8601
 
-DELETE /api/v1/invitations/:invitationId
+DELETE /v1/invitations/:invitationId
   Response:
     - success: boolean
     - cancelledAt: ISO8601

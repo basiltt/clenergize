@@ -19,7 +19,7 @@ Clenergize V3 is a carbon footprint management platform that enables organizatio
 │                     Presentation Layer                       │
 │  ┌────────────────────────────────────────────────────┐    │
 │  │          Frontend (Next.js 15 + React 19)          │    │
-│  │                    Port: 3005                      │    │
+│  │                    Port: 3000                      │    │
 │  └────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -161,7 +161,7 @@ Clenergize V3 is a carbon footprint management platform that enables organizatio
 - No database error handling
 - Missing ValidationPipe
 
-### 7. Frontend Application (Port: 3005)
+### 7. Frontend Application (Port: 3000)
 **Stack**: Next.js 15, React 19, Ant Design 5, Redux Toolkit
 **Responsibilities**:
 - User interface

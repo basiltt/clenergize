@@ -87,7 +87,7 @@ This guide establishes the coordination protocols for the 14 specialized Claude 
 
 ### 11. Frontend Agent
 - **Responsibility**: UI components, state management, accessibility
-- **Port**: 3005 (Next.js)
+- **Port**: 3000 (Next.js)
 - **Dependencies**: All backend services (via API Gateway)
 
 ### 12. DevOps Agent

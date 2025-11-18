@@ -620,7 +620,7 @@ GET    /aggregate/by-location - Group by location
 ## Events Published
 
 ```typescript
-// Activity.Activity.Recorded
+// activity.data.ingested.v1
 {
   activityId: string;
   projectId: string;
@@ -631,7 +631,7 @@ GET    /aggregate/by-location - Group by location
   timestamp: Date;
 }
 
-// Activity.Data.Validated
+// activity.data.validation-failed.v1
 {
   activityId: string;
   isValid: boolean;
@@ -641,7 +641,7 @@ GET    /aggregate/by-location - Group by location
   timestamp: Date;
 }
 
-// Activity.BulkImport.Completed
+// activity.bulk-import.completed.v1
 {
   importId: string;
   projectId: string;
@@ -652,6 +652,56 @@ GET    /aggregate/by-location - Group by location
   timestamp: Date;
 }
 ```
+
+## Events Consumed
+
+```typescript
+// organization.project.created.v1
+// Triggered when a new project is created
+// Action: Initialize activity data structures for project
+{
+  projectId: string;
+  organizationId: string;
+  hierarchyId: string;
+  createdBy: string;
+  timestamp: Date;
+}
+
+// organization.hierarchy.updated.v1
+// Triggered when project hierarchy is modified
+// Action: Update activity categorization and allocation rules
+{
+  projectId: string;
+  hierarchyId: string;
+  updatedBy: string;
+  changeType: string;
+  timestamp: Date;
+}
+
+// reference.emission-factor.updated.v1
+// Triggered when emission factors are updated
+// Action: Flag activities for recalculation
+{
+  factorId: string;
+  category: string;
+  oldValue: number;
+  newValue: number;
+  timestamp: Date;
+}
+```
+
+## Integration Points
+
+### Provides to Other Services
+- Activity data for emission calculations
+- Bulk import completion events
+- Validation results for data quality monitoring
+
+### Dependencies
+- **Organization Service**: Consumes project lifecycle events
+- **Reference Service**: Consumes emission factor updates for validation
+- **Calculation Service**: Provides validated activity data
+- **Audit Service**: All data ingestion events logged
 
 ## Database Schema
 

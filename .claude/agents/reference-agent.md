@@ -510,7 +510,7 @@ POST   /versions/migrate      - Run migrations (admin)
 ## Events Published
 
 ```typescript
-// Reference.EmissionFactor.Updated
+// reference.emission-factor.updated.v1
 {
   factorId: string;
   oldValue: number;
@@ -520,7 +520,7 @@ POST   /versions/migrate      - Run migrations (admin)
   timestamp: Date;
 }
 
-// Reference.DataVersion.Changed
+// reference.data-version.changed.v1
 {
   oldVersion: string;
   newVersion: string;
@@ -528,7 +528,7 @@ POST   /versions/migrate      - Run migrations (admin)
   timestamp: Date;
 }
 
-// Reference.BulkImport.Completed
+// reference.bulk-import.completed.v1
 {
   importId: string;
   source: string;
@@ -537,6 +537,37 @@ POST   /versions/migrate      - Run migrations (admin)
   timestamp: Date;
 }
 ```
+
+## Events Consumed
+
+```typescript
+// organization.project.created.v1
+// Triggered when a new project is created
+// Action: Ensure required emission factors are available for project scope
+{
+  projectId: string;
+  organizationId: string;
+  industry: string;
+  region: string;
+  timestamp: Date;
+}
+```
+
+**Note**: Reference Service is primarily a foundational data service and consumes minimal events. Most interactions are synchronous API calls from other services for emission factors, units, and conversion data.
+
+## Integration Points
+
+### Provides to Other Services
+- Emission factor lookups (synchronous API)
+- Unit conversion utilities (synchronous API)
+- Data version information for cache invalidation
+- Reference data validation schemas
+
+### Dependencies
+- **Organization Service**: Consumes project events to ensure data availability
+- **Activity Service**: Provides emission factors for validation
+- **Calculation Service**: Provides emission factors for calculations
+- **Audit Service**: All data changes logged
 
 ## Database Schema
 

@@ -45,7 +45,7 @@
 
 #### Emission Factor Endpoints
 ```yaml
-GET /api/v1/emission-factors
+GET /v1/emission-factors
   Query:
     - category: string (scope/type)
     - geography: string (country/region)
@@ -60,12 +60,12 @@ GET /api/v1/emission-factors
     - factors: EmissionFactor[]
     - total: number
 
-GET /api/v1/emission-factors/:factorId
+GET /v1/emission-factors/:factorId
   Response:
     - factor: EmissionFactor
     - history: FactorVersion[]
 
-POST /api/v1/emission-factors
+POST /v1/emission-factors
   Request:
     - category:
         scope: 1|2|3
@@ -88,14 +88,14 @@ POST /api/v1/emission-factors
     - factorId: string
     - factor: EmissionFactor
 
-PUT /api/v1/emission-factors/:factorId
+PUT /v1/emission-factors/:factorId
   Request:
     - Similar to POST (creates new version)
   Response:
     - factor: EmissionFactor
     - version: number
 
-POST /api/v1/emission-factors/:factorId/approve
+POST /v1/emission-factors/:factorId/approve
   Request:
     - comments: string
     - effectiveFrom: ISO8601
@@ -103,14 +103,14 @@ POST /api/v1/emission-factors/:factorId/approve
     - factor: EmissionFactor
     - approvedAt: ISO8601
 
-POST /api/v1/emission-factors/:factorId/reject
+POST /v1/emission-factors/:factorId/reject
   Request:
     - reason: string
     - comments: string
   Response:
     - factor: EmissionFactor
 
-POST /api/v1/emission-factors/import
+POST /v1/emission-factors/import
   Request:
     - source: string (EPA|DEFRA|IPCC|Custom)
     - file: base64 or S3 URL
@@ -122,7 +122,7 @@ POST /api/v1/emission-factors/import
     - imported: number
     - failed: number
 
-GET /api/v1/emission-factors/search
+GET /v1/emission-factors/search
   Request:
     - activityType: string
     - location: string
@@ -135,7 +135,7 @@ GET /api/v1/emission-factors/search
 
 #### Conversion Factor Endpoints
 ```yaml
-GET /api/v1/conversions
+GET /v1/conversions
   Query:
     - fromUnit: string
     - toUnit: string
@@ -143,7 +143,7 @@ GET /api/v1/conversions
   Response:
     - conversions: ConversionFactor[]
 
-POST /api/v1/conversions
+POST /v1/conversions
   Request:
     - fromUnit: string
     - toUnit: string
@@ -154,7 +154,7 @@ POST /api/v1/conversions
     - conversionId: string
     - conversion: ConversionFactor
 
-GET /api/v1/conversions/convert
+GET /v1/conversions/convert
   Query:
     - value: number
     - fromUnit: string
@@ -167,7 +167,7 @@ GET /api/v1/conversions/convert
 
 #### Parameter Endpoints
 ```yaml
-GET /api/v1/parameters
+GET /v1/parameters
   Query:
     - category: string
     - name: string
@@ -175,14 +175,14 @@ GET /api/v1/parameters
   Response:
     - parameters: Parameter[]
 
-PUT /api/v1/parameters/:parameterId
+PUT /v1/parameters/:parameterId
   Request:
     - value: any
     - effectiveFrom: ISO8601
   Response:
     - parameter: Parameter
 
-GET /api/v1/parameters/gwp
+GET /v1/parameters/gwp
   Query:
     - gas: string (CO2|CH4|N2O|...)
     - standard: string (AR6|AR5|AR4)
@@ -193,12 +193,12 @@ GET /api/v1/parameters/gwp
 
 #### Master Data Endpoints
 ```yaml
-GET /api/v1/reporting-years
+GET /v1/reporting-years
   Response:
     - years: ReportingYear[]
     - activeYear: ReportingYear
 
-POST /api/v1/reporting-years
+POST /v1/reporting-years
   Request:
     - year: number
     - standards: array
@@ -207,18 +207,18 @@ POST /api/v1/reporting-years
     - yearId: string
     - year: ReportingYear
 
-GET /api/v1/scopes
+GET /v1/scopes
   Response:
     - scopes: ScopeDefinition[]
 
-GET /api/v1/activity-types
+GET /v1/activity-types
   Query:
     - scope: string
     - category: string
   Response:
     - types: ActivityType[]
 
-GET /api/v1/regions
+GET /v1/regions
   Query:
     - level: country|state|city
     - parent: string

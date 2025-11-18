@@ -274,7 +274,7 @@ export const IdentityServiceAPI: APIContract = {
   ],
   events: [
     {
-      name: 'Identity.User.Created',
+      name: 'identity.user.created.v1',
       schema: {
         userId: 'string',
         email: 'string',
@@ -362,10 +362,10 @@ export interface DomainEvent {
 export const EventBusConfig = {
   // Event routing rules
   routing: {
-    'Identity.*': ['audit-service'],
-    'Organization.Project.Created': ['activity-service', 'calculation-service', 'audit-service'],
-    'Activity.Data.Validated': ['calculation-service', 'audit-service'],
-    'Calculation.Emission.Calculated': ['reporting-service', 'audit-service'],
+    'identity.*': ['audit-service'],
+    'organization.project.created.v1': ['activity-service', 'calculation-service', 'audit-service'],
+    'activity.data.validation-failed.v1': ['calculation-service', 'audit-service'],
+    'calculation.emission.calculated.v1': ['reporting-service', 'audit-service'],
     '*': ['audit-service'] // All events go to audit
   },
 
@@ -387,7 +387,7 @@ export const EventBusConfig = {
   sagas: [
     {
       name: 'ProjectCreationSaga',
-      trigger: 'Organization.Project.Created',
+      trigger: 'organization.project.created.v1',
       steps: [
         {
           service: 'reference-service',
@@ -408,7 +408,7 @@ export const EventBusConfig = {
     },
     {
       name: 'EmissionCalculationSaga',
-      trigger: 'Activity.BulkImport.Completed',
+      trigger: 'activity.bulk-import.completed.v1',
       steps: [
         {
           service: 'calculation-service',
@@ -725,7 +725,7 @@ export class DistributedTransactionPatterns {
 
         // Activity Service
         class ActivityService {
-          @EventHandler('Organization.Project.Created')
+          @EventHandler('organization.project.created.v1')
           async onProjectCreated(event: ProjectCreatedEvent) {
             await this.initializeProjectActivities(event.projectId);
             await this.publish(new ProjectActivitiesInitializedEvent(...));
@@ -734,7 +734,7 @@ export class DistributedTransactionPatterns {
 
         // Calculation Service
         class CalculationService {
-          @EventHandler('Activity.ProjectActivities.Initialized')
+          @EventHandler('activity.project-activities.initialized.v1')
           async onActivitiesInitialized(event: ProjectActivitiesInitializedEvent) {
             await this.createCalculationContext(event.projectId);
             await this.publish(new CalculationContextCreatedEvent(...));

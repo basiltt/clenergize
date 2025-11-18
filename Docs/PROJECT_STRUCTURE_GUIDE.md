@@ -22,7 +22,7 @@ ClenergizeV3/
 │   ├── calculation-service/                 # Port 3005 (replaces carbon-footprint)
 │   ├── reporting-service/                   # Port 3006 (new - separated from backend)
 │   ├── audit-service/                       # Port 3007 (new - compliance & logging)
-│   ├── frontend/                            # Port 3005 (rebuilt Next.js app)
+│   ├── frontend/                            # Port 3000 (rebuilt Next.js app)
 │   └── shared/                              # Shared libraries & contracts
 │       ├── contracts/                       # Event schemas, API contracts
 │       ├── common/                          # Utilities, helpers

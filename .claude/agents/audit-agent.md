@@ -594,27 +594,27 @@ The Audit Service subscribes to ALL events from other services:
 
 ```typescript
 // From Identity Service
-- Identity.User.*
-- Identity.Authentication.*
+- identity.user.*
+- identity.authentication.*
 
 // From Organization Service
-- Organization.Project.*
-- Organization.Hierarchy.*
+- organization.project.*
+- organization.hierarchy.*
 
 // From Activity Service
-- Activity.Data.*
-- Activity.BulkImport.*
+- activity.data.*
+- activity.bulk-import.*
 
 // From Calculation Service
-- Calculation.Emission.*
-- Calculation.Rollup.*
+- calculation.emission.*
+- calculation.rollup.*
 
 // From Reporting Service
-- Reporting.Report.*
+- reporting.report.*
 
 // From Reference Service
-- Reference.EmissionFactor.*
-- Reference.DataVersion.*
+- reference.emission-factor.*
+- reference.data-version.*
 ```
 
 ## Database Schema

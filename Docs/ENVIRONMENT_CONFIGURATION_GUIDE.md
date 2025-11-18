@@ -106,7 +106,7 @@ MAIL_SECURE=false
 #######################
 # FRONTEND
 #######################
-FRONTEND_URL=http://localhost:3005
+FRONTEND_URL=http://localhost:3000
 API_GATEWAY_URL=http://localhost:3000
 
 #######################

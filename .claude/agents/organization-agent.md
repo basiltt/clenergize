@@ -480,7 +480,7 @@ POST   /hierarchy-templates/:id/clone - Clone template
 ## Events Published
 
 ```typescript
-// Organization.Organization.Created
+// organization.organization.created.v1
 {
   organizationId: string;
   name: string;
@@ -489,7 +489,7 @@ POST   /hierarchy-templates/:id/clone - Clone template
   timestamp: Date;
 }
 
-// Organization.Project.Created
+// organization.project.created.v1
 {
   projectId: string;
   organizationId: string;
@@ -499,7 +499,7 @@ POST   /hierarchy-templates/:id/clone - Clone template
   timestamp: Date;
 }
 
-// Organization.Hierarchy.Customized
+// organization.hierarchy.updated.v1
 {
   projectId: string;
   customizations: HierarchyCustomization;
@@ -507,7 +507,7 @@ POST   /hierarchy-templates/:id/clone - Clone template
   timestamp: Date;
 }
 
-// Organization.Project.StatusChanged
+// organization.project.status-changed.v1
 {
   projectId: string;
   oldStatus: string;
@@ -517,6 +517,47 @@ POST   /hierarchy-templates/:id/clone - Clone template
   timestamp: Date;
 }
 ```
+
+## Events Consumed
+
+```typescript
+// identity.user.created.v1
+// Triggered when a new user is created
+// Action: Set up user's default organization membership
+{
+  userId: string;
+  email: string;
+  organizationId: string;
+  role: string;
+  timestamp: Date;
+}
+
+// identity.user.role-assigned.v1
+// Triggered when user role changes
+// Action: Update organization permissions and access control
+{
+  userId: string;
+  organizationId: string;
+  oldRole: string;
+  newRole: string;
+  assignedBy: string;
+  timestamp: Date;
+}
+```
+
+## Integration Points
+
+### Provides to Other Services
+- Project and hierarchy configuration for activity tracking
+- Organization structure for scoped calculations
+- User organization membership for authorization
+
+### Dependencies
+- **Identity Service**: Consumes user lifecycle events
+- **Activity Service**: Publishes project creation events
+- **Calculation Service**: Publishes project lifecycle events
+- **Reporting Service**: Publishes project lifecycle events
+- **Audit Service**: All organization changes logged
 
 ## Database Schema
 

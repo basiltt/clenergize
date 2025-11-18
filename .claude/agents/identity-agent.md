@@ -352,7 +352,7 @@ DELETE /users/:id/sessions - Revoke all sessions
 ## Events Published
 
 ```typescript
-// Identity.User.Created
+// identity.user.created.v1
 {
   userId: string;
   email: string;
@@ -362,7 +362,7 @@ DELETE /users/:id/sessions - Revoke all sessions
   timestamp: Date;
 }
 
-// Identity.User.Authenticated
+// identity.user.authenticated.v1
 {
   userId: string;
   email: string;
@@ -372,7 +372,7 @@ DELETE /users/:id/sessions - Revoke all sessions
   mfaUsed: boolean;
 }
 
-// Identity.User.PasswordReset
+// identity.password.reset-requested.v1
 {
   userId: string;
   requestedBy: string;
@@ -380,7 +380,7 @@ DELETE /users/:id/sessions - Revoke all sessions
   timestamp: Date;
 }
 
-// Identity.User.RoleChanged
+// identity.user.role-assigned.v1
 {
   userId: string;
   oldRoles: string[];
@@ -389,7 +389,7 @@ DELETE /users/:id/sessions - Revoke all sessions
   timestamp: Date;
 }
 
-// Identity.User.Locked
+// identity.user.locked.v1
 {
   userId: string;
   reason: string;
@@ -399,16 +399,44 @@ DELETE /users/:id/sessions - Revoke all sessions
 }
 ```
 
+## Events Consumed
+
+```typescript
+// organization.user.invited.v1
+// Triggered when an organization invites a new user
+// Action: Create user account with PENDING status
+{
+  userId: string;
+  email: string;
+  organizationId: string;
+  invitedBy: string;
+  role: string;
+  timestamp: Date;
+}
+
+// organization.user.removed.v1
+// Triggered when a user is removed from an organization
+// Action: Deactivate user account and revoke tokens
+{
+  userId: string;
+  organizationId: string;
+  removedBy: string;
+  reason: string;
+  timestamp: Date;
+}
+```
+
 ## Integration Points
 
-### Consumes Events
-- `Organization.User.Invited` - Create user account
-- `Organization.User.Removed` - Deactivate user
-
 ### Provides to Other Services
-- JWT verification endpoint for service-to-service auth
+- JWT verification endpoint (`/v1/auth/verify`) for service-to-service auth
 - User profile data for authorization decisions
-- Role/permission checking utilities
+- Role/permission checking utilities (`/v1/users/:id/permissions`)
+
+### Dependencies
+- **Organization Service**: Consumes user lifecycle events
+- **Audit Service**: All authentication events logged
+- **All Services**: JWT verification for authorization
 
 ## Database Schema
 

@@ -605,7 +605,7 @@ POST   /schedules/:id/run     - Run scheduled report now
 ## Events Published
 
 ```typescript
-// Reporting.Report.Generated
+// reporting.report.generated.v1
 {
   reportId: string;
   type: string;
@@ -615,7 +615,7 @@ POST   /schedules/:id/run     - Run scheduled report now
   size: number;
 }
 
-// Reporting.Report.Exported
+// reporting.report.exported.v1
 {
   reportId: string;
   format: string;
@@ -623,7 +623,7 @@ POST   /schedules/:id/run     - Run scheduled report now
   timestamp: Date;
 }
 
-// Reporting.Report.Accessed
+// reporting.report.accessed.v1
 {
   reportId: string;
   userId: string;
@@ -631,6 +631,66 @@ POST   /schedules/:id/run     - Run scheduled report now
   timestamp: Date;
 }
 ```
+
+## Events Consumed
+
+```typescript
+// calculation.emission.calculated.v1
+// Triggered when emissions are calculated for an activity
+// Action: Update real-time dashboard metrics
+{
+  calculationId: string;
+  activityId: string;
+  projectId: string;
+  emissions: number;
+  scope: string;
+  timestamp: Date;
+}
+
+// calculation.rollup.completed.v1
+// Triggered when project-level emissions are aggregated
+// Action: Update project footprint reports and cached data
+{
+  projectId: string;
+  period: Period;
+  totalEmissions: number;
+  breakdown: EmissionBreakdown;
+  timestamp: Date;
+}
+
+// organization.project.created.v1
+// Triggered when a new project is created
+// Action: Initialize reporting templates and default reports
+{
+  projectId: string;
+  organizationId: string;
+  name: string;
+  timestamp: Date;
+}
+
+// calculation.recalculation.triggered.v1
+// Triggered when project emissions are recalculated
+// Action: Invalidate cached reports and schedule regeneration
+{
+  projectId: string;
+  totalActivities: number;
+  recalculated: number;
+  timestamp: Date;
+}
+```
+
+## Integration Points
+
+### Provides to Other Services
+- Report generation status events
+- Export file URLs (S3)
+- Dashboard data for frontend
+
+### Dependencies
+- **Calculation Service**: Consumes emission calculation results
+- **Organization Service**: Consumes project lifecycle events
+- **Identity Service**: User permissions for report access
+- **Audit Service**: All report access events logged
 
 ## Database Schema
 

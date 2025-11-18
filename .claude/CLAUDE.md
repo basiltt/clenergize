@@ -273,29 +273,55 @@ make down     # Stop services
 ```
 
 ### Service Ports
+
+**Local Development (Docker Compose)**:
 ```yaml
-Frontend:        3005
-Gateway:         3000
-Identity:        3001
-Organization:    3002
-Reference:       3003
-Activity:        3004
-Calculation:     3005
-Reporting:       3006
-Audit:           3007
-MongoDB:         27017
-Redis:           6379
-LocalStack:      4566
+# Client Access
+Frontend (Next.js):     3000
+NGINX (API Gateway):    80/443  # Reverse proxy for all backend services
+
+# Backend Services (internal)
+Identity:               3001
+Organization:           3002
+Reference:              3003
+Activity:               3004
+Calculation:            3005
+Reporting:              3006
+Audit:                  3007
+
+# Infrastructure
+MongoDB:                27017
+Redis:                  6379
+LocalStack (AWS sim):   4566
+Mailhog SMTP:           1025
+Mailhog UI:             8025
+Mongo Express:          8081
+Redis Commander:        8082
+Swagger UI:             8080
 ```
+
+**Production (AWS)**:
+- API Gateway: AWS Managed Service (no local port)
+- Application Load Balancer: Distributes traffic to ECS/EKS
+- Services: Internal VPC networking (no public ports)
+
+**Important**:
+- All external client requests go through NGINX (local) or AWS API Gateway (production)
+- Frontend accesses backend via `http://localhost:80/api` (local) or production ALB URL
+- Services communicate directly with each other using internal service discovery
 
 ### MCP Server Connections
 
 > **Important**: All connection strings MUST use environment variables.
 > See `Docs/ENVIRONMENT_CONFIGURATION_GUIDE.md` for complete .env setup.
+>
+> **STANDARD**: Always use `MONGODB_URI` (not `MONGO_URI`, `MONGO_URL`, or other variations)
 
 ```javascript
 // MongoDB connections (use service-specific DB)
-// REQUIRED: Set MONGODB_URI environment variable
+// CRITICAL: Always use MONGODB_URI as the standard environment variable name
+// ❌ DO NOT use: MONGO_URI, MONGO_URL, MONGO_CONNECTION_STRING
+// ✅ ALWAYS use: MONGODB_URI
 const mongoUri = process.env.MONGODB_URI || 'mongodb://admin:localdev123@localhost:27017/?authSource=admin';
 const dbName = `clenergize_${serviceName}`;
 
@@ -347,24 +373,25 @@ service-name/
 ### Event Naming Convention
 
 ```typescript
-// Format: <BoundedContext>.<Aggregate>.<Action>
+// Format: <bounded-context>.<aggregate>.<action>.v<version>
+// IMPORTANT: Use lowercase with kebab-case for actions, versioned with .vN suffix
 const EVENT_TYPES = {
   // Identity Context
-  'Identity.User.Created': UserCreatedEvent,
-  'Identity.User.Authenticated': UserAuthenticatedEvent,
-  'Identity.User.RoleAssigned': UserRoleAssignedEvent,
-  
+  'identity.user.created.v1': UserCreatedEventV1,
+  'identity.user.authenticated.v1': UserAuthenticatedEventV1,
+  'identity.user.role-assigned.v1': UserRoleAssignedEventV1,
+
   // Organization Context
-  'Organization.Project.Created': ProjectCreatedEvent,
-  'Organization.Hierarchy.Modified': HierarchyModifiedEvent,
-  
+  'organization.project.created.v1': ProjectCreatedEventV1,
+  'organization.hierarchy.updated.v1': HierarchyUpdatedEventV1,
+
   // Activity Context
-  'Activity.Data.Ingested': DataIngestedEvent,
-  'Activity.Validation.Failed': ValidationFailedEvent,
-  
+  'activity.data.ingested.v1': DataIngestedEventV1,
+  'activity.data.validation-failed.v1': ValidationFailedEventV1,
+
   // Calculation Context
-  'Calculation.Emission.Calculated': EmissionCalculatedEvent,
-  'Calculation.Rollup.Completed': RollupCompletedEvent
+  'calculation.emission.calculated.v1': EmissionCalculatedEventV1,
+  'calculation.rollup.completed.v1': RollupCompletedEventV1
 };
 ```
 
@@ -394,6 +421,64 @@ const EVENT_TYPES = {
   }
 }
 ```
+
+### API Path Strategy
+
+The system uses two distinct URL path prefixes to differentiate between external and internal API traffic:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   API PATH CONVENTIONS                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  External APIs (through Gateway):                          │
+│  • Pattern: /api/v1/*                                      │
+│  • Example: POST /api/v1/users/login                       │
+│  • Route: Client → Gateway → Service                       │
+│  • Auth: JWT required (verified by Gateway)                │
+│  • CORS: Enabled                                            │
+│                                                             │
+│  Internal Service-to-Service APIs:                         │
+│  • Pattern: /v1/*                                          │
+│  • Example: GET /v1/users/123                              │
+│  • Route: Service → Service (direct)                       │
+│  • Auth: Service-to-service token                          │
+│  • CORS: Not applicable                                    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Implementation Guidelines:**
+
+```typescript
+// Gateway routes (external traffic)
+@Controller('api/v1/users')
+export class UserGatewayController {
+  @Post('login')
+  @UseGuards(JwtAuthGuard)
+  async login(@Body() credentials: LoginDto) {
+    // Routes to Identity Service: /v1/auth/login
+    return this.identityService.authenticate(credentials);
+  }
+}
+
+// Service internal routes (service-to-service)
+@Controller('v1/users')
+export class UserServiceController {
+  @Get(':id')
+  @UseGuards(ServiceAuthGuard)
+  async getUser(@Param('id') id: string) {
+    // Internal service endpoint
+    return this.userService.findById(id);
+  }
+}
+```
+
+**Key Rules:**
+1. All client-facing requests MUST use `/api/v1/*` prefix
+2. All service-to-service requests MUST use `/v1/*` prefix
+3. Gateway MUST NOT expose `/v1/*` endpoints externally
+4. Services MUST NOT implement `/api/v1/*` routes (Gateway only)
 
 ## 🔒 SECURITY REQUIREMENTS
 

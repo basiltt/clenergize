@@ -51,7 +51,7 @@
 
 #### Authentication Endpoints
 ```yaml
-POST /api/v1/auth/register
+POST /v1/auth/register
   Request:
     - email: string (required, email format)
     - password: string (required, min 12 chars)
@@ -64,7 +64,7 @@ POST /api/v1/auth/register
     - status: "pending_verification"
     - message: string
 
-POST /api/v1/auth/login
+POST /v1/auth/login
   Request:
     - email: string (required)
     - password: string (required)
@@ -75,14 +75,14 @@ POST /api/v1/auth/login
     - expiresIn: number (seconds)
     - user: UserProfile
 
-POST /api/v1/auth/logout
+POST /v1/auth/logout
   Request:
     - refreshToken: string (required)
   Response:
     - success: boolean
     - message: string
 
-POST /api/v1/auth/refresh
+POST /v1/auth/refresh
   Request:
     - refreshToken: string (required)
   Response:
@@ -90,14 +90,14 @@ POST /api/v1/auth/refresh
     - refreshToken: string (rotated)
     - expiresIn: number
 
-POST /api/v1/auth/forgot-password
+POST /v1/auth/forgot-password
   Request:
     - email: string (required)
   Response:
     - success: boolean
     - message: string
 
-POST /api/v1/auth/reset-password
+POST /v1/auth/reset-password
   Request:
     - token: string (required)
     - newPassword: string (required)
@@ -105,29 +105,29 @@ POST /api/v1/auth/reset-password
     - success: boolean
     - message: string
 
-POST /api/v1/auth/verify-email
+POST /v1/auth/verify-email
   Request:
     - token: string (required)
   Response:
     - success: boolean
     - user: UserProfile
 
-GET /api/v1/auth/jwks
+GET /v1/auth/jwks
   Response:
     - keys: JWKS[]
 ```
 
 #### User Management Endpoints
 ```yaml
-GET /api/v1/users/me
+GET /v1/users/me
   Response:
     - user: UserProfile
 
-GET /api/v1/users/:userId
+GET /v1/users/:userId
   Response:
     - user: UserProfile
 
-PUT /api/v1/users/:userId
+PUT /v1/users/:userId
   Request:
     - firstName: string (optional)
     - lastName: string (optional)
@@ -137,12 +137,12 @@ PUT /api/v1/users/:userId
   Response:
     - user: UserProfile
 
-DELETE /api/v1/users/:userId
+DELETE /v1/users/:userId
   Response:
     - success: boolean
     - message: string
 
-POST /api/v1/users/:userId/change-password
+POST /v1/users/:userId/change-password
   Request:
     - currentPassword: string (required)
     - newPassword: string (required)
@@ -150,7 +150,7 @@ POST /api/v1/users/:userId/change-password
     - success: boolean
     - message: string
 
-POST /api/v1/users/:userId/mfa/enable
+POST /v1/users/:userId/mfa/enable
   Request:
     - method: "totp" | "sms"
   Response:
@@ -158,14 +158,14 @@ POST /api/v1/users/:userId/mfa/enable
     - qrCode: string (base64)
     - backupCodes: string[]
 
-POST /api/v1/users/:userId/mfa/verify
+POST /v1/users/:userId/mfa/verify
   Request:
     - code: string (required)
   Response:
     - success: boolean
     - backupCodes: string[]
 
-GET /api/v1/users
+GET /v1/users
   Query:
     - search: string
     - status: "active" | "suspended" | "deleted"
@@ -179,16 +179,16 @@ GET /api/v1/users
 
 #### Role & Permission Endpoints
 ```yaml
-GET /api/v1/roles
+GET /v1/roles
   Response:
     - roles: Role[]
 
-GET /api/v1/roles/:roleId
+GET /v1/roles/:roleId
   Response:
     - role: Role
     - permissions: Permission[]
 
-POST /api/v1/roles
+POST /v1/roles
   Request:
     - name: string (required)
     - description: string
@@ -196,7 +196,7 @@ POST /api/v1/roles
   Response:
     - role: Role
 
-PUT /api/v1/roles/:roleId
+PUT /v1/roles/:roleId
   Request:
     - name: string
     - description: string
@@ -204,21 +204,21 @@ PUT /api/v1/roles/:roleId
   Response:
     - role: Role
 
-DELETE /api/v1/roles/:roleId
+DELETE /v1/roles/:roleId
   Response:
     - success: boolean
 
-POST /api/v1/users/:userId/roles
+POST /v1/users/:userId/roles
   Request:
     - roleId: string (required)
   Response:
     - success: boolean
 
-GET /api/v1/permissions
+GET /v1/permissions
   Response:
     - permissions: Permission[]
 
-GET /api/v1/users/:userId/effective-permissions
+GET /v1/users/:userId/effective-permissions
   Response:
     - permissions: Permission[]
     - roles: Role[]
@@ -226,15 +226,15 @@ GET /api/v1/users/:userId/effective-permissions
 
 #### Session Management Endpoints
 ```yaml
-GET /api/v1/sessions
+GET /v1/sessions
   Response:
     - sessions: Session[]
 
-DELETE /api/v1/sessions/:sessionId
+DELETE /v1/sessions/:sessionId
   Response:
     - success: boolean
 
-POST /api/v1/sessions/invalidate-all
+POST /v1/sessions/invalidate-all
   Response:
     - invalidated: number
 ```
