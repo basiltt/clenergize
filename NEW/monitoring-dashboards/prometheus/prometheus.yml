@@ -1,0 +1,177 @@
+# Prometheus Configuration for Clenergize V3 Microservices
+
+global:
+  scrape_interval: 15s      # Default scrape interval
+  evaluation_interval: 15s   # Evaluate rules every 15 seconds
+  scrape_timeout: 10s
+
+  # Attach these labels to any time series or alerts
+  external_labels:
+    cluster: 'clenergize-v3'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'alertmanager:9093'
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - 'alert-rules.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Identity Service
+  - job_name: 'identity-service'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'identity-service:3001'
+        labels:
+          service: 'identity'
+          tier: 'backend'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}'
+
+  # Organization Service
+  - job_name: 'organization-service'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'organization-service:3002'
+        labels:
+          service: 'organization'
+          tier: 'backend'
+
+  # Reference Service
+  - job_name: 'reference-service'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'reference-service:3003'
+        labels:
+          service: 'reference'
+          tier: 'backend'
+
+  # Activity Service
+  - job_name: 'activity-service'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'activity-service:3004'
+        labels:
+          service: 'activity'
+          tier: 'backend'
+
+  # Calculation Service
+  - job_name: 'calculation-service'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'calculation-service:3005'
+        labels:
+          service: 'calculation'
+          tier: 'backend'
+
+  # Reporting Service
+  - job_name: 'reporting-service'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'reporting-service:3006'
+        labels:
+          service: 'reporting'
+          tier: 'backend'
+
+  # Audit Service
+  - job_name: 'audit-service'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'audit-service:3007'
+        labels:
+          service: 'audit'
+          tier: 'backend'
+
+  # MongoDB Exporter
+  - job_name: 'mongodb'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+          - 'mongodb-exporter:9216'
+        labels:
+          service: 'mongodb'
+          tier: 'database'
+
+  # Redis Exporter
+  - job_name: 'redis'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+          - 'redis-exporter:9121'
+        labels:
+          service: 'redis'
+          tier: 'cache'
+
+  # Node Exporter (System Metrics)
+  - job_name: 'node-exporter'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+          - 'node-exporter:9100'
+        labels:
+          service: 'node'
+          tier: 'infrastructure'
+
+  # NGINX (API Gateway)
+  - job_name: 'nginx'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+          - 'nginx-exporter:9113'
+        labels:
+          service: 'api-gateway'
+          tier: 'gateway'
+
+# Optional: Service discovery for Kubernetes/ECS
+# Uncomment when deploying to production
+
+# - job_name: 'kubernetes-pods'
+#   kubernetes_sd_configs:
+#     - role: pod
+#   relabel_configs:
+#     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+#       action: keep
+#       regex: true
+#     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+#       action: replace
+#       target_label: __metrics_path__
+#       regex: (.+)
+#     - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+#       action: replace
+#       regex: ([^:]+)(?::\d+)?;(\d+)
+#       replacement: $1:$2
+#       target_label: __address__
+#     - source_labels: [__meta_kubernetes_namespace]
+#       action: replace
+#       target_label: kubernetes_namespace
+#     - source_labels: [__meta_kubernetes_pod_name]
+#       action: replace
+#       target_label: kubernetes_pod_name

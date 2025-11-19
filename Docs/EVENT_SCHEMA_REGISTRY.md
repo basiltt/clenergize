@@ -220,6 +220,25 @@ export interface PasswordResetRequestedEvent extends DomainEvent {
     requestedFrom: string; // IP address
   };
 }
+
+export const PasswordResetRequestedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('identity.password.reset-requested.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('User'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    userId: z.string().uuid(),
+    email: z.string().email(),
+    resetToken: z.string(),
+    expiresAt: z.string().datetime(),
+    requestedFrom: z.string().ip()
+  })
+});
 ```
 
 ### User Role Assigned Event
@@ -239,6 +258,28 @@ export interface UserRoleAssignedEvent extends DomainEvent {
     reason?: string;
   };
 }
+
+export const UserRoleAssignedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('identity.user.role-assigned.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('User'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    userId: z.string().uuid(),
+    role: z.string(),
+    scope: z.object({
+      organizationId: z.string().uuid().optional(),
+      projectId: z.string().uuid().optional()
+    }).optional(),
+    assignedBy: z.string().uuid(),
+    reason: z.string().optional()
+  })
+});
 ```
 
 ### User Updated Event
@@ -259,6 +300,29 @@ export interface UserUpdatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const UserUpdatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('identity.user.updated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('User'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    userId: z.string().uuid(),
+    changes: z.array(z.object({
+      field: z.string(),
+      oldValue: z.any(),
+      newValue: z.any()
+    })),
+    updatedBy: z.string().uuid(),
+    reason: z.string().optional(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### User Deleted Event
@@ -277,6 +341,27 @@ export interface UserDeletedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const UserDeletedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('identity.user.deleted.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('User'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    userId: z.string().uuid(),
+    email: z.string().email(),
+    deletionType: z.enum(['SOFT', 'HARD']),
+    deletedBy: z.string().uuid(),
+    reason: z.string(),
+    gdprCompliant: z.boolean(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### User Authentication Failed Event
@@ -294,6 +379,26 @@ export interface UserAuthenticationFailedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const UserAuthenticationFailedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('identity.user.authentication-failed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('User'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    email: z.string().email(),
+    ipAddress: z.string().ip(),
+    userAgent: z.string(),
+    failureReason: z.enum(['INVALID_CREDENTIALS', 'ACCOUNT_LOCKED', 'ACCOUNT_SUSPENDED', 'MFA_FAILED']),
+    attemptCount: z.number().int().positive(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Password Reset Completed Event
@@ -310,6 +415,25 @@ export interface PasswordResetCompletedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const PasswordResetCompletedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('identity.password.reset-completed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('User'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    userId: z.string().uuid(),
+    email: z.string().email(),
+    resetToken: z.string(),
+    resetFrom: z.string().ip(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### User Role Revoked Event
@@ -330,6 +454,29 @@ export interface UserRoleRevokedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const UserRoleRevokedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('identity.user.role-revoked.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('User'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    userId: z.string().uuid(),
+    role: z.string(),
+    scope: z.object({
+      organizationId: z.string().uuid().optional(),
+      projectId: z.string().uuid().optional()
+    }).optional(),
+    revokedBy: z.string().uuid(),
+    reason: z.string(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### User Activated Event
@@ -346,6 +493,25 @@ export interface UserActivatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const UserActivatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('identity.user.activated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('User'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    userId: z.string().uuid(),
+    email: z.string().email(),
+    activatedBy: z.string().uuid(),
+    activationMethod: z.enum(['EMAIL_VERIFICATION', 'ADMIN_APPROVAL', 'AUTO']),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### User Deactivated Event
@@ -363,6 +529,26 @@ export interface UserDeactivatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const UserDeactivatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('identity.user.deactivated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('User'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    userId: z.string().uuid(),
+    email: z.string().email(),
+    deactivatedBy: z.string().uuid(),
+    reason: z.string(),
+    suspensionDuration: z.number().int().positive().optional(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Session Created Event
@@ -381,6 +567,27 @@ export interface SessionCreatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const SessionCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('identity.session.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Session'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    sessionId: z.string().uuid(),
+    userId: z.string().uuid(),
+    ipAddress: z.string().ip(),
+    userAgent: z.string(),
+    expiresAt: z.string().datetime(),
+    refreshToken: z.string().optional(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Session Expired Event
@@ -396,6 +603,24 @@ export interface SessionExpiredEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const SessionExpiredEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('identity.session.expired.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Session'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    sessionId: z.string().uuid(),
+    userId: z.string().uuid(),
+    reason: z.enum(['TIMEOUT', 'LOGOUT', 'FORCE_LOGOUT', 'TOKEN_REVOKED']),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Two-Factor Authentication Enabled Event
@@ -412,6 +637,25 @@ export interface TwoFactorEnabledEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const TwoFactorEnabledEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('identity.2fa.enabled.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('User'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    userId: z.string().uuid(),
+    method: z.enum(['TOTP', 'SMS', 'EMAIL']),
+    backupCodesGenerated: z.boolean(),
+    enabledBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Two-Factor Authentication Disabled Event
@@ -427,6 +671,24 @@ export interface TwoFactorDisabledEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const TwoFactorDisabledEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('identity.2fa.disabled.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('User'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    userId: z.string().uuid(),
+    disabledBy: z.string().uuid(),
+    reason: z.string(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ---
@@ -534,6 +796,33 @@ export interface HierarchyUpdatedEvent extends DomainEvent {
     changeReason?: string;
   };
 }
+
+export const HierarchyUpdatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.hierarchy.updated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Hierarchy'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    hierarchyId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    templateReference: z.object({
+      templateId: z.string().uuid(),
+      version: z.string(),
+      snapshotId: z.string().uuid().optional()
+    }),
+    customizations: z.array(z.object({
+      nodeId: z.string().uuid(),
+      overriddenFields: z.record(z.any())
+    })).optional(),
+    updatedBy: z.string().uuid(),
+    changeReason: z.string().optional()
+  })
+});
 ```
 
 ### Permission Granted Event
@@ -553,6 +842,28 @@ export interface PermissionGrantedEvent extends DomainEvent {
     reason?: string;
   };
 }
+
+export const PermissionGrantedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.permission.granted.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Permission'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    permissionId: z.string().uuid(),
+    userId: z.string().uuid(),
+    resourceType: z.enum(['ORGANIZATION', 'PROJECT', 'HIERARCHY', 'REPORT']),
+    resourceId: z.string().uuid(),
+    permissions: z.array(z.enum(['READ', 'WRITE', 'DELETE', 'ADMIN'])),
+    grantedBy: z.string().uuid(),
+    expiresAt: z.string().datetime().optional(),
+    reason: z.string().optional()
+  })
+});
 ```
 
 ### User Added to Organization Event
@@ -571,6 +882,27 @@ export interface UserAddedToOrganizationEvent extends DomainEvent {
     endDate?: string;
   };
 }
+
+export const UserAddedToOrganizationEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.user.added.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Organization'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    organizationId: z.string().uuid(),
+    userId: z.string().uuid(),
+    role: z.string(),
+    permissions: z.array(z.string()),
+    addedBy: z.string().uuid(),
+    startDate: z.string().datetime(),
+    endDate: z.string().datetime().optional()
+  })
+});
 ```
 
 ### Organization Created Event
@@ -591,6 +923,29 @@ export interface OrganizationCreatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const OrganizationCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.organization.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Organization'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    organizationId: z.string().uuid(),
+    name: z.string().min(1),
+    industry: z.string().optional(),
+    size: z.enum(['SMALL', 'MEDIUM', 'LARGE', 'ENTERPRISE']).optional(),
+    country: z.string(),
+    ownerId: z.string().uuid(),
+    subscriptionTier: z.enum(['FREE', 'PRO', 'ENTERPRISE']),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Organization Updated Event
@@ -610,6 +965,28 @@ export interface OrganizationUpdatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const OrganizationUpdatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.organization.updated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Organization'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    organizationId: z.string().uuid(),
+    changes: z.array(z.object({
+      field: z.string(),
+      oldValue: z.any(),
+      newValue: z.any()
+    })),
+    updatedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Organization Deleted Event
@@ -627,6 +1004,26 @@ export interface OrganizationDeletedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const OrganizationDeletedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.organization.deleted.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Organization'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    organizationId: z.string().uuid(),
+    name: z.string(),
+    deletedBy: z.string().uuid(),
+    reason: z.string(),
+    dataRetentionPolicy: z.enum(['IMMEDIATE', 'ARCHIVE_30_DAYS', 'ARCHIVE_90_DAYS']),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Project Updated Event
@@ -646,6 +1043,28 @@ export interface ProjectUpdatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ProjectUpdatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.project.updated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Project'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    projectId: z.string().uuid(),
+    changes: z.array(z.object({
+      field: z.string(),
+      oldValue: z.any(),
+      newValue: z.any()
+    })),
+    updatedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Project Deleted Event
@@ -667,6 +1086,30 @@ export interface ProjectDeletedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ProjectDeletedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.project.deleted.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Project'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    projectId: z.string().uuid(),
+    name: z.string(),
+    deletedBy: z.string().uuid(),
+    cascadeDelete: z.boolean(),
+    affectedRecords: z.object({
+      activityData: z.number().int().nonnegative(),
+      calculations: z.number().int().nonnegative(),
+      reports: z.number().int().nonnegative()
+    }),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Project Archived Event
@@ -684,6 +1127,26 @@ export interface ProjectArchivedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ProjectArchivedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.project.archived.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Project'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    projectId: z.string().uuid(),
+    archivedBy: z.string().uuid(),
+    reason: z.string().optional(),
+    archiveDate: z.string().datetime(),
+    readOnlyMode: z.boolean(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Project Restored Event
@@ -699,6 +1162,24 @@ export interface ProjectRestoredEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ProjectRestoredEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.project.restored.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Project'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    projectId: z.string().uuid(),
+    restoredBy: z.string().uuid(),
+    originalArchiveDate: z.string().datetime(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Hierarchy Created Event
@@ -721,6 +1202,31 @@ export interface HierarchyCreatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const HierarchyCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.hierarchy.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Hierarchy'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    hierarchyId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    name: z.string(),
+    templateId: z.string().uuid().optional(),
+    rootNode: z.object({
+      nodeId: z.string().uuid(),
+      nodeType: z.enum(['COMPANY', 'ENTITY', 'SUBSIDIARY', 'LOCATION']),
+      name: z.string()
+    }),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Hierarchy Node Added Event
@@ -741,6 +1247,29 @@ export interface HierarchyNodeAddedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const HierarchyNodeAddedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.hierarchy.node-added.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Hierarchy'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    hierarchyId: z.string().uuid(),
+    nodeId: z.string().uuid(),
+    nodeType: z.enum(['COMPANY', 'ENTITY', 'SUBSIDIARY', 'LOCATION']),
+    nodeName: z.string(),
+    parentNodeId: z.string().uuid(),
+    level: z.number().int().nonnegative(),
+    metadata: z.record(z.any()).optional(),
+    addedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Hierarchy Node Removed Event
@@ -759,6 +1288,27 @@ export interface HierarchyNodeRemovedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const HierarchyNodeRemovedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.hierarchy.node-removed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Hierarchy'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    hierarchyId: z.string().uuid(),
+    nodeId: z.string().uuid(),
+    nodeName: z.string(),
+    cascadeDelete: z.boolean(),
+    affectedChildren: z.number().int().nonnegative(),
+    removedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Hierarchy Node Moved Event
@@ -777,6 +1327,27 @@ export interface HierarchyNodeMovedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const HierarchyNodeMovedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.hierarchy.node-moved.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Hierarchy'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    hierarchyId: z.string().uuid(),
+    nodeId: z.string().uuid(),
+    oldParentId: z.string().uuid(),
+    newParentId: z.string().uuid(),
+    movedBy: z.string().uuid(),
+    reason: z.string().optional(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### User Removed from Organization Event
@@ -795,6 +1366,27 @@ export interface UserRemovedFromOrganizationEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const UserRemovedFromOrganizationEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.user.removed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Organization'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    organizationId: z.string().uuid(),
+    userId: z.string().uuid(),
+    removedBy: z.string().uuid(),
+    reason: z.string(),
+    reassignWork: z.boolean(),
+    reassignedToUserId: z.string().uuid().optional(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Permission Revoked Event
@@ -814,6 +1406,28 @@ export interface PermissionRevokedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const PermissionRevokedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.permission.revoked.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Permission'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    permissionId: z.string().uuid(),
+    userId: z.string().uuid(),
+    resourceType: z.enum(['ORGANIZATION', 'PROJECT', 'HIERARCHY', 'REPORT']),
+    resourceId: z.string().uuid(),
+    revokedPermissions: z.array(z.enum(['READ', 'WRITE', 'DELETE', 'ADMIN'])),
+    revokedBy: z.string().uuid(),
+    reason: z.string(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Reporting Year Created Event
@@ -834,6 +1448,29 @@ export interface ReportingYearCreatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ReportingYearCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.reporting-year.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ReportingYear'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    yearId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    year: z.number().int(),
+    startDate: z.string().datetime(),
+    endDate: z.string().datetime(),
+    fiscalYearOffset: z.number().int().optional(),
+    status: z.enum(['DRAFT', 'ACTIVE', 'LOCKED', 'REPORTED']),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Reporting Year Locked Event
@@ -852,6 +1489,27 @@ export interface ReportingYearLockedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ReportingYearLockedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.reporting-year.locked.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ReportingYear'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    yearId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    year: z.number().int(),
+    lockedBy: z.string().uuid(),
+    lockReason: z.enum(['AUDIT', 'COMPLIANCE', 'FINAL_REPORT']),
+    allowsRecalculation: z.boolean(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Module Enabled Event
@@ -868,6 +1526,25 @@ export interface ModuleEnabledEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ModuleEnabledEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.module.enabled.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Project'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    projectId: z.string().uuid(),
+    module: z.enum(['STATIONARY_COMBUSTION', 'MOBILE_COMBUSTION', 'ELECTRICITY', 'WASTE', 'WATER', 'TRAVEL', 'PURCHASED_GOODS']),
+    enabledBy: z.string().uuid(),
+    configuration: z.record(z.any()).optional(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Module Disabled Event
@@ -885,6 +1562,26 @@ export interface ModuleDisabledEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ModuleDisabledEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.module.disabled.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Project'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    projectId: z.string().uuid(),
+    module: z.string(),
+    disabledBy: z.string().uuid(),
+    reason: z.string(),
+    archiveExistingData: z.boolean(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Team Created Event
@@ -905,6 +1602,29 @@ export interface TeamCreatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const TeamCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.team.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Team'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    teamId: z.string().uuid(),
+    organizationId: z.string().uuid(),
+    name: z.string(),
+    description: z.string().optional(),
+    leaderId: z.string().uuid(),
+    members: z.array(z.string().uuid()),
+    permissions: z.array(z.string()),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Team Member Added Event
@@ -921,6 +1641,25 @@ export interface TeamMemberAddedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const TeamMemberAddedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.team.member-added.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Team'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    teamId: z.string().uuid(),
+    userId: z.string().uuid(),
+    role: z.enum(['MEMBER', 'LEAD', 'CONTRIBUTOR']),
+    addedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Team Member Removed Event
@@ -937,6 +1676,25 @@ export interface TeamMemberRemovedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const TeamMemberRemovedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.team.member-removed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Team'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    teamId: z.string().uuid(),
+    userId: z.string().uuid(),
+    removedBy: z.string().uuid(),
+    reason: z.string().optional(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Entity Created Event
@@ -962,6 +1720,34 @@ export interface EntityCreatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const EntityCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.entity.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Entity'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    entityId: z.string().uuid(),
+    hierarchyId: z.string().uuid(),
+    name: z.string(),
+    entityType: z.enum(['COMPANY', 'ENTITY', 'SUBSIDIARY', 'LOCATION']),
+    parentEntityId: z.string().uuid().optional(),
+    metadata: z.object({
+      address: z.string().optional(),
+      country: z.string().optional(),
+      employeeCount: z.number().int().nonnegative().optional(),
+      floorArea: z.number().nonnegative().optional(),
+      revenue: z.number().nonnegative().optional()
+    }),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Entity Updated Event
@@ -981,6 +1767,28 @@ export interface EntityUpdatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const EntityUpdatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.entity.updated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Entity'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    entityId: z.string().uuid(),
+    changes: z.array(z.object({
+      field: z.string(),
+      oldValue: z.any(),
+      newValue: z.any()
+    })),
+    updatedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Entity Deleted Event
@@ -998,6 +1806,26 @@ export interface EntityDeletedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const EntityDeletedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('organization.entity.deleted.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Entity'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    entityId: z.string().uuid(),
+    name: z.string(),
+    deletedBy: z.string().uuid(),
+    cascadeDelete: z.boolean(),
+    affectedActivityData: z.number().int().nonnegative(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ---
@@ -1049,6 +1877,35 @@ export interface EmissionFactorCreatedEvent extends DomainEvent {
     metadata?: Record<string, any>;
   };
 }
+
+export const EmissionFactorCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.emission-factor.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('EmissionFactor'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    emissionFactorId: z.string().uuid(),
+    name: z.string(),
+    category: z.string(),
+    subcategory: z.string().optional(),
+    scope: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    unit: z.string(),
+    value: z.number(),
+    source: z.string(),
+    sourceReference: z.string().optional(),
+    geography: z.string().optional(),
+    validFrom: z.string().datetime(),
+    validTo: z.string().datetime().optional(),
+    version: z.string(),
+    createdBy: z.string().uuid(),
+    metadata: z.record(z.any()).optional()
+  })
+});
 ```
 
 ### Reference Data Versioned Event (NEW - ensures consistency)
@@ -1072,6 +1929,32 @@ export interface ReferenceDataVersionedEvent extends DomainEvent {
     createdBy: string;
   };
 }
+
+export const ReferenceDataVersionedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.data.versioned.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ReferenceDataSet'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    dataSetId: z.string().uuid(),
+    dataType: z.enum(['EMISSION_FACTOR', 'UNIT', 'CONVERSION_RULE']),
+    version: z.string(),
+    previousVersion: z.string().optional(),
+    changesSummary: z.object({
+      added: z.number().int().nonnegative(),
+      updated: z.number().int().nonnegative(),
+      deprecated: z.number().int().nonnegative()
+    }),
+    snapshotId: z.string().uuid(),
+    effectiveDate: z.string().datetime(),
+    createdBy: z.string().uuid()
+  })
+});
 ```
 
 ### Emission Factor Updated Event
@@ -1094,6 +1977,31 @@ export interface EmissionFactorUpdatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const EmissionFactorUpdatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.emission-factor.updated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('EmissionFactor'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    emissionFactorId: z.string().uuid(),
+    changes: z.array(z.object({
+      field: z.string(),
+      oldValue: z.any(),
+      newValue: z.any()
+    })),
+    newVersion: z.string(),
+    updatedBy: z.string().uuid(),
+    recalculationRequired: z.boolean(),
+    affectedProjects: z.array(z.string().uuid()).optional(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Emission Factor Deprecated Event
@@ -1112,6 +2020,27 @@ export interface EmissionFactorDeprecatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const EmissionFactorDeprecatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.emission-factor.deprecated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('EmissionFactor'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    emissionFactorId: z.string().uuid(),
+    deprecationReason: z.string(),
+    replacementFactorId: z.string().uuid().optional(),
+    effectiveDate: z.string().datetime(),
+    deprecatedBy: z.string().uuid(),
+    notifyProjects: z.array(z.string().uuid()),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Unit Created Event
@@ -1131,6 +2060,28 @@ export interface UnitCreatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const UnitCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.unit.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Unit'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    unitId: z.string().uuid(),
+    name: z.string(),
+    symbol: z.string(),
+    type: z.enum(['MASS', 'VOLUME', 'ENERGY', 'DISTANCE', 'AREA', 'COUNT']),
+    baseUnit: z.string().optional(),
+    conversionFactor: z.number().optional(),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Unit Updated Event
@@ -1150,6 +2101,28 @@ export interface UnitUpdatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const UnitUpdatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.unit.updated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Unit'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    unitId: z.string().uuid(),
+    changes: z.array(z.object({
+      field: z.string(),
+      oldValue: z.any(),
+      newValue: z.any()
+    })),
+    updatedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Conversion Rule Created Event
@@ -1169,6 +2142,28 @@ export interface ConversionRuleCreatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ConversionRuleCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.conversion.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ConversionRule'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    ruleId: z.string().uuid(),
+    fromUnit: z.string(),
+    toUnit: z.string(),
+    factor: z.number(),
+    formula: z.string().optional(),
+    source: z.string(),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Reference Data Imported Event
@@ -1190,6 +2185,30 @@ export interface ReferenceDataImportedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ReferenceDataImportedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.data.imported.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ReferenceDataSet'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    importId: z.string().uuid(),
+    dataType: z.enum(['EMISSION_FACTOR', 'UNIT', 'CONVERSION_RULE', 'PARAMETER']),
+    source: z.string(),
+    fileName: z.string().optional(),
+    totalRecords: z.number().int().nonnegative(),
+    successfulRecords: z.number().int().nonnegative(),
+    failedRecords: z.number().int().nonnegative(),
+    version: z.string(),
+    importedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Parameter Created Event
@@ -1210,6 +2229,29 @@ export interface ParameterCreatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ParameterCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.parameter.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Parameter'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    parameterId: z.string().uuid(),
+    name: z.string(),
+    category: z.string(),
+    subcategory: z.string().optional(),
+    scope: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    allowedUnits: z.array(z.string()),
+    description: z.string().optional(),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Parameter Updated Event
@@ -1229,6 +2271,28 @@ export interface ParameterUpdatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ParameterUpdatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.parameter.updated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Parameter'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    parameterId: z.string().uuid(),
+    changes: z.array(z.object({
+      field: z.string(),
+      oldValue: z.any(),
+      newValue: z.any()
+    })),
+    updatedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Category Created Event
@@ -1249,6 +2313,29 @@ export interface CategoryCreatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const CategoryCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.category.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Category'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    categoryId: z.string().uuid(),
+    name: z.string(),
+    scope: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    description: z.string().optional(),
+    parentCategoryId: z.string().uuid().optional(),
+    icon: z.string().optional(),
+    color: z.string().optional(),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Reference Data Synced Event
@@ -1268,6 +2355,28 @@ export interface ReferenceDataSyncedEvent extends DomainEvent {
     nextSyncScheduled?: string;
   };
 }
+
+export const ReferenceDataSyncedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.data.synced.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ReferenceDataSet'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    syncId: z.string().uuid(),
+    dataSource: z.enum(['DEFRA', 'EPA', 'IPCC', 'CUSTOM']),
+    syncType: z.enum(['FULL', 'INCREMENTAL']),
+    recordsAdded: z.number().int().nonnegative(),
+    recordsUpdated: z.number().int().nonnegative(),
+    recordsDeprecated: z.number().int().nonnegative(),
+    syncedAt: z.string().datetime(),
+    nextSyncScheduled: z.string().datetime().optional()
+  })
+});
 ```
 
 ### Reference Data Validated Event
@@ -1293,6 +2402,34 @@ export interface ReferenceDataValidatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ReferenceDataValidatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.data.validated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ReferenceDataSet'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    validationId: z.string().uuid(),
+    dataType: z.string(),
+    totalRecords: z.number().int().nonnegative(),
+    validRecords: z.number().int().nonnegative(),
+    invalidRecords: z.number().int().nonnegative(),
+    warnings: z.number().int().nonnegative(),
+    errors: z.array(z.object({
+      recordId: z.string(),
+      field: z.string(),
+      message: z.string(),
+      severity: z.enum(['ERROR', 'WARNING'])
+    })),
+    validatedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Emission Factor Region Mapping Created Event
@@ -1313,6 +2450,29 @@ export interface EmissionFactorRegionMappedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const EmissionFactorRegionMappedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.emission-factor.region-mapped.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('EmissionFactor'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    mappingId: z.string().uuid(),
+    emissionFactorId: z.string().uuid(),
+    region: z.string(),
+    country: z.string(),
+    gridIntensity: z.number().optional(),
+    validFrom: z.string().datetime(),
+    validTo: z.string().datetime().optional(),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Custom Emission Factor Created Event
@@ -1338,6 +2498,34 @@ export interface CustomEmissionFactorCreatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const CustomEmissionFactorCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reference.custom-emission-factor.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('EmissionFactor'),
+  userId: z.string().uuid().optional(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  data: z.object({
+    factorId: z.string().uuid(),
+    organizationId: z.string().uuid(),
+    name: z.string(),
+    value: z.number(),
+    unit: z.string(),
+    scope: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    justification: z.string(),
+    approvedBy: z.string().uuid().optional(),
+    validityPeriod: z.object({
+      from: z.string().datetime(),
+      to: z.string().datetime()
+    }),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ---
@@ -1388,6 +2576,32 @@ export interface ActivityDataIngestedEvent extends DomainEvent {
     metadata?: Record<string, any>;
   };
 }
+
+export const ActivityDataIngestedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.data.ingested.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ActivityData'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    activityDataId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    hierarchyNodeId: z.string().uuid(),
+    activityType: z.string(),
+    quantity: z.number(),
+    unit: z.string(),
+    period: z.object({
+      startDate: z.string().datetime(),
+      endDate: z.string().datetime()
+    }),
+    source: z.enum(['MANUAL', 'IMPORT', 'API', 'INTEGRATION']),
+    sourceReference: z.string().optional(),
+    uploadedBy: z.string().uuid(),
+    metadata: z.record(z.any()).optional()
+  })
+});
 ```
 
 ### Activity Data Validation Failed Event
@@ -1409,6 +2623,28 @@ export interface ActivityDataValidationFailedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ActivityDataValidationFailedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.data.validation-failed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ActivityData'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    activityDataId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    validationErrors: z.array(z.object({
+      field: z.string(),
+      message: z.string(),
+      code: z.string(),
+      severity: z.enum(['ERROR', 'WARNING'])
+    })),
+    rawData: z.record(z.any()),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Bulk Import Completed Event
@@ -1430,6 +2666,28 @@ export interface BulkImportCompletedEvent extends DomainEvent {
     completedAt: string;
   };
 }
+
+export const BulkImportCompletedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.bulk-import.completed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('BulkImport'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    importId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    fileName: z.string(),
+    totalRecords: z.number().int().nonnegative(),
+    successfulRecords: z.number().int().nonnegative(),
+    failedRecords: z.number().int().nonnegative(),
+    warnings: z.number().int().nonnegative(),
+    duration: z.number().positive(),
+    importedBy: z.string().uuid(),
+    completedAt: z.string().datetime()
+  })
+});
 ```
 
 ### Activity Data Validated Event
@@ -1446,6 +2704,23 @@ export interface ActivityDataValidatedEvent extends DomainEvent {
     validatedAt: string;
   };
 }
+
+export const ActivityDataValidatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.data.validated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ActivityData'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    activityDataId: z.string().uuid(),
+    validatedBy: z.string().uuid(),
+    validationResult: z.enum(['PASS', 'PASS_WITH_WARNINGS', 'FAIL']),
+    dataQualityScore: z.number().min(1).max(4),
+    validatedAt: z.string().datetime()
+  })
+});
 ```
 
 ### Activity Data Verified Event
@@ -1462,6 +2737,23 @@ export interface ActivityDataVerifiedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ActivityDataVerifiedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.data.verified.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ActivityData'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    activityDataId: z.string().uuid(),
+    verifiedBy: z.string().uuid(),
+    verificationMethod: z.enum(['MANUAL', 'AUTOMATED']),
+    confidence: z.number().min(0).max(100),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Activity Data Updated Event
@@ -1479,6 +2771,28 @@ export interface ActivityDataUpdatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ActivityDataUpdatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.data.updated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ActivityData'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    activityDataId: z.string().uuid(),
+    changes: z.array(z.object({
+      field: z.string(),
+      oldValue: z.any(),
+      newValue: z.any()
+    })),
+    updatedBy: z.string().uuid(),
+    reason: z.string().optional(),
+    requiresRecalculation: z.boolean(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Activity Data Deleted Event
@@ -1495,6 +2809,23 @@ export interface ActivityDataDeletedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ActivityDataDeletedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.data.deleted.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ActivityData'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    activityDataId: z.string().uuid(),
+    deletedBy: z.string().uuid(),
+    reason: z.string(),
+    cascadeDeleteCalculations: z.boolean(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Bulk Import Started Event
@@ -1513,6 +2844,25 @@ export interface BulkImportStartedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const BulkImportStartedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.bulk-import.started.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('BulkImport'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    importId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    fileName: z.string(),
+    fileSize: z.number().positive(),
+    estimatedRecords: z.number().int().nonnegative(),
+    importedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Bulk Import Failed Event
@@ -1528,6 +2878,22 @@ export interface BulkImportFailedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const BulkImportFailedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.bulk-import.failed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('BulkImport'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    importId: z.string().uuid(),
+    errorMessage: z.string(),
+    failureReason: z.enum(['VALIDATION_ERROR', 'FILE_FORMAT_ERROR', 'SYSTEM_ERROR']),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Carbon Scope Created Event
@@ -1547,6 +2913,26 @@ export interface CarbonScopeCreatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const CarbonScopeCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.carbon-scope.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('CarbonScope'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    carbonScopeId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    entityId: z.string().uuid(),
+    year: z.number().int().positive(),
+    modules: z.array(z.string()),
+    status: z.enum(['ACTIVE', 'INACTIVE']),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Carbon Scope Updated Event
@@ -1562,6 +2948,26 @@ export interface CarbonScopeUpdatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const CarbonScopeUpdatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.carbon-scope.updated.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('CarbonScope'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    carbonScopeId: z.string().uuid(),
+    changes: z.array(z.object({
+      field: z.string(),
+      oldValue: z.any(),
+      newValue: z.any()
+    })),
+    updatedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Activity Comment Added Event
@@ -1578,6 +2984,23 @@ export interface ActivityCommentAddedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ActivityCommentAddedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.comment.added.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ActivityData'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    commentId: z.string().uuid(),
+    activityDataId: z.string().uuid(),
+    comment: z.string(),
+    addedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### File Attached Event
@@ -1597,6 +3020,26 @@ export interface FileAttachedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const FileAttachedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.file.attached.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ActivityData'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    fileId: z.string().uuid(),
+    activityDataId: z.string().uuid(),
+    fileName: z.string(),
+    fileSize: z.number().positive(),
+    fileType: z.string(),
+    s3Key: z.string(),
+    uploadedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Data Quality Flagged Event
@@ -1614,6 +3057,24 @@ export interface DataQualityFlaggedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const DataQualityFlaggedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.data-quality.flagged.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ActivityData'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    activityDataId: z.string().uuid(),
+    flagType: z.enum(['OUTLIER', 'MISSING_DATA', 'INCONSISTENT', 'LOW_QUALITY']),
+    flaggedBy: z.string().uuid(),
+    description: z.string(),
+    severity: z.enum(['LOW', 'MEDIUM', 'HIGH']),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Data Quality Resolved Event
@@ -1630,6 +3091,23 @@ export interface DataQualityResolvedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const DataQualityResolvedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('activity.data-quality.resolved.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ActivityData'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    activityDataId: z.string().uuid(),
+    flagId: z.string().uuid(),
+    resolution: z.string(),
+    resolvedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ---
@@ -1745,6 +3223,35 @@ export interface RollupCompletedEvent extends DomainEvent {
     calculatedAt: string;
   };
 }
+
+export const RollupCompletedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('calculation.rollup.completed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Rollup'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    rollupId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    hierarchyNodeId: z.string().uuid(),
+    level: z.number().int().nonnegative(),
+    period: z.object({
+      startDate: z.string().datetime(),
+      endDate: z.string().datetime()
+    }),
+    totals: z.object({
+      scope1: z.number(),
+      scope2: z.number(),
+      scope3: z.number(),
+      total: z.number()
+    }),
+    childNodes: z.number().int().nonnegative(),
+    leafActivities: z.number().int().nonnegative(),
+    calculatedAt: z.string().datetime()
+  })
+});
 ```
 
 ### Recalculation Triggered Event
@@ -1766,6 +3273,28 @@ export interface RecalculationTriggeredEvent extends DomainEvent {
     scheduledFor?: string;
   };
 }
+
+export const RecalculationTriggeredEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('calculation.recalculation.triggered.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Recalculation'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    recalculationId: z.string().uuid(),
+    trigger: z.enum(['EMISSION_FACTOR_UPDATED', 'ACTIVITY_DATA_CHANGED', 'MANUAL', 'SCHEDULED']),
+    scope: z.object({
+      projectId: z.string().uuid().optional(),
+      hierarchyNodeId: z.string().uuid().optional(),
+      activityDataIds: z.array(z.string().uuid()).optional()
+    }),
+    estimatedRecords: z.number().int().nonnegative(),
+    triggeredBy: z.string().uuid(),
+    scheduledFor: z.string().datetime().optional()
+  })
+});
 ```
 
 ### Calculation Started Event
@@ -1782,6 +3311,23 @@ export interface CalculationStartedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const CalculationStartedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('calculation.calculation.started.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Calculation'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    calculationId: z.string().uuid(),
+    activityDataId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    startedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Calculation Completed Event
@@ -1798,6 +3344,23 @@ export interface CalculationCompletedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const CalculationCompletedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('calculation.calculation.completed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Calculation'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    calculationId: z.string().uuid(),
+    activityDataId: z.string().uuid(),
+    emission: z.number(),
+    duration: z.number().positive(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Calculation Failed Event
@@ -1815,6 +3378,24 @@ export interface CalculationFailedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const CalculationFailedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('calculation.calculation.failed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Calculation'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    calculationId: z.string().uuid(),
+    activityDataId: z.string().uuid(),
+    errorMessage: z.string(),
+    errorCode: z.string(),
+    retry: z.boolean(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Rollup Started Event
@@ -1831,6 +3412,23 @@ export interface RollupStartedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const RollupStartedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('calculation.rollup.started.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Rollup'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    rollupId: z.string().uuid(),
+    hierarchyNodeId: z.string().uuid(),
+    year: z.number().int().positive(),
+    startedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Allocation Created Event
@@ -1853,6 +3451,29 @@ export interface AllocationCreatedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const AllocationCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('calculation.allocation.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Allocation'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    allocationId: z.string().uuid(),
+    emissionSourceId: z.string().uuid(),
+    allocationType: z.enum(['HEADCOUNT', 'REVENUE', 'FLOOR_AREA', 'CUSTOM']),
+    totalEmission: z.number(),
+    targets: z.array(z.object({
+      entityId: z.string().uuid(),
+      allocationValue: z.number(),
+      allocatedEmission: z.number()
+    })),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ---
@@ -1896,6 +3517,32 @@ export interface ReportGenerationCompletedEvent extends DomainEvent {
     expiresAt?: string;
   };
 }
+
+export const ReportGenerationCompletedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reporting.report.generation-completed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Report'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    reportId: z.string().uuid(),
+    reportType: z.enum(['EMISSION_SUMMARY', 'ACTIVITY_DETAIL', 'COMPARISON', 'AUDIT']),
+    projectId: z.string().uuid(),
+    period: z.object({
+      startDate: z.string().datetime(),
+      endDate: z.string().datetime()
+    }),
+    format: z.enum(['PDF', 'EXCEL', 'CSV', 'JSON']),
+    fileUrl: z.string().url(),
+    fileSize: z.number().positive(),
+    generationDuration: z.number().positive(),
+    generatedBy: z.string().uuid(),
+    generatedAt: z.string().datetime(),
+    expiresAt: z.string().datetime().optional()
+  })
+});
 ```
 
 ### Report Exported Event
@@ -1915,6 +3562,26 @@ export interface ReportExportedEvent extends DomainEvent {
     exportedAt: string;
   };
 }
+
+export const ReportExportedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reporting.report.exported.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Report'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    reportId: z.string().uuid(),
+    exportId: z.string().uuid(),
+    destination: z.enum(['S3', 'EMAIL', 'FTP', 'WEBHOOK']),
+    destinationDetails: z.record(z.any()),
+    status: z.enum(['SUCCESS', 'FAILED']),
+    error: z.string().optional(),
+    exportedBy: z.string().uuid(),
+    exportedAt: z.string().datetime()
+  })
+});
 ```
 
 ### Report Generation Started Event
@@ -1931,6 +3598,23 @@ export interface ReportGenerationStartedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ReportGenerationStartedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reporting.report.generation-started.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Report'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    reportId: z.string().uuid(),
+    reportType: z.string(),
+    projectId: z.string().uuid(),
+    startedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Report Generation Failed Event
@@ -1946,6 +3630,22 @@ export interface ReportGenerationFailedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ReportGenerationFailedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reporting.report.generation-failed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Report'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    reportId: z.string().uuid(),
+    errorMessage: z.string(),
+    errorCode: z.string(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Report Scheduled Event
@@ -1964,6 +3664,25 @@ export interface ReportScheduledEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ReportScheduledEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reporting.report.scheduled.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ReportSchedule'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    scheduleId: z.string().uuid(),
+    reportType: z.string(),
+    frequency: z.enum(['DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'ANNUALLY']),
+    nextRunAt: z.string().datetime(),
+    recipients: z.array(z.string().email()),
+    createdBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Dashboard Refreshed Event
@@ -1980,6 +3699,23 @@ export interface DashboardRefreshedEvent extends DomainEvent {
     dataSources: string[];
   };
 }
+
+export const DashboardRefreshedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reporting.dashboard.refreshed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Dashboard'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    dashboardId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    refreshedAt: z.string().datetime(),
+    cacheKey: z.string(),
+    dataSources: z.array(z.string())
+  })
+});
 ```
 
 ### Export Started Event
@@ -1997,6 +3733,24 @@ export interface ExportStartedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ExportStartedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reporting.export.started.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Export'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    exportId: z.string().uuid(),
+    exportType: z.enum(['ACTIVITY_DATA', 'CALCULATIONS', 'AGGREGATED']),
+    format: z.enum(['CSV', 'EXCEL', 'JSON']),
+    estimatedRows: z.number().int().nonnegative(),
+    startedBy: z.string().uuid(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ### Export Completed Event
@@ -2014,6 +3768,24 @@ export interface ExportCompletedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const ExportCompletedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('reporting.export.completed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('Export'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    exportId: z.string().uuid(),
+    fileUrl: z.string().url(),
+    fileSize: z.number().positive(),
+    totalRows: z.number().int().nonnegative(),
+    duration: z.number().positive(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ---
@@ -2054,6 +3826,33 @@ export interface AuditLogCreatedEvent extends DomainEvent {
     metadata?: Record<string, any>;
   };
 }
+
+export const AuditLogCreatedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('audit.log.created.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('AuditLog'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    auditLogId: z.string().uuid(),
+    action: z.string(),
+    resourceType: z.string(),
+    resourceId: z.string(),
+    userId: z.string().uuid(),
+    result: z.enum(['SUCCESS', 'FAILURE']),
+    changes: z.array(z.object({
+      field: z.string(),
+      oldValue: z.any(),
+      newValue: z.any()
+    })).optional(),
+    ipAddress: z.string().ip(),
+    userAgent: z.string(),
+    timestamp: z.string().datetime(),
+    metadata: z.record(z.any()).optional()
+  })
+});
 ```
 
 ### Compliance Check Completed Event
@@ -2078,6 +3877,31 @@ export interface ComplianceCheckCompletedEvent extends DomainEvent {
     checkedBy: string;
   };
 }
+
+export const ComplianceCheckCompletedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('audit.compliance.check-completed.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('ComplianceCheck'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    checkId: z.string().uuid(),
+    checkType: z.enum(['GDPR', 'ISO14064', 'GHG_PROTOCOL', 'CUSTOM']),
+    projectId: z.string().uuid().optional(),
+    organizationId: z.string().uuid().optional(),
+    result: z.enum(['PASS', 'FAIL', 'WARNING']),
+    findings: z.array(z.object({
+      severity: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
+      category: z.string(),
+      description: z.string(),
+      affectedRecords: z.number().int().nonnegative().optional()
+    })),
+    checkedAt: z.string().datetime(),
+    checkedBy: z.string().uuid()
+  })
+});
 ```
 
 ### Security Event Detected Event
@@ -2097,6 +3921,26 @@ export interface SecurityEventDetectedEvent extends DomainEvent {
     responseActions: string[];
   };
 }
+
+export const SecurityEventDetectedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('audit.security.event-detected.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('SecurityEvent'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    securityEventId: z.string().uuid(),
+    eventType: z.enum(['BRUTE_FORCE', 'UNAUTHORIZED_ACCESS', 'SUSPICIOUS_ACTIVITY', 'DATA_EXFILTRATION']),
+    severity: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
+    userId: z.string().uuid().optional(),
+    ipAddress: z.string().ip(),
+    details: z.record(z.any()),
+    detectedAt: z.string().datetime(),
+    responseActions: z.array(z.string())
+  })
+});
 ```
 
 ### Data Access Logged Event
@@ -2120,6 +3964,30 @@ export interface DataAccessLoggedEvent extends DomainEvent {
     timestamp: string;
   };
 }
+
+export const DataAccessLoggedEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.literal('audit.data-access.logged.v1'),
+  version: z.string(),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.literal('DataAccessLog'),
+  correlationId: z.string().uuid(),
+  data: z.object({
+    accessLogId: z.string().uuid(),
+    userId: z.string().uuid(),
+    resourceType: z.string(),
+    resourceId: z.string(),
+    action: z.enum(['READ', 'WRITE', 'DELETE', 'EXPORT']),
+    accessMethod: z.enum(['UI', 'API', 'DIRECT_DATABASE']),
+    ipAddress: z.string().ip(),
+    userAgent: z.string(),
+    success: z.boolean(),
+    dataClassification: z.enum(['PUBLIC', 'INTERNAL', 'CONFIDENTIAL', 'RESTRICTED']),
+    recordCount: z.number().int().nonnegative().optional(),
+    timestamp: z.string().datetime()
+  })
+});
 ```
 
 ---

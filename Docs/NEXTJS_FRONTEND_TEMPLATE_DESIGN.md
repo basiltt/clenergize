@@ -2240,7 +2240,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
 NEXT_PUBLIC_GATEWAY_URL=http://localhost:3000
 
 # Authentication
-NEXTAUTH_URL=http://localhost:3005
+NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-key-here
 
 # AWS Cognito
@@ -2319,10 +2319,10 @@ services:
       dockerfile: Dockerfile
     container_name: clenergize-frontend
     ports:
-      - '3005:3000'
+      - '3000:3000'
     environment:
       - NEXT_PUBLIC_API_URL=http://gateway:3000
-      - NEXTAUTH_URL=http://localhost:3005
+      - NEXTAUTH_URL=http://localhost:3000
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
     depends_on:
       - gateway
@@ -2541,9 +2541,9 @@ export default async function ProjectDetailPage({
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3005",
+    "dev": "next dev -p 3000",
     "build": "next build",
-    "start": "next start -p 3005",
+    "start": "next start -p 3000",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "vitest",

@@ -648,11 +648,11 @@ jobs:
       - name: Start Next.js app
         run: pnpm --filter frontend run start &
         env:
-          PORT: 3005
+          PORT: 3000
 
       - name: Wait for app to start
         run: |
-          timeout 60 bash -c 'until curl -f http://localhost:3005/api/health; do sleep 2; done'
+          timeout 60 bash -c 'until curl -f http://localhost:3000/api/health; do sleep 2; done'
 
       - name: Run Playwright tests
         run: pnpm --filter frontend run test:e2e
@@ -725,8 +725,8 @@ jobs:
         uses: treosh/lighthouse-ci-action@v10
         with:
           urls: |
-            http://localhost:3005
-            http://localhost:3005/projects
+            http://localhost:3000
+            http://localhost:3000/projects
           uploadArtifacts: true
           temporaryPublicStorage: true
 

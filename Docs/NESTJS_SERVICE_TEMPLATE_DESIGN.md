@@ -897,7 +897,7 @@ import { User, UserRole } from '../../../domain/entities/user.entity';
 
 @ApiTags('users')
 @ApiBearerAuth()
-@Controller('api/v1/users')
+@Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UserController {
   constructor(
@@ -3014,7 +3014,7 @@ CLOUDWATCH_ENABLED=true
 
 # CORS
 CORS_ENABLED=true
-CORS_ORIGINS=http://localhost:3000,http://localhost:3005
+CORS_ORIGINS=http://localhost:3000
 
 # Rate Limiting
 RATE_LIMIT_TTL=60

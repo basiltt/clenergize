@@ -1,0 +1,38 @@
+{
+  "name": "@clenergize/performance-tests",
+  "version": "1.0.0",
+  "description": "K6 performance testing suite for Clenergize V3 microservices",
+  "scripts": {
+    "test:smoke": "k6 run k6/smoke-test.js",
+    "test:load": "k6 run k6/load-test.js",
+    "test:stress": "k6 run k6/stress-test.js",
+    "test:spike": "k6 run k6/spike-test.js",
+    "test:soak": "k6 run k6/soak-test.js",
+    "test:identity": "k6 run k6/scenarios/identity-service-test.js",
+    "test:organization": "k6 run k6/scenarios/organization-service-test.js",
+    "test:reference": "k6 run k6/scenarios/reference-service-test.js",
+    "test:activity": "k6 run k6/scenarios/activity-service-test.js",
+    "test:calculation": "k6 run k6/scenarios/calculation-service-test.js",
+    "test:reporting": "k6 run k6/scenarios/reporting-service-test.js",
+    "test:audit": "k6 run k6/scenarios/audit-service-test.js",
+    "test:all": "k6 run k6/all-services-test.js",
+    "test:ci": "k6 run --out json=results.json k6/load-test.js",
+    "analyze": "k6-report results.json",
+    "clean": "rm -rf results.json summary.html"
+  },
+  "keywords": [
+    "k6",
+    "performance",
+    "load-testing",
+    "stress-testing",
+    "microservices"
+  ],
+  "author": "Clenergize Team",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "k6": "^0.48.0"
+  },
+  "engines": {
+    "k6": ">=0.45.0"
+  }
+}

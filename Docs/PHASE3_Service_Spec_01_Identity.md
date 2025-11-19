@@ -801,8 +801,8 @@ graph TB
 #### UserRegistered
 ```json
 {
-  "eventType": "UserRegistered",
-  "version": "1.0",
+  "eventType": "identity.user.created.v1",
+  "version": "v1",
   "payload": {
     "userId": "string",
     "email": "string",
@@ -817,8 +817,8 @@ graph TB
 #### UserAuthenticated
 ```json
 {
-  "eventType": "UserAuthenticated",
-  "version": "1.0",
+  "eventType": "identity.user.authenticated.v1",
+  "version": "v1",
   "payload": {
     "userId": "string",
     "sessionId": "string",
@@ -832,8 +832,8 @@ graph TB
 #### UserProfileUpdated
 ```json
 {
-  "eventType": "UserProfileUpdated",
-  "version": "1.0",
+  "eventType": "identity.user.updated.v1",
+  "version": "v1",
   "payload": {
     "userId": "string",
     "changes": {
@@ -848,8 +848,8 @@ graph TB
 #### RoleAssigned
 ```json
 {
-  "eventType": "RoleAssigned",
-  "version": "1.0",
+  "eventType": "identity.user.role-assigned.v1",
+  "version": "v1",
   "payload": {
     "userId": "string",
     "roleId": "string",
@@ -863,8 +863,8 @@ graph TB
 #### UserDeleted
 ```json
 {
-  "eventType": "UserDeleted",
-  "version": "1.0",
+  "eventType": "identity.user.deleted.v1",
+  "version": "v1",
   "payload": {
     "userId": "string",
     "email": "string",
@@ -947,7 +947,7 @@ PORT: 3001
 
 # MongoDB
 MONGODB_URI: mongodb://...
-MONGODB_DB_NAME: identity
+MONGODB_DB_NAME: clenergize_identity
 
 # Redis
 REDIS_HOST: redis-cluster.aws.com

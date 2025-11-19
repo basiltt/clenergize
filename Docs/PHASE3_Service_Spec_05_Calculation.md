@@ -2606,6 +2606,2978 @@ JOIN calculation_results cr ON ad._id = cr.activityDataId;
 
 ---
 
+## 11. Error Code Registry
+
+### 11.1 Error Code Taxonomy
+
+**Format**: `CALC_<CATEGORY>_<NUMBER>`
+
+**Categories**:
+- `VAL`: Validation errors (400 Bad Request)
+- `AUTH`: Authorization errors (403 Forbidden)
+- `RES`: Resource not found (404 Not Found)
+- `PROC`: Processing errors (422 Unprocessable Entity)
+- `DEP`: Dependency errors (424 Failed Dependency)
+- `SYS`: System errors (500 Internal Server Error)
+
+### 11.2 Complete Error Code List
+
+#### Validation Errors (CALC_VAL_XXX)
+
+```typescript
+export const CALC_VAL_001 = {
+  code: 'CALC_VAL_001',
+  message: 'Activity data ID is required',
+  httpStatus: 400,
+  userMessage: 'Please provide a valid activity data ID',
+  resolution: 'Include activityDataId in request body'
+};
+
+export const CALC_VAL_002 = {
+  code: 'CALC_VAL_002',
+  message: 'Invalid UUID format for activity data ID',
+  httpStatus: 400,
+  userMessage: 'The activity data ID format is invalid',
+  resolution: 'Provide a valid UUID v4 format'
+};
+
+export const CALC_VAL_003 = {
+  code: 'CALC_VAL_003',
+  message: 'Year must be between 1990 and 2100',
+  httpStatus: 400,
+  userMessage: 'The specified year is out of valid range',
+  resolution: 'Provide a year between 1990 and 2100'
+};
+
+export const CALC_VAL_004 = {
+  code: 'CALC_VAL_004',
+  message: 'Batch size exceeds maximum limit (1000)',
+  httpStatus: 400,
+  userMessage: 'Too many activity data IDs in batch request',
+  resolution: 'Split batch into chunks of 1000 or fewer'
+};
+
+export const CALC_VAL_005 = {
+  code: 'CALC_VAL_005',
+  message: 'Invalid aggregation dimension',
+  httpStatus: 400,
+  userMessage: 'One or more aggregation dimensions are invalid',
+  resolution: 'Use only: scope, category, month'
+};
+
+export const CALC_VAL_006 = {
+  code: 'CALC_VAL_006',
+  message: 'Allocation values must be greater than zero',
+  httpStatus: 400,
+  userMessage: 'All allocation values must be positive numbers',
+  resolution: 'Ensure all allocation values are > 0'
+};
+
+export const CALC_VAL_007 = {
+  code: 'CALC_VAL_007',
+  message: 'Sum of allocation proportions must equal 100%',
+  httpStatus: 400,
+  userMessage: 'Allocation proportions do not sum to 100%',
+  resolution: 'Adjust allocation values to sum exactly to 100%'
+};
+
+export const CALC_VAL_008 = {
+  code: 'CALC_VAL_008',
+  message: 'Scenario override type invalid',
+  httpStatus: 400,
+  userMessage: 'Scenario override must be activityData or emissionFactor',
+  resolution: 'Use only allowed override types'
+};
+```
+
+#### Authorization Errors (CALC_AUTH_XXX)
+
+```typescript
+export const CALC_AUTH_001 = {
+  code: 'CALC_AUTH_001',
+  message: 'User not authorized to calculate emissions for this project',
+  httpStatus: 403,
+  userMessage: 'You do not have permission to perform calculations for this project',
+  resolution: 'Request project access from administrator'
+};
+
+export const CALC_AUTH_002 = {
+  code: 'CALC_AUTH_002',
+  message: 'User not authorized to create allocations',
+  httpStatus: 403,
+  userMessage: 'You do not have permission to create allocations',
+  resolution: 'Contact administrator for allocation creation permissions'
+};
+
+export const CALC_AUTH_003 = {
+  code: 'CALC_AUTH_003',
+  message: 'User not authorized to invalidate cache',
+  httpStatus: 403,
+  userMessage: 'Cache invalidation requires administrator privileges',
+  resolution: 'Contact system administrator'
+};
+```
+
+#### Resource Not Found Errors (CALC_RES_XXX)
+
+```typescript
+export const CALC_RES_001 = {
+  code: 'CALC_RES_001',
+  message: 'Activity data not found',
+  httpStatus: 404,
+  userMessage: 'The specified activity data does not exist',
+  resolution: 'Verify the activity data ID and try again'
+};
+
+export const CALC_RES_002 = {
+  code: 'CALC_RES_002',
+  message: 'Calculation result not found',
+  httpStatus: 404,
+  userMessage: 'The requested calculation result does not exist',
+  resolution: 'Check calculation ID or trigger a new calculation'
+};
+
+export const CALC_RES_003 = {
+  code: 'CALC_RES_003',
+  message: 'Aggregation not found',
+  httpStatus: 404,
+  userMessage: 'The requested aggregation does not exist',
+  resolution: 'Trigger a new aggregation for this node'
+};
+
+export const CALC_RES_004 = {
+  code: 'CALC_RES_004',
+  message: 'Scenario not found',
+  httpStatus: 404,
+  userMessage: 'The specified scenario does not exist',
+  resolution: 'Verify scenario ID or create a new scenario'
+};
+
+export const CALC_RES_005 = {
+  code: 'CALC_RES_005',
+  message: 'Allocation not found',
+  httpStatus: 404,
+  userMessage: 'The specified allocation does not exist',
+  resolution: 'Check allocation ID or create a new allocation'
+};
+
+export const CALC_RES_006 = {
+  code: 'CALC_RES_006',
+  message: 'Batch job not found',
+  httpStatus: 404,
+  userMessage: 'The batch calculation job does not exist',
+  resolution: 'Check job ID or submit a new batch'
+};
+```
+
+#### Processing Errors (CALC_PROC_XXX)
+
+```typescript
+export const CALC_PROC_001 = {
+  code: 'CALC_PROC_001',
+  message: 'Activity data not verified',
+  httpStatus: 422,
+  userMessage: 'Activity data must be verified before calculation',
+  resolution: 'Verify the activity data first through Activity Service'
+};
+
+export const CALC_PROC_002 = {
+  code: 'CALC_PROC_002',
+  message: 'Emission factor not found for parameter',
+  httpStatus: 422,
+  userMessage: 'No emission factor available for this parameter and region',
+  resolution: 'Contact administrator to add emission factor to Reference Service'
+};
+
+export const CALC_PROC_003 = {
+  code: 'CALC_PROC_003',
+  message: 'Calculation method not found',
+  httpStatus: 422,
+  userMessage: 'No calculation method available for scope and category',
+  resolution: 'Configure calculation method in system settings'
+};
+
+export const CALC_PROC_004 = {
+  code: 'CALC_PROC_004',
+  message: 'Conversion factor not found',
+  httpStatus: 422,
+  userMessage: 'Cannot convert between specified units',
+  resolution: 'Check units of measurement or contact administrator'
+};
+
+export const CALC_PROC_005 = {
+  code: 'CALC_PROC_005',
+  message: 'Formula execution failed',
+  httpStatus: 422,
+  userMessage: 'Calculation formula could not be executed',
+  resolution: 'Check formula configuration or contact support'
+};
+
+export const CALC_PROC_006 = {
+  code: 'CALC_PROC_006',
+  message: 'Circular reference detected in hierarchy',
+  httpStatus: 422,
+  userMessage: 'Hierarchy contains circular references',
+  resolution: 'Fix hierarchy structure in Organization Service'
+};
+
+export const CALC_PROC_007 = {
+  code: 'CALC_PROC_007',
+  message: 'Aggregation failed due to missing data',
+  httpStatus: 422,
+  userMessage: 'Some nodes in hierarchy are missing emission data',
+  resolution: 'Ensure all locations have activity data for the year'
+};
+
+export const CALC_PROC_008 = {
+  code: 'CALC_PROC_008',
+  message: 'Allocation target entity not found',
+  httpStatus: 422,
+  userMessage: 'One or more allocation target entities do not exist',
+  resolution: 'Verify all target entity IDs exist in Organization Service'
+};
+
+export const CALC_PROC_009 = {
+  code: 'CALC_PROC_009',
+  message: 'Scenario calculation already in progress',
+  httpStatus: 422,
+  userMessage: 'A calculation for this scenario is already running',
+  resolution: 'Wait for current calculation to complete'
+};
+
+export const CALC_PROC_010 = {
+  code: 'CALC_PROC_010',
+  message: 'Calculation timeout exceeded',
+  httpStatus: 422,
+  userMessage: 'Calculation took too long and was terminated',
+  resolution: 'Simplify calculation or contact administrator'
+};
+```
+
+#### Dependency Errors (CALC_DEP_XXX)
+
+```typescript
+export const CALC_DEP_001 = {
+  code: 'CALC_DEP_001',
+  message: 'Activity Service unavailable',
+  httpStatus: 424,
+  userMessage: 'Activity Service is currently unavailable',
+  resolution: 'Try again later or contact support'
+};
+
+export const CALC_DEP_002 = {
+  code: 'CALC_DEP_002',
+  message: 'Reference Service unavailable',
+  httpStatus: 424,
+  userMessage: 'Reference Service is currently unavailable',
+  resolution: 'Try again later or contact support'
+};
+
+export const CALC_DEP_003 = {
+  code: 'CALC_DEP_003',
+  message: 'Organization Service unavailable',
+  httpStatus: 424,
+  userMessage: 'Organization Service is currently unavailable',
+  resolution: 'Try again later or contact support'
+};
+
+export const CALC_DEP_004 = {
+  code: 'CALC_DEP_004',
+  message: 'Cache service unavailable',
+  httpStatus: 424,
+  userMessage: 'Caching service is currently unavailable',
+  resolution: 'Calculation will proceed without cache (slower)'
+};
+
+export const CALC_DEP_005 = {
+  code: 'CALC_DEP_005',
+  message: 'Event bus unavailable',
+  httpStatus: 424,
+  userMessage: 'Event publishing failed',
+  resolution: 'Calculation succeeded but events not published'
+};
+```
+
+#### System Errors (CALC_SYS_XXX)
+
+```typescript
+export const CALC_SYS_001 = {
+  code: 'CALC_SYS_001',
+  message: 'Database connection error',
+  httpStatus: 500,
+  userMessage: 'A database error occurred',
+  resolution: 'Try again or contact support if issue persists'
+};
+
+export const CALC_SYS_002 = {
+  code: 'CALC_SYS_002',
+  message: 'Unexpected error during calculation',
+  httpStatus: 500,
+  userMessage: 'An unexpected error occurred',
+  resolution: 'Contact support with calculation ID'
+};
+
+export const CALC_SYS_003 = {
+  code: 'CALC_SYS_003',
+  message: 'Cache write failure',
+  httpStatus: 500,
+  userMessage: 'Failed to cache calculation result',
+  resolution: 'Calculation succeeded but caching failed'
+};
+
+export const CALC_SYS_004 = {
+  code: 'CALC_SYS_004',
+  message: 'Aggregation cache corruption',
+  httpStatus: 500,
+  userMessage: 'Aggregation cache is corrupted',
+  resolution: 'Cache will be cleared and recalculated'
+};
+```
+
+### 11.3 Error Response Format
+
+```typescript
+interface ErrorResponse {
+  success: false;
+  error: {
+    code: string;              // e.g., CALC_PROC_002
+    message: string;           // Technical message
+    userMessage: string;       // User-friendly message
+    resolution: string;        // How to fix
+    details?: any;             // Additional context
+    timestamp: string;         // ISO 8601
+    correlationId: string;     // Request trace ID
+    path: string;              // API path
+  };
+}
+
+// Example
+{
+  "success": false,
+  "error": {
+    "code": "CALC_PROC_002",
+    "message": "Emission factor not found for parameter",
+    "userMessage": "No emission factor available for Diesel (parameter-123) in region US-CA",
+    "resolution": "Contact administrator to add emission factor to Reference Service",
+    "details": {
+      "parameterId": "parameter-123",
+      "parameterName": "Diesel",
+      "region": "US-CA",
+      "year": 2024
+    },
+    "timestamp": "2025-11-18T10:30:00Z",
+    "correlationId": "req-abc-123",
+    "path": "/v1/calculations/single"
+  }
+}
+```
+
+---
+
+## 12. Event Schemas (with Zod Validation)
+
+### 12.1 Base Event Schema
+
+```typescript
+import { z } from 'zod';
+
+export const BaseEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.string(),
+  version: z.string().regex(/^\d+\.\d+\.\d+$/),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.string(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  metadata: z.record(z.any()).optional()
+});
+
+export type BaseEvent = z.infer<typeof BaseEventSchema>;
+```
+
+### 12.2 Calculation Events
+
+#### calculation.emission.calculated.v1
+
+```typescript
+export const EmissionCalculatedEventDataSchema = z.object({
+  calculationId: z.string().uuid(),
+  activityDataId: z.string().uuid(),
+  projectId: z.string().uuid(),
+  entityId: z.string().uuid(),
+  emission: z.number().nonnegative(),
+  scope: z.enum(['Scope 1', 'Scope 2', 'Scope 3']),
+  category: z.string().min(1).max(100),
+  year: z.number().int().min(1990).max(2100),
+  month: z.number().int().min(1).max(12).optional(),
+  calculatedBy: z.string().uuid(),
+  trigger: z.enum(['automatic', 'manual', 'batch', 'scenario']),
+  method: z.object({
+    id: z.string(),
+    name: z.string(),
+    version: z.string()
+  }),
+  uncertainty: z.object({
+    lower: z.number().nonnegative(),
+    upper: z.number().nonnegative(),
+    qualityScore: z.enum([1, 2, 3, 4])
+  })
+});
+
+export const EmissionCalculatedEventSchema = BaseEventSchema.extend({
+  type: z.literal('calculation.emission.calculated.v1'),
+  aggregateType: z.literal('CalculationResult'),
+  data: EmissionCalculatedEventDataSchema
+});
+
+export type EmissionCalculatedEvent = z.infer<typeof EmissionCalculatedEventSchema>;
+
+// Usage
+const event: EmissionCalculatedEvent = {
+  id: uuid(),
+  type: 'calculation.emission.calculated.v1',
+  version: '1.0.0',
+  occurredAt: new Date().toISOString(),
+  aggregateId: calculationId,
+  aggregateType: 'CalculationResult',
+  correlationId: request.correlationId,
+  userId: request.userId,
+  data: {
+    calculationId,
+    activityDataId,
+    projectId,
+    entityId,
+    emission: 1234.56,
+    scope: 'Scope 1',
+    category: 'Stationary Combustion',
+    year: 2024,
+    calculatedBy: userId,
+    trigger: 'automatic',
+    method: {
+      id: 'CALC-001',
+      name: 'Fuel-Based Combustion',
+      version: 'GHG-2023'
+    },
+    uncertainty: {
+      lower: 1111.10,
+      upper: 1358.02,
+      qualityScore: 2
+    }
+  }
+};
+
+// Validate before publishing
+EmissionCalculatedEventSchema.parse(event);
+```
+
+#### calculation.batch.completed.v1
+
+```typescript
+export const BatchCompletedEventDataSchema = z.object({
+  batchId: z.string().uuid(),
+  projectId: z.string().uuid(),
+  totalCount: z.number().int().nonnegative(),
+  successCount: z.number().int().nonnegative(),
+  failedCount: z.number().int().nonnegative(),
+  totalEmission: z.number().nonnegative(),
+  startedAt: z.string().datetime(),
+  completedAt: z.string().datetime(),
+  durationMs: z.number().int().nonnegative(),
+  triggeredBy: z.string().uuid()
+});
+
+export const BatchCompletedEventSchema = BaseEventSchema.extend({
+  type: z.literal('calculation.batch.completed.v1'),
+  aggregateType: z.literal('BatchCalculation'),
+  data: BatchCompletedEventDataSchema
+});
+
+export type BatchCompletedEvent = z.infer<typeof BatchCompletedEventSchema>;
+```
+
+#### calculation.rollup.completed.v1
+
+```typescript
+export const RollupCompletedEventDataSchema = z.object({
+  aggregationId: z.string().uuid(),
+  nodeId: z.string().uuid(),
+  nodeName: z.string().min(1).max(200),
+  nodeType: z.enum(['Company', 'Entity', 'Subsidiary', 'Location']),
+  year: z.number().int().min(1990).max(2100),
+  totalEmission: z.number().nonnegative(),
+  directEmission: z.number().nonnegative(),
+  indirectEmission: z.number().nonnegative(),
+  childCount: z.number().int().nonnegative(),
+  byScope: z.object({
+    scope1: z.number().nonnegative(),
+    scope2: z.number().nonnegative(),
+    scope3: z.number().nonnegative()
+  }),
+  calculationCount: z.number().int().nonnegative(),
+  cacheHit: z.boolean()
+});
+
+export const RollupCompletedEventSchema = BaseEventSchema.extend({
+  type: z.literal('calculation.rollup.completed.v1'),
+  aggregateType: z.literal('Aggregation'),
+  data: RollupCompletedEventDataSchema
+});
+
+export type RollupCompletedEvent = z.infer<typeof RollupCompletedEventSchema>;
+```
+
+#### calculation.allocation.created.v1
+
+```typescript
+export const AllocationCreatedEventDataSchema = z.object({
+  allocationId: z.string().uuid(),
+  name: z.string().min(1).max(200),
+  projectId: z.string().uuid(),
+  totalEmission: z.number().nonnegative(),
+  allocationType: z.enum(['headcount', 'revenue', 'floorArea', 'custom']),
+  targetCount: z.number().int().positive(),
+  year: z.number().int().min(1990).max(2100),
+  targets: z.array(z.object({
+    entityId: z.string().uuid(),
+    entityName: z.string(),
+    allocatedEmission: z.number().nonnegative(),
+    proportion: z.number().min(0).max(100)
+  })),
+  createdBy: z.string().uuid()
+});
+
+export const AllocationCreatedEventSchema = BaseEventSchema.extend({
+  type: z.literal('calculation.allocation.created.v1'),
+  aggregateType: z.literal('Allocation'),
+  data: AllocationCreatedEventDataSchema
+});
+
+export type AllocationCreatedEvent = z.infer<typeof AllocationCreatedEventSchema>;
+```
+
+#### calculation.scenario.completed.v1
+
+```typescript
+export const ScenarioCompletedEventDataSchema = z.object({
+  scenarioId: z.string().uuid(),
+  name: z.string().min(1).max(200),
+  projectId: z.string().uuid(),
+  baselineEmission: z.number().nonnegative(),
+  projectedEmission: z.number().nonnegative(),
+  reduction: z.number(),
+  reductionPercentage: z.number(),
+  overrideCount: z.number().int().nonnegative(),
+  calculationCount: z.number().int().nonnegative(),
+  baselineYear: z.number().int().min(1990).max(2100),
+  targetYear: z.number().int().min(1990).max(2100).optional(),
+  createdBy: z.string().uuid()
+});
+
+export const ScenarioCompletedEventSchema = BaseEventSchema.extend({
+  type: z.literal('calculation.scenario.completed.v1'),
+  aggregateType: z.literal('Scenario'),
+  data: ScenarioCompletedEventDataSchema
+});
+
+export type ScenarioCompletedEvent = z.infer<typeof ScenarioCompletedEventSchema>;
+```
+
+#### calculation.cache.invalidated.v1
+
+```typescript
+export const CacheInvalidatedEventDataSchema = z.object({
+  reason: z.string().min(1).max(200),
+  scope: z.enum(['project', 'entity', 'activityData', 'all']),
+  targetId: z.string().uuid().optional(),
+  invalidatedKeys: z.number().int().nonnegative(),
+  affectedCalculations: z.number().int().nonnegative(),
+  invalidatedBy: z.string().uuid()
+});
+
+export const CacheInvalidatedEventSchema = BaseEventSchema.extend({
+  type: z.literal('calculation.cache.invalidated.v1'),
+  aggregateType: z.literal('Cache'),
+  data: CacheInvalidatedEventDataSchema
+});
+
+export type CacheInvalidatedEvent = z.infer<typeof CacheInvalidatedEventSchema>;
+```
+
+### 12.3 Event Publisher with Validation
+
+```typescript
+import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge';
+import { Injectable, Logger } from '@nestjs/common';
+import { z } from 'zod';
+
+@Injectable()
+export class EventPublisherService {
+  private readonly logger = new Logger(EventPublisherService.name);
+
+  constructor(private readonly eventBridge: EventBridgeClient) {}
+
+  async publish<T extends z.ZodType>(
+    event: z.infer<T>,
+    schema: T
+  ): Promise<void> {
+    try {
+      // Validate event against schema
+      schema.parse(event);
+
+      // Publish to EventBridge
+      await this.eventBridge.send(new PutEventsCommand({
+        Entries: [{
+          Source: 'clenergize.calculation-service',
+          DetailType: event.type,
+          Detail: JSON.stringify(event),
+          EventBusName: process.env.EVENTBRIDGE_BUS_NAME
+        }]
+      }));
+
+      this.logger.debug('Event published', {
+        eventId: event.id,
+        eventType: event.type,
+        aggregateId: event.aggregateId
+      });
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        this.logger.error('Event validation failed', {
+          eventType: event.type,
+          errors: error.errors
+        });
+        throw new Error(`Event validation failed: ${error.message}`);
+      }
+      throw error;
+    }
+  }
+}
+
+// Usage
+await eventPublisher.publish(
+  emissionCalculatedEvent,
+  EmissionCalculatedEventSchema
+);
+```
+
+---
+
+## 13. Caching Strategy
+
+### 13.1 Cache Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   CALCULATION SERVICE CACHE                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Cache Layers:                                               │
+│  1. Calculation Results (1 hour TTL)                         │
+│  2. Aggregations (1 hour TTL, cascading invalidation)       │
+│  3. Emission Factors (24 hour TTL)                           │
+│  4. Hierarchy Snapshots (Permanent for historical)          │
+│  5. Conversion Factors (7 days TTL)                          │
+│                                                              │
+│  Invalidation Triggers:                                      │
+│  • activity.data.verified.v1 → Clear calc cache             │
+│  • activity.data.updated.v1 → Clear calc + agg cache        │
+│  • reference.emission-factor.updated.v1 → Clear EF cache    │
+│  • organization.hierarchy.modified.v1 → Clear hierarchy     │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 13.2 Cache Key Patterns
+
+```typescript
+export const CacheKeys = {
+  // Calculation results
+  calculation: (activityDataId: string, version: number) =>
+    `calc:${activityDataId}:${version}`,
+
+  // Aggregations
+  aggregation: (nodeId: string, year: number, dimensions: string) =>
+    `agg:${nodeId}:${year}:${dimensions}`,
+
+  // Emission factors (from Reference Service)
+  emissionFactor: (parameterId: string, year: number, region: string) =>
+    `ef:${parameterId}:${year}:${region}`,
+
+  // Hierarchy snapshots
+  hierarchy: (nodeId: string, date: string) =>
+    `hierarchy:${nodeId}:${date}`,
+
+  // Conversion factors
+  conversionFactor: (fromUom: string, toUom: string) =>
+    `cf:${fromUom}:${toUom}`,
+
+  // Calculation method
+  calculationMethod: (scope: string, category: string) =>
+    `method:${scope}:${category}`,
+
+  // Batch job status
+  batchJob: (batchId: string) =>
+    `batch:${batchId}`,
+
+  // Scenario status
+  scenario: (scenarioId: string) =>
+    `scenario:${scenarioId}`
+};
+```
+
+### 13.3 Cache TTL Configuration
+
+```typescript
+export const CacheTTL = {
+  CALCULATION_RESULT: 3600,        // 1 hour
+  AGGREGATION: 3600,               // 1 hour
+  EMISSION_FACTOR: 86400,          // 24 hours
+  HIERARCHY_CURRENT: 3600,         // 1 hour
+  HIERARCHY_HISTORICAL: -1,        // Permanent (no TTL)
+  CONVERSION_FACTOR: 604800,       // 7 days
+  CALCULATION_METHOD: 86400,       // 24 hours
+  BATCH_JOB: 3600,                 // 1 hour
+  SCENARIO: 7200                   // 2 hours
+};
+```
+
+### 13.4 Cache Implementation
+
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+import { RedisService } from '@/shared/redis/redis.service';
+
+@Injectable()
+export class CalculationCacheService {
+  private readonly logger = new Logger(CalculationCacheService.name);
+
+  constructor(private readonly redis: RedisService) {}
+
+  // Cache calculation result
+  async cacheCalculation(
+    activityDataId: string,
+    version: number,
+    result: CalculationResult
+  ): Promise<void> {
+    const key = CacheKeys.calculation(activityDataId, version);
+    await this.redis.setex(
+      key,
+      CacheTTL.CALCULATION_RESULT,
+      JSON.stringify(result)
+    );
+    this.logger.debug('Calculation cached', { key });
+  }
+
+  // Get cached calculation
+  async getCalculation(
+    activityDataId: string,
+    version: number
+  ): Promise<CalculationResult | null> {
+    const key = CacheKeys.calculation(activityDataId, version);
+    const cached = await this.redis.get(key);
+
+    if (cached) {
+      this.logger.debug('Calculation cache hit', { key });
+      return JSON.parse(cached);
+    }
+
+    this.logger.debug('Calculation cache miss', { key });
+    return null;
+  }
+
+  // Cache aggregation
+  async cacheAggregation(
+    nodeId: string,
+    year: number,
+    dimensions: AggregationDimensions,
+    aggregation: Aggregation
+  ): Promise<void> {
+    const dimensionKey = this.serializeDimensions(dimensions);
+    const key = CacheKeys.aggregation(nodeId, year, dimensionKey);
+
+    await this.redis.setex(
+      key,
+      CacheTTL.AGGREGATION,
+      JSON.stringify(aggregation)
+    );
+
+    // Store reverse mapping (for invalidation)
+    await this.redis.sadd(`agg_index:${nodeId}:${year}`, key);
+
+    this.logger.debug('Aggregation cached', { key });
+  }
+
+  // Get cached aggregation
+  async getAggregation(
+    nodeId: string,
+    year: number,
+    dimensions: AggregationDimensions
+  ): Promise<Aggregation | null> {
+    const dimensionKey = this.serializeDimensions(dimensions);
+    const key = CacheKeys.aggregation(nodeId, year, dimensionKey);
+    const cached = await this.redis.get(key);
+
+    if (cached) {
+      this.logger.debug('Aggregation cache hit', { key });
+      return JSON.parse(cached);
+    }
+
+    this.logger.debug('Aggregation cache miss', { key });
+    return null;
+  }
+
+  // Invalidate calculation cache
+  async invalidateCalculation(activityDataId: string): Promise<number> {
+    const pattern = CacheKeys.calculation(activityDataId, '*');
+    const keys = await this.redis.keys(pattern);
+
+    if (keys.length > 0) {
+      await this.redis.del(...keys);
+      this.logger.info('Calculation cache invalidated', {
+        activityDataId,
+        keysDeleted: keys.length
+      });
+    }
+
+    return keys.length;
+  }
+
+  // Invalidate aggregation cache (with cascade)
+  async invalidateAggregation(
+    nodeId: string,
+    year: number,
+    cascade: boolean = true
+  ): Promise<number> {
+    let totalDeleted = 0;
+
+    // Delete all aggregations for this node/year
+    const indexKey = `agg_index:${nodeId}:${year}`;
+    const keys = await this.redis.smembers(indexKey);
+
+    if (keys.length > 0) {
+      await this.redis.del(...keys);
+      await this.redis.del(indexKey);
+      totalDeleted += keys.length;
+    }
+
+    // Cascade to parent nodes if requested
+    if (cascade) {
+      const parents = await this.getParentNodes(nodeId);
+      for (const parentId of parents) {
+        const parentDeleted = await this.invalidateAggregation(
+          parentId,
+          year,
+          false  // Don't cascade infinitely
+        );
+        totalDeleted += parentDeleted;
+      }
+    }
+
+    this.logger.info('Aggregation cache invalidated', {
+      nodeId,
+      year,
+      cascade,
+      keysDeleted: totalDeleted
+    });
+
+    return totalDeleted;
+  }
+
+  // Invalidate emission factor cache
+  async invalidateEmissionFactor(
+    parameterId: string,
+    year?: number
+  ): Promise<number> {
+    const pattern = year
+      ? CacheKeys.emissionFactor(parameterId, year, '*')
+      : CacheKeys.emissionFactor(parameterId, '*', '*');
+
+    const keys = await this.redis.keys(pattern);
+
+    if (keys.length > 0) {
+      await this.redis.del(...keys);
+      this.logger.info('Emission factor cache invalidated', {
+        parameterId,
+        year,
+        keysDeleted: keys.length
+      });
+    }
+
+    return keys.length;
+  }
+
+  // Cache emission factor
+  async cacheEmissionFactor(
+    parameterId: string,
+    year: number,
+    region: string,
+    emissionFactor: EmissionFactor
+  ): Promise<void> {
+    const key = CacheKeys.emissionFactor(parameterId, year, region);
+    await this.redis.setex(
+      key,
+      CacheTTL.EMISSION_FACTOR,
+      JSON.stringify(emissionFactor)
+    );
+    this.logger.debug('Emission factor cached', { key });
+  }
+
+  // Get cached emission factor
+  async getEmissionFactor(
+    parameterId: string,
+    year: number,
+    region: string
+  ): Promise<EmissionFactor | null> {
+    const key = CacheKeys.emissionFactor(parameterId, year, region);
+    const cached = await this.redis.get(key);
+
+    if (cached) {
+      this.logger.debug('Emission factor cache hit', { key });
+      return JSON.parse(cached);
+    }
+
+    this.logger.debug('Emission factor cache miss', { key });
+    return null;
+  }
+
+  // Cache hierarchy snapshot
+  async cacheHierarchy(
+    nodeId: string,
+    date: string,
+    hierarchy: HierarchySnapshot
+  ): Promise<void> {
+    const key = CacheKeys.hierarchy(nodeId, date);
+    const ttl = this.isHistorical(date)
+      ? CacheTTL.HIERARCHY_HISTORICAL
+      : CacheTTL.HIERARCHY_CURRENT;
+
+    if (ttl === -1) {
+      // Permanent cache (no TTL)
+      await this.redis.set(key, JSON.stringify(hierarchy));
+    } else {
+      await this.redis.setex(key, ttl, JSON.stringify(hierarchy));
+    }
+
+    this.logger.debug('Hierarchy cached', { key, permanent: ttl === -1 });
+  }
+
+  // Helper: Check if date is historical (> 30 days ago)
+  private isHistorical(dateString: string): boolean {
+    const date = new Date(dateString);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return date < thirtyDaysAgo;
+  }
+
+  // Helper: Serialize aggregation dimensions
+  private serializeDimensions(dimensions: AggregationDimensions): string {
+    return `${dimensions.scope ? 's' : ''}${dimensions.category ? 'c' : ''}${dimensions.month ? 'm' : ''}`;
+  }
+
+  // Helper: Get parent nodes (from Organization Service)
+  private async getParentNodes(nodeId: string): Promise<string[]> {
+    // Call Organization Service to get parent chain
+    // Implementation depends on service client
+    return [];
+  }
+
+  // Get cache statistics
+  async getCacheStats(): Promise<CacheStats> {
+    const info = await this.redis.info('stats');
+    const keys = await this.redis.dbsize();
+
+    return {
+      totalKeys: keys,
+      hitRate: this.parseHitRate(info),
+      memoryUsed: this.parseMemoryUsed(info),
+      evictedKeys: this.parseEvictedKeys(info)
+    };
+  }
+
+  // Helper parsers for Redis INFO
+  private parseHitRate(info: string): number {
+    const hits = this.extractValue(info, 'keyspace_hits');
+    const misses = this.extractValue(info, 'keyspace_misses');
+    if (hits + misses === 0) return 0;
+    return (hits / (hits + misses)) * 100;
+  }
+
+  private parseMemoryUsed(info: string): number {
+    return this.extractValue(info, 'used_memory');
+  }
+
+  private parseEvictedKeys(info: string): number {
+    return this.extractValue(info, 'evicted_keys');
+  }
+
+  private extractValue(info: string, key: string): number {
+    const regex = new RegExp(`${key}:(\\d+)`);
+    const match = info.match(regex);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+}
+
+interface CacheStats {
+  totalKeys: number;
+  hitRate: number;
+  memoryUsed: number;
+  evictedKeys: number;
+}
+```
+
+### 13.5 Cache Invalidation Event Handlers
+
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+import { EventsHandler } from '@nestjs/cqrs';
+
+@Injectable()
+export class CacheInvalidationHandler {
+  private readonly logger = new Logger(CacheInvalidationHandler.name);
+
+  constructor(private readonly cacheService: CalculationCacheService) {}
+
+  @EventsHandler('activity.data.verified.v1')
+  async onActivityDataVerified(event: ActivityDataVerifiedEvent): Promise<void> {
+    const { activityDataId } = event.data;
+
+    // Clear calculation cache for this activity data
+    await this.cacheService.invalidateCalculation(activityDataId);
+
+    this.logger.debug('Cache invalidated on activity data verified', {
+      activityDataId
+    });
+  }
+
+  @EventsHandler('activity.data.updated.v1')
+  async onActivityDataUpdated(event: ActivityDataUpdatedEvent): Promise<void> {
+    const { activityDataId, entityId, year } = event.data;
+
+    // Clear calculation cache
+    await this.cacheService.invalidateCalculation(activityDataId);
+
+    // Clear aggregation cache (with cascade to parents)
+    await this.cacheService.invalidateAggregation(entityId, year, true);
+
+    this.logger.info('Cache invalidated on activity data updated', {
+      activityDataId,
+      entityId,
+      year
+    });
+  }
+
+  @EventsHandler('reference.emission-factor.updated.v1')
+  async onEmissionFactorUpdated(event: EmissionFactorUpdatedEvent): Promise<void> {
+    const { emissionFactorId, parameterId, year } = event.data;
+
+    // Clear emission factor cache
+    await this.cacheService.invalidateEmissionFactor(parameterId, year);
+
+    // Find all calculations using this EF and queue for recalculation
+    await this.queueRecalculationsForEmissionFactor(emissionFactorId);
+
+    this.logger.warn('Emission factor updated, cache cleared', {
+      emissionFactorId,
+      parameterId,
+      year
+    });
+  }
+
+  @EventsHandler('organization.hierarchy.modified.v1')
+  async onHierarchyModified(event: HierarchyModifiedEvent): Promise<void> {
+    const { nodeId, year } = event.data;
+
+    // Clear hierarchy cache
+    const hierarchyKey = CacheKeys.hierarchy(nodeId, new Date().toISOString());
+    await this.cacheService.redis.del(hierarchyKey);
+
+    // Clear all aggregations for affected nodes
+    await this.cacheService.invalidateAggregation(nodeId, year, true);
+
+    this.logger.warn('Hierarchy modified, cache cleared', { nodeId, year });
+  }
+
+  private async queueRecalculationsForEmissionFactor(
+    emissionFactorId: string
+  ): Promise<void> {
+    // Implementation: Find calculations and queue for recalc
+    this.logger.debug('Queueing recalculations', { emissionFactorId });
+  }
+}
+```
+
+### 13.6 Cache Monitoring
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { PrometheusService } from '@/shared/prometheus/prometheus.service';
+
+@Injectable()
+export class CacheMonitoringService {
+  constructor(
+    private readonly cacheService: CalculationCacheService,
+    private readonly prometheus: PrometheusService
+  ) {}
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async collectCacheMetrics(): Promise<void> {
+    const stats = await this.cacheService.getCacheStats();
+
+    // Update Prometheus metrics
+    this.prometheus.gauge('calculation_cache_hit_rate').set(stats.hitRate);
+    this.prometheus.gauge('calculation_cache_total_keys').set(stats.totalKeys);
+    this.prometheus.gauge('calculation_cache_memory_bytes').set(stats.memoryUsed);
+    this.prometheus.counter('calculation_cache_evictions_total').inc(stats.evictedKeys);
+
+    // Alert if hit rate drops below threshold
+    if (stats.hitRate < 60) {
+      this.logger.warn('Cache hit rate below threshold', {
+        hitRate: stats.hitRate,
+        threshold: 60
+      });
+    }
+  }
+}
+```
+
+---
+
+## 14. Circuit Breaker Configuration
+
+### 14.1 Circuit Breaker Pattern
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              CIRCUIT BREAKER STATE MACHINE                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│          ┌───────────┐                                       │
+│          │  CLOSED   │ ◄──────── All requests pass          │
+│          │ (Normal)  │              through                  │
+│          └─────┬─────┘                                       │
+│                │                                             │
+│                │ Failures exceed                             │
+│                │ threshold (5 in 10s)                        │
+│                ▼                                             │
+│          ┌───────────┐                                       │
+│          │   OPEN    │ ◄──────── All requests fail          │
+│          │ (Failing) │              fast (no call)          │
+│          └─────┬─────┘                                       │
+│                │                                             │
+│                │ After timeout                               │
+│                │ (30s)                                       │
+│                ▼                                             │
+│          ┌───────────┐                                       │
+│          │ HALF-OPEN │ ◄──────── Limited requests           │
+│          │ (Testing) │              allowed                  │
+│          └─────┬─────┘                                       │
+│                │                                             │
+│                ├──────► Success → Close circuit             │
+│                └──────► Failure → Open circuit              │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 14.2 Circuit Breaker Implementation
+
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+
+enum CircuitState {
+  CLOSED = 'CLOSED',
+  OPEN = 'OPEN',
+  HALF_OPEN = 'HALF_OPEN'
+}
+
+interface CircuitBreakerConfig {
+  failureThreshold: number;      // Number of failures before opening
+  successThreshold: number;      // Number of successes to close from half-open
+  timeout: number;               // ms before trying half-open
+  monitoringWindow: number;      // ms window for counting failures
+}
+
+@Injectable()
+export class CircuitBreaker {
+  private state: CircuitState = CircuitState.CLOSED;
+  private failureCount: number = 0;
+  private successCount: number = 0;
+  private nextAttempt: number = Date.now();
+  private readonly logger = new Logger(CircuitBreaker.name);
+
+  constructor(
+    private readonly name: string,
+    private readonly config: CircuitBreakerConfig
+  ) {}
+
+  async execute<T>(fn: () => Promise<T>, fallback?: () => Promise<T>): Promise<T> {
+    if (this.state === CircuitState.OPEN) {
+      if (Date.now() < this.nextAttempt) {
+        this.logger.warn('Circuit breaker OPEN', { name: this.name });
+
+        if (fallback) {
+          return await fallback();
+        }
+
+        throw new Error(`Circuit breaker is OPEN for ${this.name}`);
+      }
+
+      // Transition to HALF_OPEN
+      this.state = CircuitState.HALF_OPEN;
+      this.logger.info('Circuit breaker transitioning to HALF_OPEN', {
+        name: this.name
+      });
+    }
+
+    try {
+      const result = await fn();
+      this.onSuccess();
+      return result;
+    } catch (error) {
+      this.onFailure();
+
+      if (fallback && this.state === CircuitState.OPEN) {
+        return await fallback();
+      }
+
+      throw error;
+    }
+  }
+
+  private onSuccess(): void {
+    if (this.state === CircuitState.HALF_OPEN) {
+      this.successCount++;
+
+      if (this.successCount >= this.config.successThreshold) {
+        this.state = CircuitState.CLOSED;
+        this.failureCount = 0;
+        this.successCount = 0;
+        this.logger.info('Circuit breaker CLOSED', { name: this.name });
+      }
+    } else {
+      this.failureCount = 0;
+    }
+  }
+
+  private onFailure(): void {
+    this.failureCount++;
+    this.successCount = 0;
+
+    if (
+      this.state === CircuitState.HALF_OPEN ||
+      this.failureCount >= this.config.failureThreshold
+    ) {
+      this.state = CircuitState.OPEN;
+      this.nextAttempt = Date.now() + this.config.timeout;
+
+      this.logger.error('Circuit breaker OPEN', {
+        name: this.name,
+        failureCount: this.failureCount,
+        nextAttemptAt: new Date(this.nextAttempt).toISOString()
+      });
+    }
+  }
+
+  getState(): CircuitState {
+    return this.state;
+  }
+
+  reset(): void {
+    this.state = CircuitState.CLOSED;
+    this.failureCount = 0;
+    this.successCount = 0;
+    this.logger.info('Circuit breaker manually reset', { name: this.name });
+  }
+}
+```
+
+### 14.3 Service-Specific Circuit Breakers
+
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+
+@Injectable()
+export class CircuitBreakerRegistry {
+  private readonly breakers = new Map<string, CircuitBreaker>();
+  private readonly logger = new Logger(CircuitBreakerRegistry.name);
+
+  constructor() {
+    this.initializeBreakers();
+  }
+
+  private initializeBreakers(): void {
+    // Activity Service circuit breaker
+    this.breakers.set('activity-service', new CircuitBreaker(
+      'activity-service',
+      {
+        failureThreshold: 5,
+        successThreshold: 2,
+        timeout: 30000,        // 30s
+        monitoringWindow: 10000 // 10s
+      }
+    ));
+
+    // Reference Service circuit breaker
+    this.breakers.set('reference-service', new CircuitBreaker(
+      'reference-service',
+      {
+        failureThreshold: 5,
+        successThreshold: 2,
+        timeout: 30000,
+        monitoringWindow: 10000
+      }
+    ));
+
+    // Organization Service circuit breaker
+    this.breakers.set('organization-service', new CircuitBreaker(
+      'organization-service',
+      {
+        failureThreshold: 5,
+        successThreshold: 2,
+        timeout: 30000,
+        monitoringWindow: 10000
+      }
+    ));
+
+    // Database circuit breaker
+    this.breakers.set('database', new CircuitBreaker(
+      'database',
+      {
+        failureThreshold: 3,   // More sensitive
+        successThreshold: 3,
+        timeout: 60000,        // 60s longer recovery
+        monitoringWindow: 5000
+      }
+    ));
+
+    // Cache circuit breaker
+    this.breakers.set('cache', new CircuitBreaker(
+      'cache',
+      {
+        failureThreshold: 10,  // More tolerant (cache is nice-to-have)
+        successThreshold: 2,
+        timeout: 15000,        // 15s faster recovery
+        monitoringWindow: 10000
+      }
+    ));
+
+    this.logger.log('Circuit breakers initialized', {
+      count: this.breakers.size
+    });
+  }
+
+  getBreaker(name: string): CircuitBreaker {
+    const breaker = this.breakers.get(name);
+    if (!breaker) {
+      throw new Error(`Circuit breaker not found: ${name}`);
+    }
+    return breaker;
+  }
+
+  async executeWithBreaker<T>(
+    name: string,
+    fn: () => Promise<T>,
+    fallback?: () => Promise<T>
+  ): Promise<T> {
+    const breaker = this.getBreaker(name);
+    return await breaker.execute(fn, fallback);
+  }
+
+  getAllStates(): Record<string, CircuitState> {
+    const states: Record<string, CircuitState> = {};
+    for (const [name, breaker] of this.breakers.entries()) {
+      states[name] = breaker.getState();
+    }
+    return states;
+  }
+}
+```
+
+### 14.4 Fallback Strategies
+
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+
+@Injectable()
+export class FallbackStrategies {
+  private readonly logger = new Logger(FallbackStrategies.name);
+
+  constructor(
+    private readonly cacheService: CalculationCacheService
+  ) {}
+
+  // Fallback: Use cached emission factor even if expired
+  async getEmissionFactorWithFallback(
+    parameterId: string,
+    year: number,
+    region: string
+  ): Promise<EmissionFactor> {
+    const breaker = this.circuitBreakers.getBreaker('reference-service');
+
+    return await breaker.execute(
+      // Primary: Call Reference Service
+      async () => {
+        return await this.referenceServiceClient.getEmissionFactor(
+          parameterId,
+          year,
+          region
+        );
+      },
+      // Fallback: Use stale cache or default
+      async () => {
+        this.logger.warn('Using fallback emission factor', {
+          parameterId,
+          year,
+          region
+        });
+
+        // Try stale cache first
+        const stale = await this.cacheService.getStaleEmissionFactor(
+          parameterId,
+          year,
+          region
+        );
+
+        if (stale) {
+          return stale;
+        }
+
+        // Last resort: Use previous year's EF
+        const previousYear = await this.cacheService.getEmissionFactor(
+          parameterId,
+          year - 1,
+          region
+        );
+
+        if (previousYear) {
+          return { ...previousYear, year }; // Mark as estimated
+        }
+
+        throw new Error('No emission factor available (primary and fallback failed)');
+      }
+    );
+  }
+
+  // Fallback: Return cached aggregation even if outdated
+  async getAggregationWithFallback(
+    nodeId: string,
+    year: number,
+    dimensions: AggregationDimensions
+  ): Promise<Aggregation> {
+    const breaker = this.circuitBreakers.getBreaker('organization-service');
+
+    return await breaker.execute(
+      // Primary: Calculate fresh aggregation
+      async () => {
+        return await this.hierarchyAggregator.aggregateNode(
+          nodeId,
+          year,
+          { dimensions, includeChildren: true }
+        );
+      },
+      // Fallback: Return cached result (even if stale)
+      async () => {
+        this.logger.warn('Using fallback aggregation (stale cache)', {
+          nodeId,
+          year
+        });
+
+        const stale = await this.cacheService.getStaleAggregation(
+          nodeId,
+          year,
+          dimensions
+        );
+
+        if (stale) {
+          return { ...stale, isStale: true };
+        }
+
+        throw new Error('No aggregation available (primary and fallback failed)');
+      }
+    );
+  }
+
+  // Fallback: Skip calculation if Activity Service down
+  async getActivityDataWithFallback(
+    activityDataId: string
+  ): Promise<ActivityData> {
+    const breaker = this.circuitBreakers.getBreaker('activity-service');
+
+    return await breaker.execute(
+      // Primary: Call Activity Service
+      async () => {
+        return await this.activityServiceClient.getActivityData(activityDataId);
+      },
+      // Fallback: Throw specific error (no fallback for activity data)
+      async () => {
+        throw new Error(
+          'Activity Service unavailable - cannot proceed with calculation'
+        );
+      }
+    );
+  }
+
+  // Fallback: Proceed without cache if Redis down
+  async getCachedCalculationWithFallback(
+    activityDataId: string,
+    version: number
+  ): Promise<CalculationResult | null> {
+    const breaker = this.circuitBreakers.getBreaker('cache');
+
+    return await breaker.execute(
+      // Primary: Get from cache
+      async () => {
+        return await this.cacheService.getCalculation(activityDataId, version);
+      },
+      // Fallback: Return null (proceed without cache)
+      async () => {
+        this.logger.warn('Cache unavailable, proceeding without cache', {
+          activityDataId,
+          version
+        });
+        return null;
+      }
+    );
+  }
+}
+```
+
+### 14.5 Circuit Breaker Monitoring
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+
+@Injectable()
+export class CircuitBreakerMonitoring {
+  constructor(
+    private readonly circuitBreakers: CircuitBreakerRegistry,
+    private readonly prometheus: PrometheusService
+  ) {}
+
+  @Cron(CronExpression.EVERY_30_SECONDS)
+  async monitorCircuitBreakers(): Promise<void> {
+    const states = this.circuitBreakers.getAllStates();
+
+    for (const [name, state] of Object.entries(states)) {
+      // Update Prometheus metrics
+      const stateValue = state === CircuitState.CLOSED ? 0 :
+                        state === CircuitState.HALF_OPEN ? 1 : 2;
+
+      this.prometheus
+        .gauge('circuit_breaker_state')
+        .labels({ service: name })
+        .set(stateValue);
+
+      // Alert if circuit is open
+      if (state === CircuitState.OPEN) {
+        this.logger.error('Circuit breaker OPEN', { service: name });
+        // Trigger alert (PagerDuty, Slack, etc.)
+      }
+    }
+  }
+
+  // Health check endpoint includes circuit breaker states
+  getHealthStatus(): Record<string, any> {
+    const states = this.circuitBreakers.getAllStates();
+    const allClosed = Object.values(states).every(s => s === CircuitState.CLOSED);
+
+    return {
+      circuitBreakers: states,
+      healthy: allClosed
+    };
+  }
+}
+```
+
+---
+
+## 15. Performance SLOs (Service Level Objectives)
+
+### 15.1 Target SLOs
+
+| Operation | p50 | p95 | p99 | Availability | Notes |
+|-----------|-----|-----|-----|--------------|-------|
+| **Single Calculation** | < 50ms | < 100ms | < 200ms | 99.9% | With cache hit: < 10ms |
+| **Batch Calculation (100)** | < 5s | < 10s | < 15s | 99.5% | Parallel processing |
+| **Hierarchy Aggregation (5 levels)** | < 200ms | < 500ms | < 1000ms | 99.9% | With cache: < 50ms |
+| **Scenario Calculation (1000 activities)** | < 15s | < 30s | < 60s | 99.0% | Queue-based async |
+| **Cache Operations** | < 5ms | < 10ms | < 20ms | 99.95% | Redis performance |
+
+### 15.2 Capacity Planning
+
+**Current Baseline** (Sprint 0.2):
+- Concurrent calculations: 50
+- Calculations per second: 100
+- Database connections: 50
+- Cache memory: 2GB
+
+**Phase 1 Target** (Sprint 1.4):
+- Concurrent calculations: 200
+- Calculations per second: 500
+- Database connections: 100
+- Cache memory: 4GB
+
+**Production Target** (Phase 3):
+- Concurrent calculations: 1000
+- Calculations per second: 5000
+- Database connections: 200
+- Cache memory: 8GB
+- Horizontal scaling: 5+ instances
+
+### 15.3 Performance Benchmarks
+
+```typescript
+// Performance test script (K6)
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export let options = {
+  stages: [
+    { duration: '2m', target: 10 },    // Ramp up to 10 users
+    { duration: '5m', target: 50 },    // Sustain 50 users
+    { duration: '10m', target: 100 },  // Peak load: 100 users
+    { duration: '3m', target: 0 },     // Ramp down
+  ],
+  thresholds: {
+    // SLO: p95 < 100ms
+    'http_req_duration{scenario:single_calculation}': ['p(95)<100'],
+    // SLO: p95 < 500ms
+    'http_req_duration{scenario:aggregation}': ['p(95)<500'],
+    // SLO: < 1% errors
+    'http_req_failed': ['rate<0.01'],
+    // SLO: > 80% cache hits
+    'cache_hit_rate': ['value>0.8'],
+  },
+};
+
+export default function () {
+  // Test single calculation
+  const calcPayload = JSON.stringify({
+    activityDataId: __ENV.ACTIVITY_DATA_ID
+  });
+
+  const calcRes = http.post(
+    `${__ENV.API_URL}/v1/calculations/single`,
+    calcPayload,
+    {
+      headers: { 'Content-Type': 'application/json' },
+      tags: { scenario: 'single_calculation' }
+    }
+  );
+
+  check(calcRes, {
+    'single calc: status 200': (r) => r.status === 200,
+    'single calc: p95 < 100ms': (r) => r.timings.duration < 100,
+    'single calc: has result': (r) => r.json('emission') !== undefined
+  });
+
+  sleep(1);
+
+  // Test aggregation
+  const aggRes = http.post(
+    `${__ENV.API_URL}/v1/aggregations/hierarchy`,
+    JSON.stringify({
+      rootNodeId: __ENV.ROOT_NODE_ID,
+      year: 2024
+    }),
+    {
+      headers: { 'Content-Type': 'application/json' },
+      tags: { scenario: 'aggregation' }
+    }
+  );
+
+  check(aggRes, {
+    'aggregation: status 200': (r) => r.status === 200,
+    'aggregation: p95 < 500ms': (r) => r.timings.duration < 500,
+    'aggregation: cache hit tracked': (r) => r.json('cacheHit') !== undefined
+  });
+
+  sleep(2);
+}
+```
+
+### 15.4 Performance Monitoring
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { Histogram, Counter, Gauge } from 'prom-client';
+
+@Injectable()
+export class PerformanceMetricsService {
+  // Histograms for latency tracking
+  private readonly calculationDuration: Histogram;
+  private readonly aggregationDuration: Histogram;
+  private readonly scenarioDuration: Histogram;
+
+  // Counters for throughput
+  private readonly calculationsTotal: Counter;
+  private readonly calculationErrors: Counter;
+
+  // Gauges for capacity
+  private readonly activeCalculations: Gauge;
+  private readonly queueDepth: Gauge;
+
+  constructor() {
+    this.calculationDuration = new Histogram({
+      name: 'calculation_duration_seconds',
+      help: 'Duration of emission calculations',
+      labelNames: ['scope', 'trigger'],
+      buckets: [0.01, 0.05, 0.1, 0.2, 0.5, 1, 2, 5]
+    });
+
+    this.aggregationDuration = new Histogram({
+      name: 'aggregation_duration_seconds',
+      help: 'Duration of hierarchy aggregations',
+      labelNames: ['levels', 'cache_hit'],
+      buckets: [0.05, 0.1, 0.2, 0.5, 1, 2, 5]
+    });
+
+    this.scenarioDuration = new Histogram({
+      name: 'scenario_calculation_duration_seconds',
+      help: 'Duration of scenario calculations',
+      labelNames: ['activity_count'],
+      buckets: [5, 10, 15, 30, 60, 120]
+    });
+
+    this.calculationsTotal = new Counter({
+      name: 'calculations_total',
+      help: 'Total number of calculations',
+      labelNames: ['scope', 'status']
+    });
+
+    this.calculationErrors = new Counter({
+      name: 'calculation_errors_total',
+      help: 'Total calculation errors',
+      labelNames: ['error_type']
+    });
+
+    this.activeCalculations = new Gauge({
+      name: 'active_calculations',
+      help: 'Number of calculations currently in progress'
+    });
+
+    this.queueDepth = new Gauge({
+      name: 'calculation_queue_depth',
+      help: 'Number of calculations waiting in queue'
+    });
+  }
+
+  // Track calculation performance
+  async trackCalculation<T>(
+    scope: string,
+    trigger: string,
+    fn: () => Promise<T>
+  ): Promise<T> {
+    const startTime = Date.now();
+    this.activeCalculations.inc();
+
+    try {
+      const result = await fn();
+
+      const duration = (Date.now() - startTime) / 1000;
+      this.calculationDuration.labels(scope, trigger).observe(duration);
+      this.calculationsTotal.labels(scope, 'success').inc();
+
+      return result;
+    } catch (error) {
+      const duration = (Date.now() - startTime) / 1000;
+      this.calculationDuration.labels(scope, trigger).observe(duration);
+      this.calculationsTotal.labels(scope, 'error').inc();
+      this.calculationErrors.labels(error.constructor.name).inc();
+      throw error;
+    } finally {
+      this.activeCalculations.dec();
+    }
+  }
+
+  // Track aggregation performance
+  async trackAggregation<T>(
+    levels: number,
+    cacheHit: boolean,
+    fn: () => Promise<T>
+  ): Promise<T> {
+    const startTime = Date.now();
+
+    const result = await fn();
+
+    const duration = (Date.now() - startTime) / 1000;
+    this.aggregationDuration
+      .labels(levels.toString(), cacheHit.toString())
+      .observe(duration);
+
+    return result;
+  }
+
+  // Update queue metrics
+  updateQueueDepth(depth: number): void {
+    this.queueDepth.set(depth);
+  }
+}
+```
+
+### 15.5 Performance Alerts
+
+```yaml
+# Prometheus alert rules
+groups:
+  - name: calculation_service_performance
+    interval: 30s
+    rules:
+      # SLO violation: p95 latency > 100ms
+      - alert: CalculationLatencyHigh
+        expr: |
+          histogram_quantile(0.95,
+            rate(calculation_duration_seconds_bucket[5m])
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: calculation-service
+        annotations:
+          summary: "Calculation p95 latency exceeds 100ms"
+          description: "p95 latency is {{ $value }}s (threshold: 0.1s)"
+
+      # SLO violation: p95 aggregation latency > 500ms
+      - alert: AggregationLatencyHigh
+        expr: |
+          histogram_quantile(0.95,
+            rate(aggregation_duration_seconds_bucket[5m])
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          service: calculation-service
+        annotations:
+          summary: "Aggregation p95 latency exceeds 500ms"
+          description: "p95 latency is {{ $value }}s (threshold: 0.5s)"
+
+      # High error rate
+      - alert: CalculationErrorRateHigh
+        expr: |
+          (
+            rate(calculations_total{status="error"}[5m]) /
+            rate(calculations_total[5m])
+          ) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          service: calculation-service
+        annotations:
+          summary: "Calculation error rate exceeds 1%"
+          description: "Error rate is {{ $value }}% (threshold: 1%)"
+
+      # Queue depth high
+      - alert: CalculationQueueDepthHigh
+        expr: calculation_queue_depth > 1000
+        for: 10m
+        labels:
+          severity: warning
+          service: calculation-service
+        annotations:
+          summary: "Calculation queue depth high"
+          description: "Queue depth is {{ $value }} (threshold: 1000)"
+
+      # Cache hit rate low
+      - alert: CacheHitRateLow
+        expr: calculation_cache_hit_rate < 60
+        for: 15m
+        labels:
+          severity: warning
+          service: calculation-service
+        annotations:
+          summary: "Cache hit rate below 60%"
+          description: "Hit rate is {{ $value }}% (threshold: 60%)"
+```
+
+---
+
+## 16. Disaster Recovery
+
+### 16.1 Recovery Time Objectives (RTO) & Recovery Point Objectives (RPO)
+
+| Component | RTO | RPO | Backup Frequency | Recovery Priority |
+|-----------|-----|-----|------------------|-------------------|
+| **Calculation Results** | 4 hours | 1 hour | Continuous (WAL) | P1 |
+| **Aggregation Cache** | 15 minutes | 0 (can recalculate) | Not backed up | P3 |
+| **Calculation Methods** | 1 hour | 24 hours | Daily | P2 |
+| **Scenarios** | 4 hours | 1 hour | Continuous (WAL) | P2 |
+| **Service Configuration** | 30 minutes | 0 (in Git) | Not needed | P1 |
+
+### 16.2 Backup Strategy
+
+#### MongoDB Backup (Calculation Results)
+
+```yaml
+# MongoDB backup configuration
+backup:
+  type: continuous
+  method: point-in-time-recovery
+
+  # Snapshot schedule
+  snapshots:
+    frequency: hourly
+    retention: 7 days
+    destination: s3://clenergize-backups/calculation-service/mongodb/
+
+  # Write-Ahead Log (WAL)
+  oplog:
+    enabled: true
+    retention: 48 hours
+
+  # Full backup
+  full_backup:
+    frequency: daily
+    time: "02:00 UTC"
+    retention: 30 days
+```
+
+#### Backup Automation
+
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+
+@Injectable()
+export class BackupService {
+  private readonly logger = new Logger(BackupService.name);
+
+  constructor(
+    private readonly mongoClient: MongoClient,
+    private readonly s3: S3Client
+  ) {}
+
+  @Cron('0 2 * * *')  // Daily at 2 AM UTC
+  async performDailyBackup(): Promise<void> {
+    this.logger.log('Starting daily backup');
+
+    const timestamp = new Date().toISOString().split('T')[0];
+    const backupId = `calculation_${timestamp}`;
+
+    try {
+      // 1. Create MongoDB snapshot
+      const db = this.mongoClient.db('clenergize_calculation');
+      const collections = await db.listCollections().toArray();
+
+      for (const collInfo of collections) {
+        const collectionName = collInfo.name;
+        const data = await db.collection(collectionName).find({}).toArray();
+
+        // 2. Upload to S3
+        await this.s3.send(new PutObjectCommand({
+          Bucket: 'clenergize-backups',
+          Key: `calculation-service/mongodb/${backupId}/${collectionName}.json`,
+          Body: JSON.stringify(data),
+          ServerSideEncryption: 'AES256'
+        }));
+
+        this.logger.log(`Backed up collection: ${collectionName}`);
+      }
+
+      // 3. Create backup manifest
+      await this.createBackupManifest(backupId, collections.map(c => c.name));
+
+      this.logger.log(`Daily backup completed: ${backupId}`);
+
+    } catch (error) {
+      this.logger.error('Backup failed', error);
+      // Trigger alert
+      throw error;
+    }
+  }
+
+  private async createBackupManifest(
+    backupId: string,
+    collections: string[]
+  ): Promise<void> {
+    const manifest = {
+      backupId,
+      timestamp: new Date().toISOString(),
+      service: 'calculation-service',
+      database: 'clenergize_calculation',
+      collections,
+      status: 'completed'
+    };
+
+    await this.s3.send(new PutObjectCommand({
+      Bucket: 'clenergize-backups',
+      Key: `calculation-service/mongodb/${backupId}/manifest.json`,
+      Body: JSON.stringify(manifest, null, 2)
+    }));
+  }
+}
+```
+
+### 16.3 Restoration Procedures
+
+#### Full Service Restoration
+
+```bash
+#!/bin/bash
+# restoration_script.sh
+
+set -e
+
+BACKUP_ID=$1
+BACKUP_BUCKET="clenergize-backups"
+SERVICE="calculation-service"
+
+echo "Starting restoration for backup: $BACKUP_ID"
+
+# 1. Download backup manifest
+aws s3 cp \
+  "s3://$BACKUP_BUCKET/$SERVICE/mongodb/$BACKUP_ID/manifest.json" \
+  /tmp/manifest.json
+
+# 2. Parse collections from manifest
+COLLECTIONS=$(jq -r '.collections[]' /tmp/manifest.json)
+
+# 3. Restore each collection
+for COLLECTION in $COLLECTIONS; do
+  echo "Restoring collection: $COLLECTION"
+
+  # Download backup
+  aws s3 cp \
+    "s3://$BACKUP_BUCKET/$SERVICE/mongodb/$BACKUP_ID/$COLLECTION.json" \
+    "/tmp/$COLLECTION.json"
+
+  # Import to MongoDB
+  mongoimport \
+    --uri "$MONGODB_URI" \
+    --db clenergize_calculation \
+    --collection "$COLLECTION" \
+    --file "/tmp/$COLLECTION.json" \
+    --jsonArray \
+    --drop
+
+  echo "Restored: $COLLECTION"
+done
+
+# 4. Verify restoration
+echo "Verifying restoration..."
+mongo "$MONGODB_URI" --eval "
+  db.calculation_results.count();
+  db.aggregations.count();
+  db.scenarios.count();
+"
+
+echo "Restoration completed successfully"
+```
+
+#### Point-in-Time Recovery (PITR)
+
+```bash
+#!/bin/bash
+# pitr_restore.sh
+
+TARGET_TIME=$1  # ISO 8601 format: 2025-11-18T10:30:00Z
+
+echo "Performing point-in-time recovery to: $TARGET_TIME"
+
+# 1. Find latest snapshot before target time
+SNAPSHOT_ID=$(aws backup list-recovery-points \
+  --backup-vault-name calculation-service-vault \
+  --query "RecoveryPoints[?CreationDate<'$TARGET_TIME'] | [-1].RecoveryPointArn" \
+  --output text)
+
+echo "Using snapshot: $SNAPSHOT_ID"
+
+# 2. Restore from snapshot
+aws backup start-restore-job \
+  --recovery-point-arn "$SNAPSHOT_ID" \
+  --iam-role-arn "$RESTORE_ROLE_ARN" \
+  --metadata "{
+    \"targetTime\": \"$TARGET_TIME\"
+  }"
+
+# 3. Wait for restore job to complete
+# ... (implementation)
+
+# 4. Replay oplog to target time
+# ... (implementation)
+
+echo "PITR completed"
+```
+
+### 16.4 Disaster Scenarios & Response
+
+#### Scenario 1: Database Corruption
+
+**Detection**: Health check failures, query errors
+
+**Response**:
+1. Switch to read-only mode
+2. Identify last good backup
+3. Restore from backup (RTO: 4 hours)
+4. Replay oplog to minimize data loss
+5. Recalculate recent results if needed
+
+#### Scenario 2: Complete Region Failure
+
+**Detection**: AWS region unavailability, multiple service failures
+
+**Response**:
+1. Activate DR region (AWS us-west-2)
+2. Redirect traffic via Route53
+3. Restore from cross-region backup (RTO: 6 hours)
+4. Verify data integrity
+5. Resume operations in DR region
+
+#### Scenario 3: Data Center Outage
+
+**Detection**: All services in availability zone unavailable
+
+**Response**:
+1. Auto-failover to other availability zones
+2. Rebalance load across remaining zones
+3. No data loss (multi-AZ replication)
+4. RTO: 15 minutes (automatic)
+
+#### Scenario 4: Accidental Data Deletion
+
+**Detection**: User report, audit log review
+
+**Response**:
+1. Identify deletion timestamp
+2. Perform PITR to moment before deletion
+3. Restore affected records only (selective restore)
+4. RTO: 2 hours, RPO: 0 (oplog replay)
+
+### 16.5 Regular DR Testing
+
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
+
+@Injectable()
+export class DisasterRecoveryTestingService {
+  private readonly logger = new Logger(DisasterRecoveryTestingService.name);
+
+  @Cron('0 0 1 * *')  // Monthly on 1st day at midnight
+  async performDRTest(): Promise<void> {
+    this.logger.log('Starting monthly DR test');
+
+    const testResults = {
+      testDate: new Date(),
+      scenarios: []
+    };
+
+    try {
+      // Test 1: Backup integrity
+      const backupTest = await this.testBackupIntegrity();
+      testResults.scenarios.push(backupTest);
+
+      // Test 2: Restore procedure
+      const restoreTest = await this.testRestoreProcedure();
+      testResults.scenarios.push(restoreTest);
+
+      // Test 3: Failover to DR region
+      const failoverTest = await this.testRegionalFailover();
+      testResults.scenarios.push(failoverTest);
+
+      // Generate report
+      await this.generateDRReport(testResults);
+
+      this.logger.log('DR test completed successfully');
+
+    } catch (error) {
+      this.logger.error('DR test failed', error);
+      // Alert on-call engineer
+      throw error;
+    }
+  }
+
+  private async testBackupIntegrity(): Promise<any> {
+    // 1. Download latest backup
+    // 2. Verify checksums
+    // 3. Validate data structure
+    return {
+      scenario: 'backup_integrity',
+      status: 'passed',
+      duration: 300  // seconds
+    };
+  }
+
+  private async testRestoreProcedure(): Promise<any> {
+    // 1. Restore to isolated test environment
+    // 2. Verify data completeness
+    // 3. Run integration tests
+    return {
+      scenario: 'restore_procedure',
+      status: 'passed',
+      rto: 3600,  // seconds
+      rpo: 0
+    };
+  }
+
+  private async testRegionalFailover(): Promise<any> {
+    // 1. Simulate region failure
+    // 2. Activate DR region
+    // 3. Verify service availability
+    return {
+      scenario: 'regional_failover',
+      status: 'passed',
+      failoverTime: 900  // seconds
+    };
+  }
+
+  private async generateDRReport(results: any): Promise<void> {
+    // Generate and email report to stakeholders
+    this.logger.log('DR test report generated', results);
+  }
+}
+```
+
+---
+
+## 17. OpenAPI Specification
+
+### 17.1 Swagger Configuration
+
+```typescript
+import { INestApplication } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
+export function setupSwagger(app: INestApplication): void {
+  const config = new DocumentBuilder()
+    .setTitle('Calculation Service API')
+    .setDescription(`
+      The Calculation Service is responsible for:
+      - GHG Protocol emission calculations (Scope 1, 2, 3)
+      - Hierarchy aggregation and rollups
+      - Emission allocation algorithms
+      - What-if scenario modeling
+      - Calculation history and versioning
+    `)
+    .setVersion('1.0.0')
+    .setContact(
+      'Clenergize Support',
+      'https://clenergize.com/support',
+      'support@clenergize.com'
+    )
+    .setLicense('Proprietary', 'https://clenergize.com/license')
+    .addServer('http://localhost:3005', 'Local Development')
+    .addServer('https://dev-api.clenergize.com', 'Development')
+    .addServer('https://staging-api.clenergize.com', 'Staging')
+    .addServer('https://api.clenergize.com', 'Production')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Enter JWT token from Identity Service'
+      },
+      'JWT-auth'
+    )
+    .addTag('calculations', 'Emission calculation operations')
+    .addTag('aggregations', 'Hierarchy aggregation operations')
+    .addTag('allocations', 'Emission allocation operations')
+    .addTag('scenarios', 'What-if scenario modeling')
+    .addTag('history', 'Calculation history and versioning')
+    .addTag('cache', 'Cache management (admin only)')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+
+  // Serve Swagger UI
+  SwaggerModule.setup('api/docs', app, document, {
+    customSiteTitle: 'Calculation Service API',
+    customCss: '.swagger-ui .topbar { display: none }',
+    swaggerOptions: {
+      persistAuthorization: true,
+      docExpansion: 'none',
+      filter: true,
+      showRequestDuration: true,
+      syntaxHighlight: {
+        activated: true,
+        theme: 'monokai'
+      }
+    }
+  });
+
+  // Export OpenAPI spec as JSON
+  const fs = require('fs');
+  fs.writeFileSync(
+    './openapi-spec.json',
+    JSON.stringify(document, null, 2)
+  );
+}
+```
+
+### 17.2 API Endpoint Documentation
+
+```typescript
+import { Controller, Post, Get, Body, Param, Query } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiBody
+} from '@nestjs/swagger';
+
+@ApiTags('calculations')
+@ApiBearerAuth('JWT-auth')
+@Controller('v1/calculations')
+export class CalculationsController {
+
+  @Post('single')
+  @ApiOperation({
+    summary: 'Calculate emissions for single activity data',
+    description: `
+      Calculates GHG emissions for a single activity data record using
+      the appropriate calculation method, emission factor, and conversion factors.
+
+      **Process**:
+      1. Fetch activity data from Activity Service
+      2. Validate activity data is verified
+      3. Determine calculation method (Scope 1/2/3 specific)
+      4. Fetch emission factor from Reference Service
+      5. Apply conversion factors if needed
+      6. Execute calculation formula
+      7. Calculate uncertainty bounds
+      8. Store result with version tracking
+      9. Publish calculation.emission.calculated.v1 event
+      10. Invalidate aggregation cache
+
+      **Performance**: p95 < 100ms (with cache hit: < 10ms)
+    `
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['activityDataId'],
+      properties: {
+        activityDataId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'UUID of activity data record',
+          example: '123e4567-e89b-12d3-a456-426614174000'
+        },
+        emissionFactorId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Optional: Override default emission factor',
+          example: '223e4567-e89b-12d3-a456-426614174001'
+        },
+        calculationMethod: {
+          type: 'string',
+          description: 'Optional: Override calculation method',
+          example: 'CALC-001'
+        },
+        metadata: {
+          type: 'object',
+          properties: {
+            triggeredBy: {
+              type: 'string',
+              description: 'User ID or "system"'
+            },
+            reason: {
+              type: 'string',
+              enum: ['data_verified', 'manual_recalc', 'scenario']
+            }
+          }
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Calculation successful',
+    schema: {
+      type: 'object',
+      properties: {
+        calculationId: { type: 'string', format: 'uuid' },
+        activityDataId: { type: 'string', format: 'uuid' },
+        emission: { type: 'number', description: 'tCO2e' },
+        uncertainty: {
+          type: 'object',
+          properties: {
+            lower: { type: 'number' },
+            upper: { type: 'number' },
+            qualityScore: { type: 'integer', enum: [1, 2, 3, 4] }
+          }
+        },
+        calculation: {
+          type: 'object',
+          properties: {
+            method: { type: 'string' },
+            formula: { type: 'string' },
+            version: { type: 'string' }
+          }
+        },
+        calculatedAt: { type: 'string', format: 'date-time' },
+        calculatedBy: { type: 'string', format: 'uuid' }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error (CALC_VAL_001, CALC_VAL_002)'
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Activity data not found (CALC_RES_001)'
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'Processing error (CALC_PROC_001 - CALC_PROC_010)'
+  })
+  @ApiResponse({
+    status: 424,
+    description: 'Dependency unavailable (CALC_DEP_001 - CALC_DEP_005)'
+  })
+  async calculateSingle(
+    @Body() dto: CalculateSingleDto
+  ): Promise<CalculationResult> {
+    return await this.calculationService.calculateSingle(dto);
+  }
+
+  @Post('batch')
+  @ApiOperation({
+    summary: 'Calculate emissions for multiple activity data records',
+    description: 'Batch calculation with parallel processing (max 1000 records)'
+  })
+  @ApiResponse({ status: 202, description: 'Batch accepted for processing' })
+  async calculateBatch(
+    @Body() dto: CalculateBatchDto
+  ): Promise<BatchJobResponse> {
+    return await this.calculationService.calculateBatch(dto);
+  }
+
+  // Additional endpoints...
+}
+
+@ApiTags('aggregations')
+@ApiBearerAuth('JWT-auth')
+@Controller('v1/aggregations')
+export class AggregationsController {
+
+  @Post('hierarchy')
+  @ApiOperation({
+    summary: 'Aggregate emissions across organizational hierarchy',
+    description: `
+      Performs bottom-up aggregation of emissions from leaf nodes to root.
+      Supports multi-dimensional grouping (scope, category, month).
+      Results are cached for 1 hour with smart invalidation.
+
+      **Performance**: p95 < 500ms (with cache hit: < 50ms)
+    `
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['rootNodeId', 'year'],
+      properties: {
+        rootNodeId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Company, Entity, Subsidiary, or Location ID'
+        },
+        year: {
+          type: 'integer',
+          minimum: 1990,
+          maximum: 2100
+        },
+        dimensions: {
+          type: 'object',
+          properties: {
+            scope: { type: 'boolean', default: true },
+            category: { type: 'boolean', default: true },
+            month: { type: 'boolean', default: false }
+          }
+        },
+        includeChildren: {
+          type: 'boolean',
+          default: true,
+          description: 'Include emissions from child nodes'
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Aggregation successful',
+    schema: {
+      type: 'object',
+      properties: {
+        aggregationId: { type: 'string', format: 'uuid' },
+        rootNode: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            type: { type: 'string', enum: ['Company', 'Entity', 'Subsidiary', 'Location'] }
+          }
+        },
+        year: { type: 'integer' },
+        totals: {
+          type: 'object',
+          properties: {
+            direct: { type: 'number', description: 'tCO2e' },
+            indirect: { type: 'number', description: 'tCO2e' },
+            total: { type: 'number', description: 'tCO2e' }
+          }
+        },
+        byScope: {
+          type: 'object',
+          properties: {
+            scope1: { type: 'number' },
+            scope2: { type: 'number' },
+            scope3: { type: 'number' }
+          }
+        },
+        cacheHit: { type: 'boolean' }
+      }
+    }
+  })
+  async aggregateHierarchy(
+    @Body() dto: AggregateHierarchyDto
+  ): Promise<Aggregation> {
+    return await this.aggregationService.aggregateHierarchy(dto);
+  }
+}
+```
+
+### 17.3 DTO Schemas
+
+```typescript
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsUUID, IsOptional, IsEnum, IsObject } from 'class-validator';
+
+export class CalculateSingleDto {
+  @ApiProperty({
+    description: 'UUID of activity data record',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @IsUUID()
+  activityDataId: string;
+
+  @ApiPropertyOptional({
+    description: 'Override default emission factor',
+    example: '223e4567-e89b-12d3-a456-426614174001'
+  })
+  @IsUUID()
+  @IsOptional()
+  emissionFactorId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Override calculation method',
+    example: 'CALC-001'
+  })
+  @IsOptional()
+  calculationMethod?: string;
+
+  @ApiPropertyOptional({
+    description: 'Additional metadata'
+  })
+  @IsObject()
+  @IsOptional()
+  metadata?: {
+    triggeredBy?: string;
+    reason?: 'data_verified' | 'manual_recalc' | 'scenario';
+  };
+}
+
+export class AggregateHierarchyDto {
+  @ApiProperty({
+    description: 'Root node ID (Company, Entity, Subsidiary, or Location)',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @IsUUID()
+  rootNodeId: string;
+
+  @ApiProperty({
+    description: 'Year for aggregation',
+    example: 2024,
+    minimum: 1990,
+    maximum: 2100
+  })
+  year: number;
+
+  @ApiPropertyOptional({
+    description: 'Aggregation dimensions',
+    example: { scope: true, category: true, month: false }
+  })
+  @IsOptional()
+  dimensions?: {
+    scope?: boolean;
+    category?: boolean;
+    month?: boolean;
+  };
+
+  @ApiPropertyOptional({
+    description: 'Include child nodes in aggregation',
+    default: true
+  })
+  @IsOptional()
+  includeChildren?: boolean;
+}
+```
+
+---
+
+## 18. Security Hardening
+
+### 18.1 Input Validation (Zod Schemas)
+
+```typescript
+import { z } from 'zod';
+
+// Request validation schemas
+export const CalculateSingleRequestSchema = z.object({
+  activityDataId: z.string().uuid({
+    message: 'Activity data ID must be a valid UUID'
+  }),
+  emissionFactorId: z.string().uuid().optional(),
+  calculationMethod: z.string().max(50).optional(),
+  metadata: z.object({
+    triggeredBy: z.string().uuid(),
+    reason: z.enum(['data_verified', 'manual_recalc', 'scenario'])
+  }).optional()
+}).strict();  // Reject unknown fields
+
+export const AggregateHierarchyRequestSchema = z.object({
+  rootNodeId: z.string().uuid(),
+  year: z.number().int().min(1990).max(2100),
+  dimensions: z.object({
+    scope: z.boolean().optional(),
+    category: z.boolean().optional(),
+    month: z.boolean().optional()
+  }).optional(),
+  includeChildren: z.boolean().optional()
+}).strict();
+
+export const CreateAllocationRequestSchema = z.object({
+  name: z.string().min(1).max(200),
+  description: z.string().max(500).optional(),
+  emissionSourceId: z.string().uuid(),
+  allocationType: z.enum(['headcount', 'revenue', 'floorArea', 'custom']),
+  targets: z.array(z.object({
+    entityId: z.string().uuid(),
+    allocationValue: z.number().positive()
+  })).min(2).max(100),
+  year: z.number().int().min(1990).max(2100),
+  notes: z.string().max(1000).optional()
+}).strict();
+
+// Validation middleware
+@Injectable()
+export class ValidationMiddleware implements NestMiddleware {
+  constructor(private readonly schema: z.ZodType) {}
+
+  use(req: Request, res: Response, next: NextFunction) {
+    try {
+      this.schema.parse(req.body);
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        throw new BadRequestException({
+          code: 'CALC_VAL_001',
+          message: 'Validation failed',
+          errors: error.errors
+        });
+      }
+      throw error;
+    }
+  }
+}
+```
+
+### 18.2 Authorization Guards
+
+```typescript
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+
+@Injectable()
+export class CalculationAuthGuard implements CanActivate {
+  constructor(
+    private reflector: Reflector,
+    private identityService: IdentityServiceClient
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    // Extract required permissions from decorator
+    const requiredPermissions = this.reflector.get<string[]>(
+      'permissions',
+      context.getHandler()
+    );
+
+    if (!requiredPermissions) {
+      return true;  // No specific permissions required
+    }
+
+    // Check if user has required permissions
+    const hasPermission = await this.identityService.checkPermissions(
+      user.id,
+      requiredPermissions
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException({
+        code: 'CALC_AUTH_001',
+        message: 'User not authorized to perform calculations'
+      });
+    }
+
+    // Additional checks for resource ownership
+    if (request.params.projectId) {
+      const hasProjectAccess = await this.identityService.hasProjectAccess(
+        user.id,
+        request.params.projectId
+      );
+
+      if (!hasProjectAccess) {
+        throw new ForbiddenException({
+          code: 'CALC_AUTH_001',
+          message: 'User not authorized to calculate emissions for this project'
+        });
+      }
+    }
+
+    return true;
+  }
+}
+
+// Usage in controllers
+@Controller('v1/calculations')
+@UseGuards(JwtAuthGuard, CalculationAuthGuard)
+export class CalculationsController {
+
+  @Post('single')
+  @Permissions('calculation:create')
+  async calculateSingle(
+    @Body() dto: CalculateSingleDto,
+    @User() user: UserContext
+  ): Promise<CalculationResult> {
+    // Implementation
+  }
+
+  @Delete('cache/invalidate')
+  @Permissions('calculation:admin')
+  async invalidateCache(
+    @Body() dto: InvalidateCacheDto
+  ): Promise<void> {
+    // Only admins can invalidate cache
+  }
+}
+```
+
+### 18.3 Rate Limiting
+
+```typescript
+import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Redis } from 'ioredis';
+
+@Injectable()
+export class RateLimitMiddleware implements NestMiddleware {
+  constructor(private readonly redis: Redis) {}
+
+  async use(req: Request, res: Response, next: NextFunction) {
+    const userId = req.user?.id || req.ip;
+    const endpoint = req.path;
+
+    // Define rate limits per endpoint
+    const limits = {
+      '/v1/calculations/single': { requests: 100, window: 60 },  // 100 req/min
+      '/v1/calculations/batch': { requests: 10, window: 60 },    // 10 req/min
+      '/v1/aggregations/hierarchy': { requests: 50, window: 60 }, // 50 req/min
+      default: { requests: 200, window: 60 }  // 200 req/min
+    };
+
+    const limit = limits[endpoint] || limits.default;
+    const key = `ratelimit:${userId}:${endpoint}`;
+
+    // Increment counter
+    const current = await this.redis.incr(key);
+
+    if (current === 1) {
+      await this.redis.expire(key, limit.window);
+    }
+
+    // Set rate limit headers
+    res.setHeader('X-RateLimit-Limit', limit.requests);
+    res.setHeader('X-RateLimit-Remaining', Math.max(0, limit.requests - current));
+    res.setHeader('X-RateLimit-Reset', Math.ceil(Date.now() / 1000) + limit.window);
+
+    if (current > limit.requests) {
+      throw new TooManyRequestsException({
+        code: 'CALC_SYS_005',
+        message: 'Rate limit exceeded',
+        retryAfter: limit.window
+      });
+    }
+
+    next();
+  }
+}
+```
+
+### 18.4 SQL/NoSQL Injection Prevention
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { MongoClient, ObjectId } from 'mongodb';
+
+@Injectable()
+export class CalculationRepository {
+  constructor(private readonly mongo: MongoClient) {}
+
+  // SECURE: Use parameterized queries
+  async findCalculationsByProject(projectId: string): Promise<CalculationResult[]> {
+    const db = this.mongo.db('clenergize_calculation');
+
+    // ✅ CORRECT: projectId is safely escaped by MongoDB driver
+    return await db.collection('calculation_results').find({
+      projectId: new ObjectId(projectId)
+    }).toArray();
+  }
+
+  // SECURE: Validate and sanitize all inputs
+  async searchCalculations(filters: any): Promise<CalculationResult[]> {
+    const db = this.mongo.db('clenergize_calculation');
+
+    // ✅ Build safe query with allowlist
+    const safeQuery: any = {};
+
+    if (filters.projectId) {
+      safeQuery.projectId = new ObjectId(filters.projectId);
+    }
+
+    if (filters.scope && ['Scope 1', 'Scope 2', 'Scope 3'].includes(filters.scope)) {
+      safeQuery.scope = filters.scope;
+    }
+
+    if (filters.year && typeof filters.year === 'number') {
+      safeQuery.year = filters.year;
+    }
+
+    return await db.collection('calculation_results').find(safeQuery).toArray();
+  }
+
+  // ❌ DANGEROUS: Never do this!
+  // async dangerousSearch(query: string): Promise<any> {
+  //   return await db.collection('calculation_results').find(eval(query));  // NEVER!
+  // }
+}
+```
+
+### 18.5 Secrets Management
+
+```typescript
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+
+@Injectable()
+export class SecretsService {
+  private readonly client: SecretsManagerClient;
+  private readonly cache = new Map<string, { value: any; expiresAt: number }>();
+
+  constructor() {
+    this.client = new SecretsManagerClient({
+      region: process.env.AWS_REGION || 'us-east-1'
+    });
+  }
+
+  async getSecret(secretName: string): Promise<any> {
+    // Check cache first (5 minute TTL)
+    const cached = this.cache.get(secretName);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.value;
+    }
+
+    // Fetch from AWS Secrets Manager
+    const command = new GetSecretValueCommand({ SecretId: secretName });
+    const response = await this.client.send(command);
+
+    const secret = JSON.parse(response.SecretString!);
+
+    // Cache for 5 minutes
+    this.cache.set(secretName, {
+      value: secret,
+      expiresAt: Date.now() + 300000
+    });
+
+    return secret;
+  }
+}
+
+// Usage
+@Injectable()
+export class CalculationService {
+  constructor(private readonly secrets: SecretsService) {}
+
+  async initialize(): Promise<void> {
+    // ✅ CORRECT: Fetch secrets from AWS Secrets Manager
+    const dbCredentials = await this.secrets.getSecret('calculation/mongodb');
+    this.mongoUri = dbCredentials.uri;
+
+    // ❌ NEVER hardcode secrets!
+    // this.mongoUri = 'mongodb://admin:password123@localhost:27017';
+  }
+}
+```
+
+### 18.6 Security Headers
+
+```typescript
+import helmet from 'helmet';
+
+export function configureSecurityHeaders(app: INestApplication): void {
+  app.use(helmet({
+    // Content Security Policy
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'none'"],
+        frameSrc: ["'none'"]
+      }
+    },
+    // Strict Transport Security (HSTS)
+    hsts: {
+      maxAge: 31536000,  // 1 year
+      includeSubDomains: true,
+      preload: true
+    },
+    // X-Frame-Options
+    frameguard: {
+      action: 'deny'
+    },
+    // X-Content-Type-Options
+    noSniff: true,
+    // X-XSS-Protection
+    xssFilter: true,
+    // Referrer Policy
+    referrerPolicy: {
+      policy: 'strict-origin-when-cross-origin'
+    }
+  }));
+
+  // Additional security headers
+  app.use((req, res, next) => {
+    res.setHeader('X-Service-Name', 'calculation-service');
+    res.setHeader('X-Service-Version', process.env.VERSION || '1.0.0');
+    next();
+  });
+}
+```
+
+---
+
 ## Appendix A: Calculation Method Reference
 
 ### Scope 1: Direct Emissions

@@ -12,7 +12,15 @@
 ## 📋 PROJECT OVERVIEW
 
 ### System Summary
-Clenergize V3 is an enterprise carbon footprint management platform being rebuilt from a problematic monolithic architecture to a secure, scalable microservices architecture.
+Clenergize V3 is an enterprise carbon footprint management platform being refactored from a poorly-implemented microservices architecture to a secure, scalable, well-architected microservices system.
+
+**OLD Architecture Issues (already microservices, but poorly implemented)**:
+- 7 microservices (user-management-ms, project-management-ms, master-data-ms, carbon-footprint-ms, companyDetails-ms, backend-ms, frontend)
+- Critical security flaws (JWT decode without verification, infinite SQS loops, hardcoded secrets)
+- Data duplication (hierarchy cloning, UserReference replication, denormalized data)
+- Poor separation of concerns (backend-ms mixes gateway + domain logic)
+- No transactional integrity, no event schema contracts
+- Refer to `OLD/DESIGN-REVIEW.md` for complete analysis of 10 critical + 10 major issues
 
 ### Key Metrics
 - **Services**: 7 backend microservices + 1 frontend
@@ -326,10 +334,14 @@ const mongoUri = process.env.MONGODB_URI || 'mongodb://admin:localdev123@localho
 const dbName = `clenergize_${serviceName}`;
 
 // Redis connections
+// CRITICAL: Use separate databases for cache and pub/sub to avoid key collisions
+// ✅ ALWAYS use: REDIS_URL, REDIS_CACHE_DB, REDIS_PUBSUB_DB
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+const redisCacheDb = process.env.REDIS_CACHE_DB || '0';
+const redisPubSubDb = process.env.REDIS_PUBSUB_DB || '1';
 const redisClient = {
-  cache: `${redisUrl}/0`,
-  pubsub: `${redisUrl}/1`
+  cache: `${redisUrl}/${redisCacheDb}`,
+  pubsub: `${redisUrl}/${redisPubSubDb}`
 };
 
 // LocalStack (AWS services - for local development only)

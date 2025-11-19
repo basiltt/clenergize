@@ -107,6 +107,8 @@ services:
       - PORT=3001
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_identity?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - JWT_ISSUER=http://localhost:3001
       - JWT_AUDIENCE=clenergize-v3
       - LOCALSTACK_ENDPOINT=http://localstack:4566
@@ -146,6 +148,8 @@ services:
       - PORT=3002
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_organization?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
@@ -180,6 +184,8 @@ services:
       - PORT=3003
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_reference?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
@@ -214,6 +220,8 @@ services:
       - PORT=3004
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_activity?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
@@ -248,6 +256,8 @@ services:
       - PORT=3005
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_calculation?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
@@ -283,6 +293,8 @@ services:
       - PORT=3006
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_reporting?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
@@ -318,6 +330,8 @@ services:
       - PORT=3007
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_audit?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test

@@ -16,14 +16,14 @@ This document defines the normalized MongoDB collection schemas for all 7 micros
 
 | Service | Collections | Total Indexes | Estimated Size (1 year) |
 |---------|-------------|---------------|-------------------------|
-| Identity | 5 | 12 | 500 MB |
-| Organization | 7 | 18 | 2 GB |
-| Reference | 5 | 10 | 100 MB |
-| Activity | 6 | 15 | 50 GB |
-| Calculation | 4 | 12 | 100 GB |
-| Reporting | 5 | 10 | 10 GB |
-| Audit | 5 | 15 | 20 GB |
-| **Total** | **37** | **92** | **~183 GB** |
+| Identity | 5 | 18 | 500 MB |
+| Organization | 7 | 30 | 2 GB |
+| Reference | 5 | 17 | 100 MB |
+| Activity | 6 | 23 | 50 GB |
+| Calculation | 4 | 16 | 100 GB |
+| Reporting | 5 | 15 | 10 GB |
+| Audit | 5 | 20 | 20 GB |
+| **Total** | **37** | **139** | **~183 GB** |
 
 ### Key Design Principles
 
@@ -2774,11 +2774,835 @@ This database design specification provides **37 normalized MongoDB collection s
 
 ---
 
+## 12. Complete Index Definitions (MongoDB Syntax)
+
+This section provides all 92 indexes in executable MongoDB commands for each service database. These indexes support all query patterns identified in the API specification.
+
+### 12.1 Identity Service Indexes (12 indexes)
+
+**Database**: `clenergize_identity`
+
+```javascript
+// Users Collection (5 indexes)
+db.users.createIndex({ email: 1 }, {
+  unique: true,
+  name: 'idx_users_email_unique'
+});
+
+db.users.createIndex({ organizationId: 1, status: 1 }, {
+  name: 'idx_users_org_status'
+});
+
+db.users.createIndex({ status: 1, deletedAt: 1 }, {
+  name: 'idx_users_status_deleted'
+});
+
+db.users.createIndex({ emailVerificationToken: 1 }, {
+  sparse: true,
+  name: 'idx_users_email_verification_token'
+});
+
+db.users.createIndex({ createdAt: -1 }, {
+  name: 'idx_users_created_desc'
+});
+
+// Sessions Collection (4 indexes)
+db.sessions.createIndex({ sessionToken: 1 }, {
+  unique: true,
+  name: 'idx_sessions_token_unique'
+});
+
+db.sessions.createIndex({ userId: 1, isRevoked: 1 }, {
+  name: 'idx_sessions_user_revoked'
+});
+
+db.sessions.createIndex({ expiresAt: 1 }, {
+  expireAfterSeconds: 0,
+  name: 'idx_sessions_ttl'
+});
+
+db.sessions.createIndex({ lastActivityAt: -1 }, {
+  name: 'idx_sessions_activity_desc'
+});
+
+// Refresh Tokens Collection (4 indexes)
+db.refresh_tokens.createIndex({ tokenHash: 1 }, {
+  unique: true,
+  name: 'idx_refresh_tokens_hash_unique'
+});
+
+db.refresh_tokens.createIndex({ userId: 1, isRevoked: 1 }, {
+  name: 'idx_refresh_tokens_user_revoked'
+});
+
+db.refresh_tokens.createIndex({ expiresAt: 1 }, {
+  expireAfterSeconds: 0,
+  name: 'idx_refresh_tokens_ttl'
+});
+
+db.refresh_tokens.createIndex({ previousTokenHash: 1 }, {
+  sparse: true,
+  name: 'idx_refresh_tokens_previous_hash'
+});
+
+// MFA Secrets Collection (2 indexes)
+db.mfa_secrets.createIndex({ userId: 1 }, {
+  unique: true,
+  name: 'idx_mfa_secrets_user_unique'
+});
+
+db.mfa_secrets.createIndex({ isVerified: 1 }, {
+  name: 'idx_mfa_secrets_verified'
+});
+
+// Password Reset Tokens Collection (3 indexes)
+db.password_reset_tokens.createIndex({ tokenHash: 1 }, {
+  unique: true,
+  name: 'idx_password_reset_hash_unique'
+});
+
+db.password_reset_tokens.createIndex({ userId: 1, isUsed: 1 }, {
+  name: 'idx_password_reset_user_used'
+});
+
+db.password_reset_tokens.createIndex({ expiresAt: 1 }, {
+  expireAfterSeconds: 0,
+  name: 'idx_password_reset_ttl'
+});
+```
+
+**Identity Service Summary**: 18 indexes (corrected from 12)
+
+---
+
+### 12.2 Organization Service Indexes (18 indexes)
+
+**Database**: `clenergize_organization`
+
+```javascript
+// Organizations Collection (4 indexes)
+db.organizations.createIndex({ name: 1 }, {
+  name: 'idx_organizations_name'
+});
+
+db.organizations.createIndex({ status: 1, deletedAt: 1 }, {
+  name: 'idx_organizations_status_deleted'
+});
+
+db.organizations.createIndex({ subscriptionTier: 1 }, {
+  name: 'idx_organizations_subscription'
+});
+
+db.organizations.createIndex({ createdAt: -1 }, {
+  name: 'idx_organizations_created_desc'
+});
+
+// Projects Collection (6 indexes)
+db.projects.createIndex({ organizationId: 1, status: 1 }, {
+  name: 'idx_projects_org_status'
+});
+
+db.projects.createIndex({ organizationId: 1, reportingYear: 1 }, {
+  name: 'idx_projects_org_year'
+});
+
+db.projects.createIndex({ ownerId: 1 }, {
+  name: 'idx_projects_owner'
+});
+
+db.projects.createIndex({ hierarchyId: 1 }, {
+  name: 'idx_projects_hierarchy'
+});
+
+db.projects.createIndex({ status: 1, deletedAt: 1 }, {
+  name: 'idx_projects_status_deleted'
+});
+
+db.projects.createIndex({ createdAt: -1 }, {
+  name: 'idx_projects_created_desc'
+});
+
+// Hierarchies Collection (3 indexes)
+db.hierarchies.createIndex({ organizationId: 1, status: 1 }, {
+  name: 'idx_hierarchies_org_status'
+});
+
+db.hierarchies.createIndex({ isTemplate: 1 }, {
+  name: 'idx_hierarchies_template'
+});
+
+db.hierarchies.createIndex({ templateId: 1 }, {
+  sparse: true,
+  name: 'idx_hierarchies_template_id'
+});
+
+// Hierarchy Nodes Collection (5 indexes)
+db.hierarchy_nodes.createIndex({ hierarchyId: 1, path: 1 }, {
+  name: 'idx_hierarchy_nodes_hierarchy_path'
+});
+
+db.hierarchy_nodes.createIndex({ hierarchyId: 1, parentId: 1 }, {
+  name: 'idx_hierarchy_nodes_hierarchy_parent'
+});
+
+db.hierarchy_nodes.createIndex({ organizationId: 1 }, {
+  name: 'idx_hierarchy_nodes_org'
+});
+
+db.hierarchy_nodes.createIndex({ path: 1 }, {
+  name: 'idx_hierarchy_nodes_path'
+});
+
+db.hierarchy_nodes.createIndex({ level: 1 }, {
+  name: 'idx_hierarchy_nodes_level'
+});
+
+// Permissions Collection (5 indexes)
+db.permissions.createIndex({ userId: 1, resourceType: 1, resourceId: 1 }, {
+  name: 'idx_permissions_user_resource'
+});
+
+db.permissions.createIndex({ organizationId: 1, userId: 1 }, {
+  name: 'idx_permissions_org_user'
+});
+
+db.permissions.createIndex({ resourceType: 1, resourceId: 1 }, {
+  name: 'idx_permissions_resource'
+});
+
+db.permissions.createIndex({ expiresAt: 1 }, {
+  sparse: true,
+  name: 'idx_permissions_expires'
+});
+
+db.permissions.createIndex({ revokedAt: 1 }, {
+  sparse: true,
+  name: 'idx_permissions_revoked'
+});
+
+// Teams Collection (4 indexes)
+db.teams.createIndex({ organizationId: 1, isActive: 1 }, {
+  name: 'idx_teams_org_active'
+});
+
+db.teams.createIndex({ 'members.userId': 1 }, {
+  name: 'idx_teams_members_user'
+});
+
+db.teams.createIndex({ leaderId: 1 }, {
+  name: 'idx_teams_leader'
+});
+
+db.teams.createIndex({ projectIds: 1 }, {
+  name: 'idx_teams_projects'
+});
+
+// Reporting Years Collection (3 indexes)
+db.reporting_years.createIndex({ organizationId: 1, year: 1 }, {
+  unique: true,
+  name: 'idx_reporting_years_org_year_unique'
+});
+
+db.reporting_years.createIndex({ status: 1 }, {
+  name: 'idx_reporting_years_status'
+});
+
+db.reporting_years.createIndex({ year: -1 }, {
+  name: 'idx_reporting_years_year_desc'
+});
+```
+
+**Organization Service Summary**: 30 indexes (corrected from 18)
+
+---
+
+### 12.3 Reference Service Indexes (10 indexes)
+
+**Database**: `clenergize_reference`
+
+```javascript
+// Emission Factors Collection (6 indexes)
+db.emission_factors.createIndex({ parameterId: 1, year: 1, status: 1 }, {
+  name: 'idx_emission_factors_param_year_status'
+});
+
+db.emission_factors.createIndex({ categoryId: 1, status: 1 }, {
+  name: 'idx_emission_factors_category_status'
+});
+
+db.emission_factors.createIndex({ organizationId: 1, type: 1 }, {
+  sparse: true,
+  name: 'idx_emission_factors_org_type'
+});
+
+db.emission_factors.createIndex({ region: 1, year: 1 }, {
+  name: 'idx_emission_factors_region_year'
+});
+
+db.emission_factors.createIndex({ status: 1, effectiveFrom: 1 }, {
+  name: 'idx_emission_factors_status_effective'
+});
+
+db.emission_factors.createIndex({ source: 1, version: 1 }, {
+  name: 'idx_emission_factors_source_version'
+});
+
+// Units Collection (2 indexes)
+db.units.createIndex({ symbol: 1 }, {
+  unique: true,
+  name: 'idx_units_symbol_unique'
+});
+
+db.units.createIndex({ category: 1, isActive: 1 }, {
+  name: 'idx_units_category_active'
+});
+
+// Conversion Rules Collection (2 indexes)
+db.conversion_rules.createIndex({ fromUnitId: 1, toUnitId: 1 }, {
+  unique: true,
+  name: 'idx_conversion_rules_from_to_unique'
+});
+
+db.conversion_rules.createIndex({ toUnitId: 1, fromUnitId: 1 }, {
+  name: 'idx_conversion_rules_to_from'
+});
+
+// Parameters Collection (3 indexes)
+db.parameters.createIndex({ code: 1 }, {
+  unique: true,
+  name: 'idx_parameters_code_unique'
+});
+
+db.parameters.createIndex({ categoryId: 1, isActive: 1 }, {
+  name: 'idx_parameters_category_active'
+});
+
+db.parameters.createIndex({ scope: 1 }, {
+  name: 'idx_parameters_scope'
+});
+
+// Categories Collection (4 indexes)
+db.categories.createIndex({ code: 1 }, {
+  unique: true,
+  name: 'idx_categories_code_unique'
+});
+
+db.categories.createIndex({ parentId: 1 }, {
+  name: 'idx_categories_parent'
+});
+
+db.categories.createIndex({ path: 1 }, {
+  name: 'idx_categories_path'
+});
+
+db.categories.createIndex({ scope: 1 }, {
+  name: 'idx_categories_scope'
+});
+```
+
+**Reference Service Summary**: 17 indexes (corrected from 10)
+
+---
+
+### 12.4 Activity Service Indexes (15 indexes)
+
+**Database**: `clenergize_activity`
+
+```javascript
+// Carbon Scopes Collection (4 indexes)
+db.carbon_scopes.createIndex({ projectId: 1, scope: 1 }, {
+  name: 'idx_carbon_scopes_project_scope'
+});
+
+db.carbon_scopes.createIndex({ organizationId: 1 }, {
+  name: 'idx_carbon_scopes_org'
+});
+
+db.carbon_scopes.createIndex({ hierarchyNodeId: 1 }, {
+  sparse: true,
+  name: 'idx_carbon_scopes_hierarchy_node'
+});
+
+db.carbon_scopes.createIndex({ status: 1, deletedAt: 1 }, {
+  name: 'idx_carbon_scopes_status_deleted'
+});
+
+// Activity Data Collection (6 indexes)
+db.activity_data.createIndex({ carbonScopeId: 1, year: 1, month: 1 }, {
+  name: 'idx_activity_data_scope_year_month'
+});
+
+db.activity_data.createIndex({ projectId: 1, parameterId: 1, year: 1 }, {
+  name: 'idx_activity_data_project_param_year'
+});
+
+db.activity_data.createIndex({ organizationId: 1, year: 1 }, {
+  name: 'idx_activity_data_org_year'
+});
+
+db.activity_data.createIndex({ status: 1, deletedAt: 1 }, {
+  name: 'idx_activity_data_status_deleted'
+});
+
+db.activity_data.createIndex({ bulkImportId: 1 }, {
+  sparse: true,
+  name: 'idx_activity_data_bulk_import'
+});
+
+db.activity_data.createIndex({ createdAt: -1 }, {
+  name: 'idx_activity_data_created_desc'
+});
+
+// Bulk Imports Collection (4 indexes)
+db.bulk_imports.createIndex({ projectId: 1, status: 1 }, {
+  name: 'idx_bulk_imports_project_status'
+});
+
+db.bulk_imports.createIndex({ organizationId: 1, createdAt: -1 }, {
+  name: 'idx_bulk_imports_org_created'
+});
+
+db.bulk_imports.createIndex({ status: 1 }, {
+  name: 'idx_bulk_imports_status'
+});
+
+db.bulk_imports.createIndex({ createdAt: -1 }, {
+  name: 'idx_bulk_imports_created_desc'
+});
+
+// Attachments Collection (3 indexes)
+db.attachments.createIndex({ activityDataId: 1 }, {
+  name: 'idx_attachments_activity_data'
+});
+
+db.attachments.createIndex({ projectId: 1, createdAt: -1 }, {
+  name: 'idx_attachments_project_created'
+});
+
+db.attachments.createIndex({ s3Key: 1 }, {
+  unique: true,
+  name: 'idx_attachments_s3_key_unique'
+});
+
+// Comments Collection (3 indexes)
+db.comments.createIndex({ activityDataId: 1, createdAt: -1 }, {
+  name: 'idx_comments_activity_data_created'
+});
+
+db.comments.createIndex({ projectId: 1, isResolved: 1 }, {
+  name: 'idx_comments_project_resolved'
+});
+
+db.comments.createIndex({ parentId: 1 }, {
+  sparse: true,
+  name: 'idx_comments_parent'
+});
+
+// Data Quality Flags Collection (3 indexes)
+db.data_quality_flags.createIndex({ activityDataId: 1, status: 1 }, {
+  name: 'idx_quality_flags_activity_status'
+});
+
+db.data_quality_flags.createIndex({ projectId: 1, severity: 1, status: 1 }, {
+  name: 'idx_quality_flags_project_severity_status'
+});
+
+db.data_quality_flags.createIndex({ status: 1, createdAt: -1 }, {
+  name: 'idx_quality_flags_status_created'
+});
+```
+
+**Activity Service Summary**: 23 indexes (corrected from 15)
+
+---
+
+### 12.5 Calculation Service Indexes (12 indexes)
+
+**Database**: `clenergize_calculation`
+
+```javascript
+// Calculations Collection (6 indexes)
+db.calculations.createIndex({ activityDataId: 1 }, {
+  name: 'idx_calculations_activity_data'
+});
+
+db.calculations.createIndex({ projectId: 1, scope: 1, calculatedAt: -1 }, {
+  name: 'idx_calculations_project_scope_calc'
+});
+
+db.calculations.createIndex({ organizationId: 1, calculatedAt: -1 }, {
+  name: 'idx_calculations_org_calc'
+});
+
+db.calculations.createIndex({ emissionFactorId: 1 }, {
+  name: 'idx_calculations_emission_factor'
+});
+
+db.calculations.createIndex({ recalculationJobId: 1 }, {
+  sparse: true,
+  name: 'idx_calculations_recalc_job'
+});
+
+db.calculations.createIndex({ calculatedAt: -1 }, {
+  name: 'idx_calculations_calc_desc'
+});
+
+// Rollups Collection (4 indexes)
+db.rollups.createIndex({ projectId: 1, year: 1, month: 1, aggregationType: 1 }, {
+  name: 'idx_rollups_project_year_month_agg'
+});
+
+db.rollups.createIndex({ organizationId: 1, year: 1 }, {
+  name: 'idx_rollups_org_year'
+});
+
+db.rollups.createIndex({ hierarchyNodeId: 1, year: 1 }, {
+  sparse: true,
+  name: 'idx_rollups_hierarchy_year'
+});
+
+db.rollups.createIndex({ calculatedAt: -1 }, {
+  name: 'idx_rollups_calc_desc'
+});
+
+// Allocations Collection (3 indexes)
+db.allocations.createIndex({ calculationId: 1 }, {
+  name: 'idx_allocations_calculation'
+});
+
+db.allocations.createIndex({ projectId: 1, fromHierarchyNodeId: 1 }, {
+  name: 'idx_allocations_project_from_node'
+});
+
+db.allocations.createIndex({ toHierarchyNodeId: 1 }, {
+  name: 'idx_allocations_to_node'
+});
+
+// Recalculation Jobs Collection (3 indexes)
+db.recalculation_jobs.createIndex({ projectId: 1, status: 1 }, {
+  name: 'idx_recalc_jobs_project_status'
+});
+
+db.recalculation_jobs.createIndex({ organizationId: 1, createdAt: -1 }, {
+  name: 'idx_recalc_jobs_org_created'
+});
+
+db.recalculation_jobs.createIndex({ status: 1, createdAt: -1 }, {
+  name: 'idx_recalc_jobs_status_created'
+});
+```
+
+**Calculation Service Summary**: 16 indexes (corrected from 12)
+
+---
+
+### 12.6 Reporting Service Indexes (10 indexes)
+
+**Database**: `clenergize_reporting`
+
+```javascript
+// Reports Collection (4 indexes)
+db.reports.createIndex({ projectId: 1, reportType: 1, createdAt: -1 }, {
+  name: 'idx_reports_project_type_created'
+});
+
+db.reports.createIndex({ organizationId: 1, status: 1 }, {
+  name: 'idx_reports_org_status'
+});
+
+db.reports.createIndex({ status: 1, expiresAt: 1 }, {
+  name: 'idx_reports_status_expires'
+});
+
+db.reports.createIndex({ expiresAt: 1 }, {
+  expireAfterSeconds: 0,
+  name: 'idx_reports_ttl'
+});
+
+// Report Schedules Collection (3 indexes)
+db.report_schedules.createIndex({ projectId: 1, isActive: 1 }, {
+  name: 'idx_report_schedules_project_active'
+});
+
+db.report_schedules.createIndex({ organizationId: 1, isActive: 1 }, {
+  name: 'idx_report_schedules_org_active'
+});
+
+db.report_schedules.createIndex({ nextRunAt: 1, isActive: 1 }, {
+  name: 'idx_report_schedules_next_run'
+});
+
+// Exports Collection (4 indexes)
+db.exports.createIndex({ projectId: 1, status: 1 }, {
+  name: 'idx_exports_project_status'
+});
+
+db.exports.createIndex({ organizationId: 1, createdAt: -1 }, {
+  name: 'idx_exports_org_created'
+});
+
+db.exports.createIndex({ status: 1, expiresAt: 1 }, {
+  name: 'idx_exports_status_expires'
+});
+
+db.exports.createIndex({ expiresAt: 1 }, {
+  expireAfterSeconds: 0,
+  name: 'idx_exports_ttl'
+});
+
+// Report Templates Collection (2 indexes)
+db.report_templates.createIndex({ organizationId: 1, isActive: 1 }, {
+  sparse: true,
+  name: 'idx_report_templates_org_active'
+});
+
+db.report_templates.createIndex({ isGlobal: 1, reportType: 1 }, {
+  name: 'idx_report_templates_global_type'
+});
+
+// Dashboards Collection (2 indexes)
+db.dashboards.createIndex({ userId: 1, organizationId: 1 }, {
+  name: 'idx_dashboards_user_org'
+});
+
+db.dashboards.createIndex({ userId: 1, isDefault: 1 }, {
+  name: 'idx_dashboards_user_default'
+});
+```
+
+**Reporting Service Summary**: 15 indexes (corrected from 10)
+
+---
+
+### 12.7 Audit Service Indexes (15 indexes)
+
+**Database**: `clenergize_audit`
+
+```javascript
+// Audit Logs Collection (6 indexes)
+db.audit_logs.createIndex({ organizationId: 1, createdAt: -1 }, {
+  name: 'idx_audit_logs_org_created'
+});
+
+db.audit_logs.createIndex({ userId: 1, action: 1, createdAt: -1 }, {
+  name: 'idx_audit_logs_user_action_created'
+});
+
+db.audit_logs.createIndex({ resourceType: 1, resourceId: 1, createdAt: -1 }, {
+  name: 'idx_audit_logs_resource_created'
+});
+
+db.audit_logs.createIndex({ action: 1, result: 1, createdAt: -1 }, {
+  name: 'idx_audit_logs_action_result_created'
+});
+
+db.audit_logs.createIndex({ sequenceNumber: 1 }, {
+  unique: true,
+  name: 'idx_audit_logs_sequence_unique'
+});
+
+db.audit_logs.createIndex({ hash: 1 }, {
+  unique: true,
+  name: 'idx_audit_logs_hash_unique'
+});
+
+// Compliance Checks Collection (3 indexes)
+db.compliance_checks.createIndex({ organizationId: 1, complianceType: 1, checkedAt: -1 }, {
+  name: 'idx_compliance_checks_org_type_checked'
+});
+
+db.compliance_checks.createIndex({ projectId: 1, status: 1 }, {
+  sparse: true,
+  name: 'idx_compliance_checks_project_status'
+});
+
+db.compliance_checks.createIndex({ nextCheckDue: 1 }, {
+  name: 'idx_compliance_checks_next_due'
+});
+
+// Security Events Collection (3 indexes)
+db.security_events.createIndex({ organizationId: 1, severity: 1, detectedAt: -1 }, {
+  name: 'idx_security_events_org_severity_detected'
+});
+
+db.security_events.createIndex({ userId: 1, eventType: 1 }, {
+  sparse: true,
+  name: 'idx_security_events_user_type'
+});
+
+db.security_events.createIndex({ eventType: 1, isResolved: 1, detectedAt: -1 }, {
+  name: 'idx_security_events_type_resolved_detected'
+});
+
+// Data Access Logs Collection (4 indexes)
+db.data_access_logs.createIndex({ organizationId: 1, createdAt: -1 }, {
+  name: 'idx_data_access_logs_org_created'
+});
+
+db.data_access_logs.createIndex({ userId: 1, action: 1, createdAt: -1 }, {
+  name: 'idx_data_access_logs_user_action_created'
+});
+
+db.data_access_logs.createIndex({ resourceType: 1, resourceId: 1, createdAt: -1 }, {
+  name: 'idx_data_access_logs_resource_created'
+});
+
+db.data_access_logs.createIndex({ createdAt: -1 }, {
+  name: 'idx_data_access_logs_created_desc'
+});
+
+// GDPR Requests Collection (4 indexes)
+db.gdpr_requests.createIndex({ organizationId: 1, status: 1 }, {
+  name: 'idx_gdpr_requests_org_status'
+});
+
+db.gdpr_requests.createIndex({ subjectUserId: 1, requestType: 1 }, {
+  name: 'idx_gdpr_requests_user_type'
+});
+
+db.gdpr_requests.createIndex({ status: 1, dueDate: 1 }, {
+  name: 'idx_gdpr_requests_status_due'
+});
+
+db.gdpr_requests.createIndex({ createdAt: -1 }, {
+  name: 'idx_gdpr_requests_created_desc'
+});
+```
+
+**Audit Service Summary**: 20 indexes (corrected from 15)
+
+---
+
+## 13. Index Summary & Statistics
+
+### 13.1 Total Index Count by Service
+
+| Service | Collections | Total Indexes | TTL Indexes | Unique Indexes | Compound Indexes |
+|---------|-------------|---------------|-------------|----------------|------------------|
+| Identity | 5 | 18 | 3 | 5 | 6 |
+| Organization | 7 | 30 | 0 | 2 | 18 |
+| Reference | 5 | 17 | 0 | 5 | 7 |
+| Activity | 6 | 23 | 0 | 1 | 14 |
+| Calculation | 4 | 16 | 0 | 0 | 11 |
+| Reporting | 5 | 15 | 2 | 0 | 8 |
+| Audit | 5 | 20 | 0 | 3 | 12 |
+| **TOTAL** | **37** | **139** | **5** | **16** | **76** |
+
+### 13.2 Special Index Types
+
+#### TTL Indexes (5 total)
+Auto-expire temporary data after specified duration:
+
+1. **sessions.expiresAt** - Auto-delete expired sessions immediately
+2. **refresh_tokens.expiresAt** - Auto-delete expired tokens immediately
+3. **password_reset_tokens.expiresAt** - Auto-delete after 1 hour
+4. **reports.expiresAt** - Auto-delete after 90 days
+5. **exports.expiresAt** - Auto-delete after 7 days
+
+#### Unique Indexes (16 total)
+Enforce data uniqueness constraints:
+
+1. **users.email** - Unique user email addresses
+2. **sessions.sessionToken** - Unique session identifiers
+3. **refresh_tokens.tokenHash** - Unique refresh token hashes
+4. **mfa_secrets.userId** - One MFA secret per user
+5. **password_reset_tokens.tokenHash** - Unique reset token hashes
+6. **reporting_years.organizationId+year** - One reporting year per org
+7. **units.symbol** - Unique unit symbols (kWh, kg, etc.)
+8. **conversion_rules.fromUnitId+toUnitId** - Unique conversion pairs
+9. **parameters.code** - Unique parameter codes
+10. **categories.code** - Unique category codes
+11. **attachments.s3Key** - Unique S3 storage keys
+12. **audit_logs.sequenceNumber** - Ordered audit trail
+13. **audit_logs.hash** - Tamper detection via hash chain
+
+#### Text Indexes (0 total)
+None currently defined. Consider adding for:
+- **users.firstName, lastName** - Name search
+- **projects.name, description** - Project search
+- **activity_data.notes** - Full-text search on notes
+
+#### Geospatial Indexes (0 total)
+None required for current functionality.
+
+### 13.3 Index Performance Targets
+
+| Metric | Target | Monitoring |
+|--------|--------|------------|
+| Query response time | <50ms | CloudWatch, slow query log |
+| Index hit ratio | >95% | `db.collection.aggregate([{$indexStats:{}}])` |
+| Index size vs data | <20% | Monitor index sizes |
+| Unused indexes | 0 | Review `accesses.ops` in indexStats |
+
+### 13.4 Index Maintenance Commands
+
+```javascript
+// Check index usage statistics
+db.collection_name.aggregate([{ $indexStats: {} }]);
+
+// Find slow queries missing indexes
+db.setProfilingLevel(1, { slowms: 100 });
+db.system.profile.find().sort({ millis: -1 }).limit(10);
+
+// Rebuild indexes (use during maintenance window)
+db.collection_name.reIndex();
+
+// Drop unused index
+db.collection_name.dropIndex('idx_name');
+
+// Check index sizes
+db.collection_name.stats().indexSizes;
+```
+
+### 13.5 Index Creation Script
+
+Complete initialization script for all databases:
+
+```bash
+#!/bin/bash
+# create_all_indexes.sh
+
+mongosh "mongodb://admin:localdev123@localhost:27017/?authSource=admin" << 'EOF'
+
+// Identity Service
+use clenergize_identity;
+load('identity_indexes.js');
+
+// Organization Service
+use clenergize_organization;
+load('organization_indexes.js');
+
+// Reference Service
+use clenergize_reference;
+load('reference_indexes.js');
+
+// Activity Service
+use clenergize_activity;
+load('activity_indexes.js');
+
+// Calculation Service
+use clenergize_calculation;
+load('calculation_indexes.js');
+
+// Reporting Service
+use clenergize_reporting;
+load('reporting_indexes.js');
+
+// Audit Service
+use clenergize_audit;
+load('audit_indexes.js');
+
+print('All indexes created successfully!');
+EOF
+```
+
+---
+
 **Next Steps**:
 1. Week 2-3: Security Architecture (STRIDE threat modeling, JWT/JWKS)
 2. Week 3-4: Performance Architecture (Redis caching, query optimization)
 3. Week 4-5: Service Templates (NestJS boilerplate with these schemas)
 
 **Last Updated**: November 18, 2025
-**Version**: 1.0.0
+**Version**: 1.1.0
 **Maintained By**: Architecture Agent

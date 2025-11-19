@@ -947,8 +947,8 @@ organization-service/
 #### CompanyCreated
 ```json
 {
-  "eventType": "CompanyCreated",
-  "version": "1.0",
+  "eventType": "organization.organization.created.v1",
+  "version": "v1",
   "payload": {
     "companyId": "string",
     "name": "string",
@@ -962,8 +962,8 @@ organization-service/
 #### ProjectCreated
 ```json
 {
-  "eventType": "ProjectCreated",
-  "version": "1.0",
+  "eventType": "organization.project.created.v1",
+  "version": "v1",
   "payload": {
     "projectId": "string",
     "companyId": "string",
@@ -981,8 +981,8 @@ organization-service/
 #### HierarchyUpdated
 ```json
 {
-  "eventType": "HierarchyUpdated",
-  "version": "1.0",
+  "eventType": "organization.hierarchy.updated.v1",
+  "version": "v1",
   "payload": {
     "companyId": "string",
     "changeType": "created|updated|deleted",
@@ -1001,8 +1001,8 @@ organization-service/
 #### UserAssignedToProject
 ```json
 {
-  "eventType": "UserAssignedToProject",
-  "version": "1.0",
+  "eventType": "organization.permission.granted.v1",
+  "version": "v1",
   "payload": {
     "assignmentId": "string",
     "projectId": "string",
@@ -1020,7 +1020,7 @@ organization-service/
 #### UserRegistered (from Identity Service)
 ```json
 {
-  "eventType": "UserRegistered",
+  "eventType": "identity.user.created.v1",
   "action": "Check for pending invitations and auto-assign"
 }
 ```
@@ -1028,7 +1028,7 @@ organization-service/
 #### UserDeleted (from Identity Service)
 ```json
 {
-  "eventType": "UserDeleted",
+  "eventType": "identity.user.deleted.v1",
   "action": "Remove all project assignments for deleted user"
 }
 ```

@@ -507,8 +507,8 @@ reference-service/
 #### EmissionFactorApproved
 ```json
 {
-  "eventType": "EmissionFactorApproved",
-  "version": "1.0",
+  "eventType": "reference.emission-factor.updated.v1",
+  "version": "v1",
   "payload": {
     "factorId": "string",
     "category": "object",
@@ -521,8 +521,8 @@ reference-service/
 #### ConversionFactorUpdated
 ```json
 {
-  "eventType": "ConversionFactorUpdated",
-  "version": "1.0",
+  "eventType": "reference.conversion.created.v1",
+  "version": "v1",
   "payload": {
     "conversionId": "string",
     "fromUnit": "string",
@@ -535,8 +535,8 @@ reference-service/
 #### ReportingYearActivated
 ```json
 {
-  "eventType": "ReportingYearActivated",
-  "version": "1.0",
+  "eventType": "organization.reporting-year.created.v1",
+  "version": "v1",
   "payload": {
     "year": "number",
     "standards": "array",

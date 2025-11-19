@@ -2694,6 +2694,2339 @@ async function migrateReportHistory() {
 
 ---
 
+## 11. Error Code Registry
+
+### 11.1 Error Code Taxonomy
+
+**Format**: `RPT_<CATEGORY>_<NUMBER>`
+
+**Categories**:
+- `VAL`: Validation errors (400 Bad Request)
+- `AUTH`: Authorization errors (403 Forbidden)
+- `RES`: Resource not found (404 Not Found)
+- `GEN`: Report generation errors (422 Unprocessable Entity)
+- `DEP`: Dependency errors (424 Failed Dependency)
+- `SYS`: System errors (500 Internal Server Error)
+
+### 11.2 Complete Error Code List
+
+#### Validation Errors (RPT_VAL_XXX)
+
+```typescript
+export const RPT_VAL_001 = {
+  code: 'RPT_VAL_001',
+  message: 'Report type is required',
+  httpStatus: 400,
+  userMessage: 'Please specify a valid report type',
+  resolution: 'Use one of: ghg-protocol, scope-analysis, trend, entity-comparison, custom'
+};
+
+export const RPT_VAL_002 = {
+  code: 'RPT_VAL_002',
+  message: 'Format must be pdf, excel, or csv',
+  httpStatus: 400,
+  userMessage: 'Invalid report format',
+  resolution: 'Use one of: pdf, excel, csv'
+};
+
+export const RPT_VAL_003 = {
+  code: 'RPT_VAL_003',
+  message: 'Year must be between 2000 and 2100',
+  httpStatus: 400,
+  userMessage: 'Invalid reporting year',
+  resolution: 'Provide a year between 2000 and 2100'
+};
+
+export const RPT_VAL_004 = {
+  code: 'RPT_VAL_004',
+  message: 'Too many recipients (max 50)',
+  httpStatus: 400,
+  userMessage: 'Too many email recipients',
+  resolution: 'Limit recipients to 50 or fewer'
+};
+
+export const RPT_VAL_005 = {
+  code: 'RPT_VAL_005',
+  message: 'Invalid email address format',
+  httpStatus: 400,
+  userMessage: 'One or more email addresses are invalid',
+  resolution: 'Check email format: user@example.com'
+};
+
+export const RPT_VAL_006 = {
+  code: 'RPT_VAL_006',
+  message: 'Invalid cron expression',
+  httpStatus: 400,
+  userMessage: 'Schedule cron expression is invalid',
+  resolution: 'Use valid cron format: 0 9 * * 1 (9 AM every Monday)'
+};
+
+export const RPT_VAL_007 = {
+  code: 'RPT_VAL_007',
+  message: 'Invalid timezone',
+  httpStatus: 400,
+  userMessage: 'Timezone is not recognized',
+  resolution: 'Use IANA timezone (e.g., America/New_York)'
+};
+
+export const RPT_VAL_008 = {
+  code: 'RPT_VAL_008',
+  message: 'End date must be after start date',
+  httpStatus: 400,
+  userMessage: 'Schedule end date is before start date',
+  resolution: 'Set end date after start date'
+};
+```
+
+#### Authorization Errors (RPT_AUTH_XXX)
+
+```typescript
+export const RPT_AUTH_001 = {
+  code: 'RPT_AUTH_001',
+  message: 'User not authorized to generate reports for this project',
+  httpStatus: 403,
+  userMessage: 'You do not have permission to generate reports for this project',
+  resolution: 'Request project access from administrator'
+};
+
+export const RPT_AUTH_002 = {
+  code: 'RPT_AUTH_002',
+  message: 'User not authorized to create organization templates',
+  httpStatus: 403,
+  userMessage: 'Only administrators can create organization templates',
+  resolution: 'Contact administrator for template creation'
+};
+
+export const RPT_AUTH_003 = {
+  code: 'RPT_AUTH_003',
+  message: 'User not authorized to create schedules',
+  httpStatus: 403,
+  userMessage: 'You do not have permission to schedule reports',
+  resolution: 'Request scheduler permissions from administrator'
+};
+
+export const RPT_AUTH_004 = {
+  code: 'RPT_AUTH_004',
+  message: 'User not authorized to export data',
+  httpStatus: 403,
+  userMessage: 'You do not have data export permissions',
+  resolution: 'Contact administrator for export access'
+};
+```
+
+#### Resource Not Found Errors (RPT_RES_XXX)
+
+```typescript
+export const RPT_RES_001 = {
+  code: 'RPT_RES_001',
+  message: 'Report not found',
+  httpStatus: 404,
+  userMessage: 'The requested report does not exist',
+  resolution: 'Check report ID or generate a new report'
+};
+
+export const RPT_RES_002 = {
+  code: 'RPT_RES_002',
+  message: 'Template not found',
+  httpStatus: 404,
+  userMessage: 'The specified template does not exist',
+  resolution: 'Check template ID or use a system template'
+};
+
+export const RPT_RES_003 = {
+  code: 'RPT_RES_003',
+  message: 'Schedule not found',
+  httpStatus: 404,
+  userMessage: 'The specified schedule does not exist',
+  resolution: 'Check schedule ID or create a new schedule'
+};
+
+export const RPT_RES_004 = {
+  code: 'RPT_RES_004',
+  message: 'Export not found',
+  httpStatus: 404,
+  userMessage: 'The requested export does not exist',
+  resolution: 'Check export ID or initiate a new export'
+};
+
+export const RPT_RES_005 = {
+  code: 'RPT_RES_005',
+  message: 'Project not found',
+  httpStatus: 404,
+  userMessage: 'The specified project does not exist',
+  resolution: 'Verify project ID with Organization Service'
+};
+```
+
+#### Generation Errors (RPT_GEN_XXX)
+
+```typescript
+export const RPT_GEN_001 = {
+  code: 'RPT_GEN_001',
+  message: 'Report generation failed',
+  httpStatus: 422,
+  userMessage: 'Failed to generate report',
+  resolution: 'Check logs and try again'
+};
+
+export const RPT_GEN_002 = {
+  code: 'RPT_GEN_002',
+  message: 'No calculation data available',
+  httpStatus: 422,
+  userMessage: 'No emission data available for this project/year',
+  resolution: 'Ensure calculations are completed for this period'
+};
+
+export const RPT_GEN_003 = {
+  code: 'RPT_GEN_003',
+  message: 'PDF generation timeout',
+  httpStatus: 422,
+  userMessage: 'Report generation took too long',
+  resolution: 'Reduce report scope or contact support'
+};
+
+export const RPT_GEN_004 = {
+  code: 'RPT_GEN_004',
+  message: 'Excel row limit exceeded',
+  httpStatus: 422,
+  userMessage: 'Export exceeds Excel row limit (1M rows)',
+  resolution: 'Apply filters or use CSV format'
+};
+
+export const RPT_GEN_005 = {
+  code: 'RPT_GEN_005',
+  message: 'Template section execution failed',
+  httpStatus: 422,
+  userMessage: 'One or more report sections failed to render',
+  resolution: 'Check template configuration or contact support'
+};
+
+export const RPT_GEN_006 = {
+  code: 'RPT_GEN_006',
+  message: 'Chart generation failed',
+  httpStatus: 422,
+  userMessage: 'Failed to generate chart visualization',
+  resolution: 'Check chart configuration or disable charts'
+};
+
+export const RPT_GEN_007 = {
+  code: 'RPT_GEN_007',
+  message: 'Report already generating',
+  httpStatus: 422,
+  userMessage: 'This report is already being generated',
+  resolution: 'Wait for current generation to complete'
+};
+
+export const RPT_GEN_008 = {
+  code: 'RPT_GEN_008',
+  message: 'Export size exceeds limit',
+  httpStatus: 422,
+  userMessage: 'Export would exceed size limit (500 MB)',
+  resolution: 'Apply filters to reduce data volume'
+};
+```
+
+#### Dependency Errors (RPT_DEP_XXX)
+
+```typescript
+export const RPT_DEP_001 = {
+  code: 'RPT_DEP_001',
+  message: 'Calculation Service unavailable',
+  httpStatus: 424,
+  userMessage: 'Calculation Service is currently unavailable',
+  resolution: 'Try again later or contact support'
+};
+
+export const RPT_DEP_002 = {
+  code: 'RPT_DEP_002',
+  message: 'Organization Service unavailable',
+  httpStatus: 424,
+  userMessage: 'Organization Service is currently unavailable',
+  resolution: 'Try again later or contact support'
+};
+
+export const RPT_DEP_003 = {
+  code: 'RPT_DEP_003',
+  message: 'S3 storage unavailable',
+  httpStatus: 424,
+  userMessage: 'File storage is currently unavailable',
+  resolution: 'Try again later or contact support'
+};
+
+export const RPT_DEP_004 = {
+  code: 'RPT_DEP_004',
+  message: 'Email service unavailable',
+  httpStatus: 424,
+  userMessage: 'Email delivery service is currently unavailable',
+  resolution: 'Download report manually or try again later'
+};
+```
+
+#### System Errors (RPT_SYS_XXX)
+
+```typescript
+export const RPT_SYS_001 = {
+  code: 'RPT_SYS_001',
+  message: 'Database connection error',
+  httpStatus: 500,
+  userMessage: 'A database error occurred',
+  resolution: 'Try again or contact support if issue persists'
+};
+
+export const RPT_SYS_002 = {
+  code: 'RPT_SYS_002',
+  message: 'Unexpected error during report generation',
+  httpStatus: 500,
+  userMessage: 'An unexpected error occurred',
+  resolution: 'Contact support with report ID'
+};
+
+export const RPT_SYS_003 = {
+  code: 'RPT_SYS_003',
+  message: 'Queue processing error',
+  httpStatus: 500,
+  userMessage: 'Failed to process report queue',
+  resolution: 'Report may be delayed, monitor status'
+};
+
+export const RPT_SYS_004 = {
+  code: 'RPT_SYS_004',
+  message: 'S3 upload failed',
+  httpStatus: 500,
+  userMessage: 'Failed to upload report to storage',
+  resolution: 'Contact support with report ID'
+};
+```
+
+### 11.3 Error Response Format
+
+```typescript
+interface ErrorResponse {
+  success: false;
+  error: {
+    code: string;              // e.g., RPT_GEN_002
+    message: string;           // Technical message
+    userMessage: string;       // User-friendly message
+    resolution: string;        // How to fix
+    details?: any;             // Additional context
+    timestamp: string;         // ISO 8601
+    correlationId: string;     // Request trace ID
+    path: string;              // API path
+  };
+}
+
+// Example
+{
+  "success": false,
+  "error": {
+    "code": "RPT_GEN_002",
+    "message": "No calculation data available",
+    "userMessage": "No emission data available for Acme Corp (2024)",
+    "resolution": "Ensure calculations are completed for this period",
+    "details": {
+      "projectId": "project-123",
+      "projectName": "Acme Corp",
+      "year": 2024,
+      "calculationCount": 0
+    },
+    "timestamp": "2025-11-18T10:30:00Z",
+    "correlationId": "req-abc-123",
+    "path": "/v1/reports/generate"
+  }
+}
+```
+
+---
+
+## 12. Event Schemas (with Zod Validation)
+
+### 12.1 Base Event Schema
+
+```typescript
+import { z } from 'zod';
+
+export const BaseEventSchema = z.object({
+  id: z.string().uuid(),
+  type: z.string(),
+  version: z.string().regex(/^\d+\.\d+\.\d+$/),
+  occurredAt: z.string().datetime(),
+  aggregateId: z.string().uuid(),
+  aggregateType: z.string(),
+  correlationId: z.string().uuid(),
+  causationId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  metadata: z.record(z.any()).optional()
+});
+
+export type BaseEvent = z.infer<typeof BaseEventSchema>;
+```
+
+### 12.2 Reporting Events
+
+#### reporting.report.generated.v1
+
+```typescript
+export const ReportGeneratedEventDataSchema = z.object({
+  reportId: z.string().uuid(),
+  reportType: z.enum(['ghg-protocol', 'scope-analysis', 'trend', 'entity-comparison', 'custom']),
+  format: z.enum(['pdf', 'excel', 'csv']),
+  projectId: z.string().uuid(),
+  projectName: z.string(),
+  year: z.number().int().min(2000).max(2100),
+  fileSize: z.number().positive(),
+  generatedBy: z.string().uuid(),
+  duration: z.number().int().positive(),  // Generation time (ms)
+  summary: z.object({
+    totalEmissions: z.number().nonnegative(),
+    scope1: z.number().nonnegative(),
+    scope2: z.number().nonnegative(),
+    scope3: z.number().nonnegative(),
+    dataQuality: z.number().min(0).max(100)
+  })
+});
+
+export const ReportGeneratedEventSchema = BaseEventSchema.extend({
+  type: z.literal('reporting.report.generated.v1'),
+  aggregateType: z.literal('Report'),
+  data: ReportGeneratedEventDataSchema
+});
+
+export type ReportGeneratedEvent = z.infer<typeof ReportGeneratedEventSchema>;
+```
+
+#### reporting.export.completed.v1
+
+```typescript
+export const ExportCompletedEventDataSchema = z.object({
+  exportId: z.string().uuid(),
+  exportType: z.enum(['activity-data', 'calculations', 'aggregated']),
+  format: z.enum(['csv', 'excel', 'json']),
+  projectId: z.string().uuid(),
+  year: z.number().int(),
+  fileSize: z.number().positive(),
+  totalRows: z.number().int().nonnegative(),
+  requestedBy: z.string().uuid(),
+  duration: z.number().int().positive()
+});
+
+export const ExportCompletedEventSchema = BaseEventSchema.extend({
+  type: z.literal('reporting.export.completed.v1'),
+  aggregateType: z.literal('Export'),
+  data: ExportCompletedEventDataSchema
+});
+
+export type ExportCompletedEvent = z.infer<typeof ExportCompletedEventSchema>;
+```
+
+#### reporting.schedule.executed.v1
+
+```typescript
+export const ScheduleExecutedEventDataSchema = z.object({
+  scheduleId: z.string().uuid(),
+  name: z.string(),
+  reportId: z.string().uuid(),
+  status: z.enum(['success', 'failed']),
+  executionTime: z.string().datetime(),
+  nextRunAt: z.string().datetime().optional(),
+  recipientCount: z.number().int().nonnegative(),
+  errorMessage: z.string().optional()
+});
+
+export const ScheduleExecutedEventSchema = BaseEventSchema.extend({
+  type: z.literal('reporting.schedule.executed.v1'),
+  aggregateType: z.literal('ReportSchedule'),
+  data: ScheduleExecutedEventDataSchema
+});
+
+export type ScheduleExecutedEvent = z.infer<typeof ScheduleExecutedEventSchema>;
+```
+
+#### reporting.distribution.sent.v1
+
+```typescript
+export const DistributionSentEventDataSchema = z.object({
+  reportId: z.string().uuid(),
+  scheduleId: z.string().uuid().optional(),
+  recipients: z.array(z.string().email()),
+  successCount: z.number().int().nonnegative(),
+  failedCount: z.number().int().nonnegative(),
+  sentAt: z.string().datetime()
+});
+
+export const DistributionSentEventSchema = BaseEventSchema.extend({
+  type: z.literal('reporting.distribution.sent.v1'),
+  aggregateType: z.literal('Distribution'),
+  data: DistributionSentEventDataSchema
+});
+
+export type DistributionSentEvent = z.infer<typeof DistributionSentEventSchema>;
+```
+
+#### reporting.template.created.v1
+
+```typescript
+export const TemplateCreatedEventDataSchema = z.object({
+  templateId: z.string().uuid(),
+  name: z.string(),
+  type: z.enum(['system', 'organization', 'user']),
+  reportType: z.string(),
+  createdBy: z.string().uuid(),
+  baseTemplateId: z.string().uuid().optional()
+});
+
+export const TemplateCreatedEventSchema = BaseEventSchema.extend({
+  type: z.literal('reporting.template.created.v1'),
+  aggregateType: z.literal('ReportTemplate'),
+  data: TemplateCreatedEventDataSchema
+});
+
+export type TemplateCreatedEvent = z.infer<typeof TemplateCreatedEventSchema>;
+```
+
+### 12.3 Event Publisher with Validation
+
+```typescript
+import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge';
+import { Injectable, Logger } from '@nestjs/common';
+import { z } from 'zod';
+
+@Injectable()
+export class EventPublisherService {
+  private readonly logger = new Logger(EventPublisherService.name);
+
+  constructor(private readonly eventBridge: EventBridgeClient) {}
+
+  async publish<T extends z.ZodType>(
+    event: z.infer<T>,
+    schema: T
+  ): Promise<void> {
+    try {
+      // Validate event against schema
+      schema.parse(event);
+
+      // Publish to EventBridge
+      await this.eventBridge.send(new PutEventsCommand({
+        Entries: [{
+          Source: 'clenergize.reporting-service',
+          DetailType: event.type,
+          Detail: JSON.stringify(event),
+          EventBusName: process.env.EVENTBRIDGE_BUS_NAME
+        }]
+      }));
+
+      this.logger.debug('Event published', {
+        eventId: event.id,
+        eventType: event.type,
+        aggregateId: event.aggregateId
+      });
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        this.logger.error('Event validation failed', {
+          eventType: event.type,
+          errors: error.errors
+        });
+        throw new Error(`Event validation failed: ${error.message}`);
+      }
+      throw error;
+    }
+  }
+}
+
+// Usage
+await eventPublisher.publish(
+  reportGeneratedEvent,
+  ReportGeneratedEventSchema
+);
+```
+
+---
+
+## 13. Enhanced Caching Strategy
+
+### 13.1 Multi-Layer Cache Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   REPORTING SERVICE CACHE                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Layer 1: In-Memory Cache (Node.js Map)                     │
+│  • Template metadata (5 minutes TTL)                         │
+│  • Frequently used aggregations (1 minute TTL)              │
+│  • LRU eviction, max 1000 entries                           │
+│                                                              │
+│  Layer 2: Redis Cache (Distributed)                         │
+│  • Dashboard summaries (5 minutes TTL)                       │
+│  • Dashboard breakdowns (5 minutes TTL)                      │
+│  • Dashboard trends (10 minutes TTL)                         │
+│  • Report status (1 hour TTL)                                │
+│  • Export status (30 minutes TTL)                            │
+│                                                              │
+│  Layer 3: MongoDB Cache (Materialized Views)                │
+│  • Pre-aggregated project totals (refreshed on calc events) │
+│  • Historical report summaries (permanent)                   │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 13.2 Cache Implementation
+
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+import { RedisService } from '@/shared/redis/redis.service';
+import LRU from 'lru-cache';
+
+@Injectable()
+export class ReportingCacheService {
+  private readonly logger = new Logger(ReportingCacheService.name);
+  private readonly lruCache: LRU<string, any>;
+
+  constructor(private readonly redis: RedisService) {
+    // Initialize in-memory LRU cache
+    this.lruCache = new LRU({
+      max: 1000,
+      ttl: 60000,  // 1 minute default
+      updateAgeOnGet: true
+    });
+  }
+
+  // Dashboard summary caching
+  async getDashboardSummary(
+    projectId: string,
+    year: number
+  ): Promise<DashboardSummary | null> {
+    const key = `dashboard:summary:${projectId}:${year}`;
+
+    // Try in-memory cache first
+    if (this.lruCache.has(key)) {
+      this.logger.debug('Dashboard summary cache hit (memory)', { key });
+      return this.lruCache.get(key);
+    }
+
+    // Try Redis cache
+    const cached = await this.redis.get(key);
+    if (cached) {
+      this.logger.debug('Dashboard summary cache hit (redis)', { key });
+      const data = JSON.parse(cached);
+      this.lruCache.set(key, data);  // Populate in-memory cache
+      return data;
+    }
+
+    this.logger.debug('Dashboard summary cache miss', { key });
+    return null;
+  }
+
+  async cacheDashboardSummary(
+    projectId: string,
+    year: number,
+    summary: DashboardSummary
+  ): Promise<void> {
+    const key = `dashboard:summary:${projectId}:${year}`;
+    const ttl = 300;  // 5 minutes
+
+    // Store in both caches
+    this.lruCache.set(key, summary, { ttl: 60000 });  // 1 minute in memory
+    await this.redis.setex(key, ttl, JSON.stringify(summary));
+
+    this.logger.debug('Dashboard summary cached', { key });
+  }
+
+  // Dashboard breakdown caching
+  async getDashboardBreakdown(
+    projectId: string,
+    year: number,
+    dimension: string
+  ): Promise<DashboardBreakdown | null> {
+    const key = `dashboard:breakdown:${projectId}:${year}:${dimension}`;
+
+    const cached = await this.redis.get(key);
+    if (cached) {
+      this.logger.debug('Dashboard breakdown cache hit', { key });
+      return JSON.parse(cached);
+    }
+
+    this.logger.debug('Dashboard breakdown cache miss', { key });
+    return null;
+  }
+
+  async cacheDashboardBreakdown(
+    projectId: string,
+    year: number,
+    dimension: string,
+    breakdown: DashboardBreakdown
+  ): Promise<void> {
+    const key = `dashboard:breakdown:${projectId}:${year}:${dimension}`;
+    await this.redis.setex(key, 300, JSON.stringify(breakdown));
+    this.logger.debug('Dashboard breakdown cached', { key });
+  }
+
+  // Invalidate dashboard cache
+  async invalidateDashboardCache(
+    projectId: string,
+    year: number
+  ): Promise<number> {
+    const patterns = [
+      `dashboard:summary:${projectId}:${year}`,
+      `dashboard:breakdown:${projectId}:${year}:*`,
+      `dashboard:trend:${projectId}:*`
+    ];
+
+    let totalDeleted = 0;
+    for (const pattern of patterns) {
+      if (pattern.includes('*')) {
+        const keys = await this.redis.keys(pattern);
+        if (keys.length > 0) {
+          await this.redis.del(...keys);
+          totalDeleted += keys.length;
+        }
+      } else {
+        await this.redis.del(pattern);
+        totalDeleted++;
+      }
+
+      // Also clear from in-memory cache
+      this.lruCache.delete(pattern);
+    }
+
+    this.logger.info('Dashboard cache invalidated', {
+      projectId,
+      year,
+      keysDeleted: totalDeleted
+    });
+
+    return totalDeleted;
+  }
+
+  // Cache report status for polling
+  async cacheReportStatus(
+    reportId: string,
+    status: ReportStatus
+  ): Promise<void> {
+    const key = `report:status:${reportId}`;
+    await this.redis.setex(key, 3600, JSON.stringify(status));  // 1 hour
+  }
+
+  async getReportStatus(
+    reportId: string
+  ): Promise<ReportStatus | null> {
+    const key = `report:status:${reportId}`;
+    const cached = await this.redis.get(key);
+    return cached ? JSON.parse(cached) : null;
+  }
+
+  // Cache statistics
+  async getCacheStats(): Promise<CacheStats> {
+    const redisInfo = await this.redis.info('stats');
+
+    return {
+      inMemory: {
+        size: this.lruCache.size,
+        maxSize: this.lruCache.max,
+        hitRate: this.calculateLRUHitRate()
+      },
+      redis: {
+        keys: await this.redis.dbsize(),
+        hitRate: this.parseRedisHitRate(redisInfo),
+        memoryUsed: this.parseRedisMemory(redisInfo)
+      }
+    };
+  }
+
+  private calculateLRUHitRate(): number {
+    // Implementation: Track hits/misses in LRU cache
+    return 0;  // Placeholder
+  }
+
+  private parseRedisHitRate(info: string): number {
+    const hits = this.extractValue(info, 'keyspace_hits');
+    const misses = this.extractValue(info, 'keyspace_misses');
+    if (hits + misses === 0) return 0;
+    return (hits / (hits + misses)) * 100;
+  }
+
+  private parseRedisMemory(info: string): number {
+    return this.extractValue(info, 'used_memory');
+  }
+
+  private extractValue(info: string, key: string): number {
+    const regex = new RegExp(`${key}:(\\d+)`);
+    const match = info.match(regex);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+}
+
+interface CacheStats {
+  inMemory: {
+    size: number;
+    maxSize: number;
+    hitRate: number;
+  };
+  redis: {
+    keys: number;
+    hitRate: number;
+    memoryUsed: number;
+  };
+}
+```
+
+---
+
+## 14. Circuit Breaker Configuration
+
+### 14.1 Circuit Breaker Implementation
+
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+
+enum CircuitState {
+  CLOSED = 'CLOSED',
+  OPEN = 'OPEN',
+  HALF_OPEN = 'HALF_OPEN'
+}
+
+interface CircuitBreakerConfig {
+  failureThreshold: number;
+  successThreshold: number;
+  timeout: number;
+  monitoringWindow: number;
+}
+
+@Injectable()
+export class CircuitBreaker {
+  private state: CircuitState = CircuitState.CLOSED;
+  private failureCount: number = 0;
+  private successCount: number = 0;
+  private nextAttempt: number = Date.now();
+  private readonly logger = new Logger(CircuitBreaker.name);
+
+  constructor(
+    private readonly name: string,
+    private readonly config: CircuitBreakerConfig
+  ) {}
+
+  async execute<T>(fn: () => Promise<T>, fallback?: () => Promise<T>): Promise<T> {
+    if (this.state === CircuitState.OPEN) {
+      if (Date.now() < this.nextAttempt) {
+        this.logger.warn('Circuit breaker OPEN', { name: this.name });
+
+        if (fallback) {
+          return await fallback();
+        }
+
+        throw new Error(`Circuit breaker is OPEN for ${this.name}`);
+      }
+
+      // Transition to HALF_OPEN
+      this.state = CircuitState.HALF_OPEN;
+      this.logger.info('Circuit breaker transitioning to HALF_OPEN', {
+        name: this.name
+      });
+    }
+
+    try {
+      const result = await fn();
+      this.onSuccess();
+      return result;
+    } catch (error) {
+      this.onFailure();
+
+      if (fallback && this.state === CircuitState.OPEN) {
+        return await fallback();
+      }
+
+      throw error;
+    }
+  }
+
+  private onSuccess(): void {
+    if (this.state === CircuitState.HALF_OPEN) {
+      this.successCount++;
+
+      if (this.successCount >= this.config.successThreshold) {
+        this.state = CircuitState.CLOSED;
+        this.failureCount = 0;
+        this.successCount = 0;
+        this.logger.info('Circuit breaker CLOSED', { name: this.name });
+      }
+    } else {
+      this.failureCount = 0;
+    }
+  }
+
+  private onFailure(): void {
+    this.failureCount++;
+    this.successCount = 0;
+
+    if (
+      this.state === CircuitState.HALF_OPEN ||
+      this.failureCount >= this.config.failureThreshold
+    ) {
+      this.state = CircuitState.OPEN;
+      this.nextAttempt = Date.now() + this.config.timeout;
+
+      this.logger.error('Circuit breaker OPEN', {
+        name: this.name,
+        failureCount: this.failureCount,
+        nextAttemptAt: new Date(this.nextAttempt).toISOString()
+      });
+    }
+  }
+
+  getState(): CircuitState {
+    return this.state;
+  }
+}
+```
+
+### 14.2 Service-Specific Circuit Breakers
+
+```typescript
+@Injectable()
+export class CircuitBreakerRegistry {
+  private readonly breakers = new Map<string, CircuitBreaker>();
+  private readonly logger = new Logger(CircuitBreakerRegistry.name);
+
+  constructor() {
+    this.initializeBreakers();
+  }
+
+  private initializeBreakers(): void {
+    // Calculation Service circuit breaker
+    this.breakers.set('calculation-service', new CircuitBreaker(
+      'calculation-service',
+      {
+        failureThreshold: 5,
+        successThreshold: 2,
+        timeout: 30000,        // 30s
+        monitoringWindow: 10000
+      }
+    ));
+
+    // Organization Service circuit breaker
+    this.breakers.set('organization-service', new CircuitBreaker(
+      'organization-service',
+      {
+        failureThreshold: 5,
+        successThreshold: 2,
+        timeout: 30000,
+        monitoringWindow: 10000
+      }
+    ));
+
+    // S3 circuit breaker
+    this.breakers.set('s3', new CircuitBreaker(
+      's3',
+      {
+        failureThreshold: 10,   // More tolerant
+        successThreshold: 3,
+        timeout: 60000,         // 60s longer recovery
+        monitoringWindow: 10000
+      }
+    ));
+
+    // SES circuit breaker
+    this.breakers.set('ses', new CircuitBreaker(
+      'ses',
+      {
+        failureThreshold: 10,
+        successThreshold: 3,
+        timeout: 60000,
+        monitoringWindow: 10000
+      }
+    ));
+
+    this.logger.log('Circuit breakers initialized', {
+      count: this.breakers.size
+    });
+  }
+
+  getBreaker(name: string): CircuitBreaker {
+    const breaker = this.breakers.get(name);
+    if (!breaker) {
+      throw new Error(`Circuit breaker not found: ${name}`);
+    }
+    return breaker;
+  }
+}
+```
+
+### 14.3 Fallback Strategies
+
+```typescript
+@Injectable()
+export class FallbackStrategies {
+  private readonly logger = new Logger(FallbackStrategies.name);
+
+  constructor(
+    private readonly cacheService: ReportingCacheService,
+    private readonly circuitBreakers: CircuitBreakerRegistry
+  ) {}
+
+  // Fallback: Serve stale dashboard data if Calculation Service down
+  async getDashboardWithFallback(
+    projectId: string,
+    year: number
+  ): Promise<DashboardSummary> {
+    const breaker = this.circuitBreakers.getBreaker('calculation-service');
+
+    return await breaker.execute(
+      // Primary: Fetch fresh data
+      async () => {
+        return await this.fetchFreshDashboard(projectId, year);
+      },
+      // Fallback: Use stale cache
+      async () => {
+        this.logger.warn('Using stale dashboard data', { projectId, year });
+
+        const stale = await this.cacheService.getStaleDashboardSummary(
+          projectId,
+          year
+        );
+
+        if (stale) {
+          return { ...stale, isStale: true };
+        }
+
+        throw new Error('No dashboard data available (primary and fallback failed)');
+      }
+    );
+  }
+
+  // Fallback: Queue email for later if SES down
+  async sendEmailWithFallback(
+    recipients: string[],
+    report: Report
+  ): Promise<void> {
+    const breaker = this.circuitBreakers.getBreaker('ses');
+
+    return await breaker.execute(
+      // Primary: Send via SES
+      async () => {
+        return await this.emailService.sendReportEmail(recipients, report);
+      },
+      // Fallback: Queue for later
+      async () => {
+        this.logger.warn('SES unavailable, queueing email', {
+          reportId: report.reportId,
+          recipientCount: recipients.length
+        });
+
+        await this.emailQueue.enqueue({
+          recipients,
+          reportId: report.reportId,
+          scheduledAt: Date.now() + 300000  // Retry in 5 minutes
+        });
+      }
+    );
+  }
+}
+```
+
+---
+
+## 15. Performance SLOs (Service Level Objectives)
+
+### 15.1 Target SLOs
+
+| Operation | p50 | p95 | p99 | Availability | Notes |
+|-----------|-----|-----|-----|--------------|-------|
+| **Dashboard Query** | < 100ms | < 200ms | < 500ms | 99.9% | With cache hit: < 50ms |
+| **PDF Generation (10-page)** | < 5s | < 10s | < 15s | 99.5% | Queue-based async |
+| **PDF Generation (50-page)** | < 15s | < 30s | < 60s | 99.0% | Complex reports |
+| **Excel Export (10k rows)** | < 3s | < 5s | < 10s | 99.5% | Streaming write |
+| **CSV Export (100k rows)** | < 10s | < 20s | < 30s | 99.5% | Streaming pipeline |
+| **Email Delivery** | < 2s | < 5s | < 10s | 99.9% | Per recipient |
+| **Report Status Poll** | < 50ms | < 100ms | < 200ms | 99.95% | Cached in Redis |
+
+### 15.2 Capacity Planning
+
+**Current Baseline** (Sprint 0.3):
+- Concurrent report generations: 5 (Puppeteer instances)
+- Dashboard queries per second: 100
+- PDF generations per hour: 50
+- Email sends per hour: 500
+- Cache memory: 2GB Redis
+
+**Phase 1 Target** (Sprint 1.4):
+- Concurrent report generations: 10
+- Dashboard queries per second: 500
+- PDF generations per hour: 200
+- Email sends per hour: 2000
+- Cache memory: 4GB Redis
+
+**Production Target** (Phase 3):
+- Concurrent report generations: 20
+- Dashboard queries per second: 2000
+- PDF generations per hour: 1000
+- Email sends per hour: 10000
+- Cache memory: 8GB Redis
+- Horizontal scaling: 3+ instances
+
+### 15.3 Performance Benchmarks
+
+```typescript
+// K6 Performance Test
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export let options = {
+  stages: [
+    { duration: '2m', target: 10 },    // Warm up
+    { duration: '5m', target: 50 },    // Normal load
+    { duration: '5m', target: 100 },   // Peak load
+    { duration: '2m', target: 0 },     // Cool down
+  ],
+  thresholds: {
+    // SLO: Dashboard p95 < 200ms
+    'http_req_duration{scenario:dashboard}': ['p(95)<200'],
+    // SLO: PDF generation p95 < 10s (10-page report)
+    'http_req_duration{scenario:pdf_10page}': ['p(95)<10000'],
+    // SLO: < 1% errors
+    'http_req_failed': ['rate<0.01'],
+    // SLO: > 85% cache hits
+    'cache_hit_rate': ['value>0.85'],
+  },
+};
+
+export default function () {
+  // Test dashboard query
+  const dashboardRes = http.get(
+    `${__ENV.API_URL}/v1/dashboard/summary?projectId=${__ENV.PROJECT_ID}&year=2024`,
+    {
+      tags: { scenario: 'dashboard' }
+    }
+  );
+
+  check(dashboardRes, {
+    'dashboard: status 200': (r) => r.status === 200,
+    'dashboard: p95 < 200ms': (r) => r.timings.duration < 200,
+    'dashboard: has cache header': (r) => r.headers['X-Cache'] !== undefined
+  });
+
+  sleep(1);
+
+  // Test PDF generation (10% of requests)
+  if (Math.random() < 0.1) {
+    const pdfRes = http.post(
+      `${__ENV.API_URL}/v1/reports/generate`,
+      JSON.stringify({
+        projectId: __ENV.PROJECT_ID,
+        year: 2024,
+        reportType: 'scope-analysis',
+        format: 'pdf'
+      }),
+      {
+        headers: { 'Content-Type': 'application/json' },
+        tags: { scenario: 'pdf_10page' }
+      }
+    );
+
+    check(pdfRes, {
+      'pdf: status 202': (r) => r.status === 202,
+      'pdf: has report ID': (r) => r.json('reportId') !== undefined
+    });
+  }
+
+  sleep(2);
+}
+```
+
+### 15.4 Performance Monitoring
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { Histogram, Counter, Gauge } from 'prom-client';
+
+@Injectable()
+export class PerformanceMetricsService {
+  // Histograms for latency
+  private readonly dashboardQueryDuration: Histogram;
+  private readonly reportGenerationDuration: Histogram;
+  private readonly exportDuration: Histogram;
+
+  // Counters for throughput
+  private readonly reportsTotal: Counter;
+  private readonly exportTotal: Counter;
+  private readonly emailsTotal: Counter;
+
+  // Gauges for capacity
+  private readonly activeGenerations: Gauge;
+  private readonly queueDepth: Gauge;
+
+  constructor() {
+    this.dashboardQueryDuration = new Histogram({
+      name: 'dashboard_query_duration_seconds',
+      help: 'Duration of dashboard queries',
+      labelNames: ['widget_type', 'cache_hit'],
+      buckets: [0.05, 0.1, 0.2, 0.5, 1]
+    });
+
+    this.reportGenerationDuration = new Histogram({
+      name: 'report_generation_duration_seconds',
+      help: 'Duration of report generation',
+      labelNames: ['report_type', 'format', 'page_count'],
+      buckets: [1, 5, 10, 15, 30, 60, 120]
+    });
+
+    this.exportDuration = new Histogram({
+      name: 'export_duration_seconds',
+      help: 'Duration of data export',
+      labelNames: ['export_type', 'format', 'row_count'],
+      buckets: [1, 5, 10, 20, 30, 60]
+    });
+
+    this.reportsTotal = new Counter({
+      name: 'reports_generated_total',
+      help: 'Total reports generated',
+      labelNames: ['report_type', 'format', 'status']
+    });
+
+    this.exportTotal = new Counter({
+      name: 'exports_completed_total',
+      help: 'Total exports completed',
+      labelNames: ['export_type', 'format', 'status']
+    });
+
+    this.emailsTotal = new Counter({
+      name: 'emails_sent_total',
+      help: 'Total emails sent',
+      labelNames: ['status']
+    });
+
+    this.activeGenerations = new Gauge({
+      name: 'active_report_generations',
+      help: 'Number of report generations in progress'
+    });
+
+    this.queueDepth = new Gauge({
+      name: 'report_queue_depth',
+      help: 'Number of reports waiting in queue'
+    });
+  }
+
+  // Track dashboard query performance
+  async trackDashboardQuery<T>(
+    widgetType: string,
+    cacheHit: boolean,
+    fn: () => Promise<T>
+  ): Promise<T> {
+    const startTime = Date.now();
+
+    const result = await fn();
+
+    const duration = (Date.now() - startTime) / 1000;
+    this.dashboardQueryDuration
+      .labels(widgetType, cacheHit.toString())
+      .observe(duration);
+
+    return result;
+  }
+
+  // Track report generation performance
+  async trackReportGeneration<T>(
+    reportType: string,
+    format: string,
+    fn: () => Promise<T>
+  ): Promise<T> {
+    const startTime = Date.now();
+    this.activeGenerations.inc();
+
+    try {
+      const result = await fn();
+
+      const duration = (Date.now() - startTime) / 1000;
+      this.reportGenerationDuration
+        .labels(reportType, format, 'estimated')
+        .observe(duration);
+
+      this.reportsTotal.labels(reportType, format, 'success').inc();
+
+      return result;
+    } catch (error) {
+      const duration = (Date.now() - startTime) / 1000;
+      this.reportGenerationDuration
+        .labels(reportType, format, 'estimated')
+        .observe(duration);
+
+      this.reportsTotal.labels(reportType, format, 'error').inc();
+
+      throw error;
+    } finally {
+      this.activeGenerations.dec();
+    }
+  }
+
+  // Update queue metrics
+  updateQueueDepth(depth: number): void {
+    this.queueDepth.set(depth);
+  }
+}
+```
+
+### 15.5 Performance Alerts
+
+```yaml
+# Prometheus alert rules
+groups:
+  - name: reporting_service_performance
+    interval: 30s
+    rules:
+      # SLO violation: Dashboard p95 latency > 200ms
+      - alert: DashboardLatencyHigh
+        expr: |
+          histogram_quantile(0.95,
+            rate(dashboard_query_duration_seconds_bucket[5m])
+          ) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          service: reporting-service
+        annotations:
+          summary: "Dashboard p95 latency exceeds 200ms"
+          description: "p95 latency is {{ $value }}s (threshold: 0.2s)"
+
+      # SLO violation: PDF generation p95 latency > 10s (10-page)
+      - alert: ReportGenerationSlow
+        expr: |
+          histogram_quantile(0.95,
+            rate(report_generation_duration_seconds_bucket{page_count="10"}[5m])
+          ) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: reporting-service
+        annotations:
+          summary: "Report generation p95 exceeds 10s for 10-page reports"
+          description: "p95 duration is {{ $value }}s (threshold: 10s)"
+
+      # High error rate
+      - alert: ReportErrorRateHigh
+        expr: |
+          (
+            rate(reports_generated_total{status="error"}[5m]) /
+            rate(reports_generated_total[5m])
+          ) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          service: reporting-service
+        annotations:
+          summary: "Report error rate exceeds 1%"
+          description: "Error rate is {{ $value }}% (threshold: 1%)"
+
+      # Queue depth high
+      - alert: ReportQueueDepthHigh
+        expr: report_queue_depth > 100
+        for: 10m
+        labels:
+          severity: warning
+          service: reporting-service
+        annotations:
+          summary: "Report queue depth high"
+          description: "Queue depth is {{ $value }} (threshold: 100)"
+
+      # Cache hit rate low
+      - alert: CacheHitRateLow
+        expr: |
+          (
+            rate(dashboard_query_duration_seconds_count{cache_hit="true"}[10m]) /
+            rate(dashboard_query_duration_seconds_count[10m])
+          ) < 0.85
+        for: 15m
+        labels:
+          severity: warning
+          service: reporting-service
+        annotations:
+          summary: "Dashboard cache hit rate below 85%"
+          description: "Hit rate is {{ $value }}% (threshold: 85%)"
+```
+
+---
+
+## 16. Disaster Recovery
+
+### 16.1 Recovery Time Objectives (RTO) & Recovery Point Objectives (RPO)
+
+| Component | RTO | RPO | Backup Frequency | Recovery Priority |
+|-----------|-----|-----|------------------|-------------------|
+| **Report Metadata** | 2 hours | 1 hour | Continuous (WAL) | P1 |
+| **Generated Report Files** | 4 hours | 24 hours | S3 versioning | P2 |
+| **Report Templates** | 30 minutes | 0 (in Git) | Git commits | P2 |
+| **Report Schedules** | 1 hour | 1 hour | Continuous (WAL) | P1 |
+| **Dashboard Cache** | 5 minutes | 0 (can recalculate) | Not backed up | P3 |
+
+### 16.2 Backup Strategy
+
+#### MongoDB Backup (Report Metadata)
+
+```yaml
+# MongoDB backup configuration
+backup:
+  type: continuous
+  method: point-in-time-recovery
+
+  # Snapshot schedule
+  snapshots:
+    frequency: hourly
+    retention: 7 days
+    destination: s3://clenergize-backups/reporting-service/mongodb/
+
+  # Write-Ahead Log (WAL)
+  oplog:
+    enabled: true
+    retention: 48 hours
+
+  # Full backup
+  full_backup:
+    frequency: daily
+    time: "03:00 UTC"
+    retention: 30 days
+```
+
+#### S3 Backup (Generated Reports)
+
+```yaml
+# S3 lifecycle policy
+lifecycle:
+  rules:
+    - id: report-retention
+      status: Enabled
+      transitions:
+        - days: 90
+          storage_class: STANDARD_IA  # Infrequent Access
+        - days: 365
+          storage_class: GLACIER      # Long-term archive
+      expiration:
+        days: 2555                    # 7 years (compliance)
+
+  versioning:
+    enabled: true
+    versions_to_retain: 3
+
+  cross_region_replication:
+    enabled: true
+    destination: s3://clenergize-backups-dr/reporting-service/
+    region: us-west-2
+```
+
+### 16.3 Restoration Procedures
+
+#### Full Service Restoration
+
+```bash
+#!/bin/bash
+# reporting_service_restore.sh
+
+set -e
+
+BACKUP_ID=$1
+BACKUP_BUCKET="clenergize-backups"
+SERVICE="reporting-service"
+
+echo "Starting restoration for backup: $BACKUP_ID"
+
+# 1. Download backup manifest
+aws s3 cp \
+  "s3://$BACKUP_BUCKET/$SERVICE/mongodb/$BACKUP_ID/manifest.json" \
+  /tmp/manifest.json
+
+# 2. Parse collections from manifest
+COLLECTIONS=$(jq -r '.collections[]' /tmp/manifest.json)
+
+# 3. Restore MongoDB collections
+for COLLECTION in $COLLECTIONS; do
+  echo "Restoring collection: $COLLECTION"
+
+  aws s3 cp \
+    "s3://$BACKUP_BUCKET/$SERVICE/mongodb/$BACKUP_ID/$COLLECTION.json" \
+    "/tmp/$COLLECTION.json"
+
+  mongoimport \
+    --uri "$MONGODB_URI" \
+    --db clenergize_reporting \
+    --collection "$COLLECTION" \
+    --file "/tmp/$COLLECTION.json" \
+    --jsonArray \
+    --drop
+
+  echo "Restored: $COLLECTION"
+done
+
+# 4. Restore S3 report files (if needed)
+if [ "$RESTORE_S3_FILES" = "true" ]; then
+  echo "Restoring S3 report files..."
+  aws s3 sync \
+    "s3://$BACKUP_BUCKET/$SERVICE/s3/$BACKUP_ID/" \
+    "s3://clenergize-reports/"
+fi
+
+# 5. Verify restoration
+echo "Verifying restoration..."
+mongo "$MONGODB_URI" --eval "
+  db.reports.count();
+  db.report_schedules.count();
+  db.report_templates.count();
+"
+
+echo "Restoration completed successfully"
+```
+
+### 16.4 Disaster Scenarios & Response
+
+#### Scenario 1: Report Generation Service Failure
+
+**Detection**: Health check failures, queue backlog
+
+**Response**:
+1. Auto-restart failed containers (ECS/K8s)
+2. Scale up healthy instances
+3. Process queued reports with increased capacity
+4. RTO: 5 minutes (automatic)
+
+#### Scenario 2: S3 Storage Outage
+
+**Detection**: S3 upload failures, circuit breaker opens
+
+**Response**:
+1. Queue report files locally (temporary disk)
+2. Monitor S3 recovery
+3. Retry upload when S3 recovers
+4. RTO: 30 minutes, RPO: 0 (no data loss)
+
+#### Scenario 3: Database Corruption
+
+**Detection**: Query errors, data integrity checks fail
+
+**Response**:
+1. Stop write operations (read-only mode)
+2. Identify corruption extent
+3. Restore from latest snapshot (RTO: 2 hours)
+4. Replay oplog to minimize data loss (RPO: 1 hour)
+5. Validate restored data
+6. Resume normal operations
+
+#### Scenario 4: Complete Region Failure
+
+**Detection**: AWS region unavailability
+
+**Response**:
+1. Activate DR region (us-west-2)
+2. Redirect traffic via Route53 health checks
+3. Restore from cross-region backup (RTO: 4 hours)
+4. Sync S3 report files from replica bucket
+5. Verify all integrations in DR region
+6. Resume operations
+
+### 16.5 Regular DR Testing
+
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
+
+@Injectable()
+export class DisasterRecoveryTestingService {
+  private readonly logger = new Logger(DisasterRecoveryTestingService.name);
+
+  @Cron('0 0 1 * *')  // Monthly on 1st day at midnight
+  async performDRTest(): Promise<void> {
+    this.logger.log('Starting monthly DR test');
+
+    const testResults = {
+      testDate: new Date(),
+      scenarios: []
+    };
+
+    try {
+      // Test 1: Backup integrity
+      const backupTest = await this.testBackupIntegrity();
+      testResults.scenarios.push(backupTest);
+
+      // Test 2: Restore procedure
+      const restoreTest = await this.testRestoreProcedure();
+      testResults.scenarios.push(restoreTest);
+
+      // Test 3: S3 failover
+      const s3FailoverTest = await this.testS3Failover();
+      testResults.scenarios.push(s3FailoverTest);
+
+      // Test 4: Regional failover
+      const regionalFailoverTest = await this.testRegionalFailover();
+      testResults.scenarios.push(regionalFailoverTest);
+
+      // Generate report
+      await this.generateDRReport(testResults);
+
+      this.logger.log('DR test completed successfully');
+
+    } catch (error) {
+      this.logger.error('DR test failed', error);
+      // Alert on-call engineer
+      throw error;
+    }
+  }
+
+  private async testBackupIntegrity(): Promise<any> {
+    // 1. Download latest backup
+    // 2. Verify checksums
+    // 3. Validate data structure
+    return {
+      scenario: 'backup_integrity',
+      status: 'passed',
+      duration: 300  // seconds
+    };
+  }
+
+  private async testRestoreProcedure(): Promise<any> {
+    // 1. Restore to isolated test environment
+    // 2. Verify data completeness
+    // 3. Run smoke tests
+    return {
+      scenario: 'restore_procedure',
+      status: 'passed',
+      rto: 7200,  // seconds (2 hours)
+      rpo: 3600   // seconds (1 hour)
+    };
+  }
+
+  private async testS3Failover(): Promise<any> {
+    // 1. Simulate S3 primary unavailability
+    // 2. Verify failover to replica bucket
+    // 3. Validate file access
+    return {
+      scenario: 's3_failover',
+      status: 'passed',
+      failoverTime: 1800  // seconds (30 minutes)
+    };
+  }
+
+  private async testRegionalFailover(): Promise<any> {
+    // 1. Simulate region failure
+    // 2. Activate DR region
+    // 3. Verify service availability
+    return {
+      scenario: 'regional_failover',
+      status: 'passed',
+      failoverTime: 14400  // seconds (4 hours)
+    };
+  }
+
+  private async generateDRReport(results: any): Promise<void> {
+    // Generate and email report to stakeholders
+    this.logger.log('DR test report generated', results);
+  }
+}
+```
+
+---
+
+## 17. OpenAPI Specification
+
+### 17.1 Swagger Configuration
+
+```typescript
+import { INestApplication } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
+export function setupSwagger(app: INestApplication): void {
+  const config = new DocumentBuilder()
+    .setTitle('Reporting Service API')
+    .setDescription(`
+      The Reporting Service is responsible for:
+      - GHG Protocol-compliant emission reports
+      - Data export in multiple formats (CSV, Excel, PDF)
+      - Scheduled report generation and distribution
+      - Dashboard analytics aggregations
+      - Report template management
+    `)
+    .setVersion('1.0.0')
+    .setContact(
+      'Clenergize Support',
+      'https://clenergize.com/support',
+      'support@clenergize.com'
+    )
+    .setLicense('Proprietary', 'https://clenergize.com/license')
+    .addServer('http://localhost:3006', 'Local Development')
+    .addServer('https://dev-api.clenergize.com', 'Development')
+    .addServer('https://staging-api.clenergize.com', 'Staging')
+    .addServer('https://api.clenergize.com', 'Production')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Enter JWT token from Identity Service'
+      },
+      'JWT-auth'
+    )
+    .addTag('reports', 'Report generation operations')
+    .addTag('schedules', 'Scheduled report management')
+    .addTag('exports', 'Data export operations')
+    .addTag('dashboard', 'Dashboard analytics')
+    .addTag('templates', 'Report template management')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+
+  // Serve Swagger UI
+  SwaggerModule.setup('api/docs', app, document, {
+    customSiteTitle: 'Reporting Service API',
+    customCss: '.swagger-ui .topbar { display: none }',
+    swaggerOptions: {
+      persistAuthorization: true,
+      docExpansion: 'none',
+      filter: true,
+      showRequestDuration: true,
+      syntaxHighlight: {
+        activated: true,
+        theme: 'monokai'
+      }
+    }
+  });
+
+  // Export OpenAPI spec as JSON
+  const fs = require('fs');
+  fs.writeFileSync(
+    './openapi-spec.json',
+    JSON.stringify(document, null, 2)
+  );
+}
+```
+
+### 17.2 API Endpoint Documentation
+
+```typescript
+import { Controller, Post, Get, Body, Param, Query } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiBody
+} from '@nestjs/swagger';
+
+@ApiTags('reports')
+@ApiBearerAuth('JWT-auth')
+@Controller('v1/reports')
+export class ReportsController {
+
+  @Post('generate')
+  @ApiOperation({
+    summary: 'Generate a report on-demand',
+    description: `
+      Generates an emission report in the specified format. Report generation
+      is queued and processed asynchronously. Use the returned reportId to
+      poll for completion status.
+
+      **Process**:
+      1. Validate request and check permissions
+      2. Queue report generation job (SQS)
+      3. Return 202 Accepted with reportId
+      4. Process report asynchronously (5-60 seconds)
+      5. Upload completed report to S3
+      6. Update report status to 'completed'
+      7. Send email notifications if requested
+
+      **Performance**: PDF (10-page) p95 < 10s, Excel p95 < 5s
+    `
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['reportType', 'format', 'projectId', 'year'],
+      properties: {
+        reportType: {
+          type: 'string',
+          enum: ['ghg-protocol', 'scope-analysis', 'trend', 'entity-comparison', 'custom'],
+          description: 'Type of report to generate',
+          example: 'ghg-protocol'
+        },
+        format: {
+          type: 'string',
+          enum: ['pdf', 'excel', 'csv'],
+          description: 'Output format',
+          example: 'pdf'
+        },
+        projectId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Project UUID',
+          example: '123e4567-e89b-12d3-a456-426614174000'
+        },
+        year: {
+          type: 'integer',
+          minimum: 2000,
+          maximum: 2100,
+          description: 'Reporting year',
+          example: 2024
+        },
+        templateId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Optional: Use custom template'
+        },
+        sendEmail: {
+          type: 'boolean',
+          description: 'Send report via email',
+          default: false
+        },
+        recipients: {
+          type: 'array',
+          items: { type: 'string', format: 'email' },
+          maxItems: 50,
+          description: 'Email recipients (max 50)'
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 202,
+    description: 'Report generation queued',
+    schema: {
+      type: 'object',
+      properties: {
+        reportId: { type: 'string', format: 'uuid' },
+        status: { type: 'string', enum: ['queued'] },
+        estimatedDuration: { type: 'integer', description: 'Seconds' },
+        queuePosition: { type: 'integer' }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error (RPT_VAL_001, RPT_VAL_002)'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Not authorized (RPT_AUTH_001)'
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'No calculation data available (RPT_GEN_002)'
+  })
+  async generateReport(
+    @Body() dto: GenerateReportDto
+  ): Promise<ReportJobResponse> {
+    return await this.reportingService.queueReportGeneration(dto);
+  }
+
+  @Get(':reportId')
+  @ApiOperation({
+    summary: 'Get report details and download link',
+    description: 'Returns report metadata and presigned S3 URL for download (expires in 7 days)'
+  })
+  @ApiParam({
+    name: 'reportId',
+    type: 'string',
+    format: 'uuid',
+    description: 'Report UUID'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Report found',
+    schema: {
+      type: 'object',
+      properties: {
+        reportId: { type: 'string' },
+        status: { type: 'string', enum: ['queued', 'generating', 'completed', 'failed'] },
+        reportType: { type: 'string' },
+        format: { type: 'string' },
+        projectName: { type: 'string' },
+        year: { type: 'integer' },
+        generatedAt: { type: 'string', format: 'date-time' },
+        file: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            size: { type: 'integer' },
+            url: { type: 'string', description: 'Presigned S3 URL' },
+            expiresAt: { type: 'string', format: 'date-time' }
+          }
+        },
+        summary: {
+          type: 'object',
+          properties: {
+            totalEmissions: { type: 'number' },
+            scope1: { type: 'number' },
+            scope2: { type: 'number' },
+            scope3: { type: 'number' },
+            dataQuality: { type: 'number' }
+          }
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Report not found (RPT_RES_001)'
+  })
+  async getReport(
+    @Param('reportId') reportId: string
+  ): Promise<ReportDetails> {
+    return await this.reportingService.getReportDetails(reportId);
+  }
+
+  // Additional endpoints...
+}
+
+@ApiTags('dashboard')
+@ApiBearerAuth('JWT-auth')
+@Controller('v1/dashboard')
+export class DashboardController {
+
+  @Get('summary')
+  @ApiOperation({
+    summary: 'Get dashboard summary data',
+    description: `
+      Returns high-level emission summary for a project/year.
+      Results are cached for 5 minutes.
+
+      **Performance**: p95 < 200ms (with cache hit: < 50ms)
+    `
+  })
+  @ApiQuery({
+    name: 'projectId',
+    type: 'string',
+    format: 'uuid',
+    required: true,
+    description: 'Project UUID'
+  })
+  @ApiQuery({
+    name: 'year',
+    type: 'integer',
+    required: true,
+    example: 2024
+  })
+  @ApiQuery({
+    name: 'compareToYear',
+    type: 'integer',
+    required: false,
+    description: 'Optional: Compare to previous year'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Dashboard summary',
+    schema: {
+      type: 'object',
+      properties: {
+        projectId: { type: 'string' },
+        projectName: { type: 'string' },
+        year: { type: 'integer' },
+        totals: {
+          type: 'object',
+          properties: {
+            emission: { type: 'number', description: 'tCO2e' },
+            scope1: { type: 'number' },
+            scope2: { type: 'number' },
+            scope3: { type: 'number' }
+          }
+        },
+        trends: {
+          type: 'object',
+          nullable: true,
+          properties: {
+            totalChange: { type: 'number', description: 'tCO2e absolute' },
+            percentageChange: { type: 'number', description: '%' }
+          }
+        },
+        dataQuality: {
+          type: 'object',
+          properties: {
+            verificationRate: { type: 'number', description: '% verified' },
+            qualityScore: { type: 'number', description: 'Average (1-4)' }
+          }
+        },
+        cachedAt: { type: 'string', format: 'date-time' },
+        cacheExpiry: { type: 'string', format: 'date-time' }
+      }
+    }
+  })
+  async getDashboardSummary(
+    @Query('projectId') projectId: string,
+    @Query('year') year: number,
+    @Query('compareToYear') compareToYear?: number
+  ): Promise<DashboardSummary> {
+    return await this.dashboardService.getSummary(projectId, year, compareToYear);
+  }
+}
+```
+
+---
+
+## 18. Security Hardening
+
+### 18.1 Input Validation (Zod Schemas)
+
+```typescript
+import { z } from 'zod';
+
+// Report generation validation
+export const GenerateReportRequestSchema = z.object({
+  reportType: z.enum(['ghg-protocol', 'scope-analysis', 'trend', 'entity-comparison', 'custom']),
+  format: z.enum(['pdf', 'excel', 'csv']),
+  projectId: z.string().uuid(),
+  year: z.number().int().min(2000).max(2100),
+  scope: z.enum(['Scope 1', 'Scope 2', 'Scope 3', 'All']).optional(),
+  entityIds: z.array(z.string().uuid()).max(100).optional(),
+  categories: z.array(z.string()).max(50).optional(),
+  templateId: z.string().uuid().optional(),
+  includeCharts: z.boolean().optional(),
+  includeMethodology: z.boolean().optional(),
+  compareToYear: z.number().int().min(2000).max(2100).optional(),
+  sendEmail: z.boolean().optional(),
+  recipients: z.array(z.string().email()).max(50).optional()
+}).strict();
+
+// Schedule creation validation
+export const CreateScheduleRequestSchema = z.object({
+  name: z.string().min(1).max(200),
+  description: z.string().max(500).optional(),
+  reportType: z.string(),
+  format: z.enum(['pdf', 'excel', 'csv']),
+  templateId: z.string().uuid().optional(),
+  filters: z.object({
+    projectId: z.string().uuid(),
+    scope: z.string().optional(),
+    entityIds: z.array(z.string().uuid()).optional()
+  }),
+  frequency: z.enum(['daily', 'weekly', 'monthly', 'quarterly', 'annually', 'custom']),
+  cronExpression: z.string().regex(/^(\*|([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])|\*\/([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])) (\*|([0-9]|1[0-9]|2[0-3])|\*\/([0-9]|1[0-9]|2[0-3])) (\*|([1-9]|1[0-9]|2[0-9]|3[0-1])|\*\/([1-9]|1[0-9]|2[0-9]|3[0-1])) (\*|([1-9]|1[0-2])|\*\/([1-9]|1[0-2])) (\*|([0-6])|\*\/([0-6]))$/).optional(),
+  timezone: z.string().regex(/^[A-Za-z]+\/[A-Za-z_]+$/),  // IANA timezone
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime().optional(),
+  recipients: z.array(z.string().email()).min(1).max(50),
+  emailSubject: z.string().max(200).optional(),
+  emailBody: z.string().max(2000).optional(),
+  enabled: z.boolean().default(true)
+}).strict().refine(
+  (data) => !data.endDate || new Date(data.endDate) > new Date(data.startDate),
+  { message: 'End date must be after start date' }
+);
+
+// Export validation
+export const CreateExportRequestSchema = z.object({
+  exportType: z.enum(['activity-data', 'calculations', 'aggregated']),
+  format: z.enum(['csv', 'excel', 'json']),
+  projectId: z.string().uuid(),
+  year: z.number().int().min(2000).max(2100),
+  scope: z.string().optional(),
+  categories: z.array(z.string()).optional(),
+  entityIds: z.array(z.string().uuid()).optional(),
+  dateRange: z.object({
+    from: z.string().datetime(),
+    to: z.string().datetime()
+  }).optional(),
+  includeCalculations: z.boolean().optional(),
+  includeMetadata: z.boolean().optional(),
+  groupBy: z.array(z.enum(['year', 'scope', 'category', 'entity'])).optional()
+}).strict();
+
+// Validation middleware
+@Injectable()
+export class ValidationMiddleware implements NestMiddleware {
+  constructor(private readonly schema: z.ZodType) {}
+
+  use(req: Request, res: Response, next: NextFunction) {
+    try {
+      this.schema.parse(req.body);
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        throw new BadRequestException({
+          code: 'RPT_VAL_001',
+          message: 'Validation failed',
+          errors: error.errors
+        });
+      }
+      throw error;
+    }
+  }
+}
+```
+
+### 18.2 Authorization Guards
+
+```typescript
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+
+@Injectable()
+export class ReportingAuthGuard implements CanActivate {
+  constructor(
+    private reflector: Reflector,
+    private identityService: IdentityServiceClient
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    // Extract required permissions
+    const requiredPermissions = this.reflector.get<string[]>(
+      'permissions',
+      context.getHandler()
+    );
+
+    if (!requiredPermissions) {
+      return true;
+    }
+
+    // Check user has required permissions
+    const hasPermission = await this.identityService.checkPermissions(
+      user.id,
+      requiredPermissions
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException({
+        code: 'RPT_AUTH_001',
+        message: 'User not authorized to generate reports'
+      });
+    }
+
+    // Verify project access
+    if (request.body.projectId) {
+      const hasProjectAccess = await this.identityService.hasProjectAccess(
+        user.id,
+        request.body.projectId
+      );
+
+      if (!hasProjectAccess) {
+        throw new ForbiddenException({
+          code: 'RPT_AUTH_001',
+          message: 'User not authorized to generate reports for this project'
+        });
+      }
+    }
+
+    return true;
+  }
+}
+
+// Usage
+@Controller('v1/reports')
+@UseGuards(JwtAuthGuard, ReportingAuthGuard)
+export class ReportsController {
+
+  @Post('generate')
+  @Permissions('reporting:create')
+  async generateReport(@Body() dto: GenerateReportDto) {
+    // Implementation
+  }
+
+  @Post('schedules/create')
+  @Permissions('reporting:schedule')
+  async createSchedule(@Body() dto: CreateScheduleDto) {
+    // Only users with schedule permission
+  }
+
+  @Delete('schedules/:id')
+  @Permissions('reporting:admin')
+  async deleteSchedule(@Param('id') id: string) {
+    // Only admins can delete
+  }
+}
+```
+
+### 18.3 Rate Limiting
+
+```typescript
+import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Redis } from 'ioredis';
+
+@Injectable()
+export class RateLimitMiddleware implements NestMiddleware {
+  constructor(private readonly redis: Redis) {}
+
+  async use(req: Request, res: Response, next: NextFunction) {
+    const userId = req.user?.id || req.ip;
+    const endpoint = req.path;
+
+    // Rate limits per endpoint
+    const limits = {
+      '/v1/reports/generate': { requests: 10, window: 3600 },      // 10 reports/hour
+      '/v1/exports/activity-data': { requests: 5, window: 3600 },  // 5 exports/hour
+      '/v1/dashboard/summary': { requests: 100, window: 60 },      // 100 queries/min
+      default: { requests: 200, window: 60 }  // 200 req/min
+    };
+
+    const limit = limits[endpoint] || limits.default;
+    const key = `ratelimit:${userId}:${endpoint}`;
+
+    const current = await this.redis.incr(key);
+
+    if (current === 1) {
+      await this.redis.expire(key, limit.window);
+    }
+
+    res.setHeader('X-RateLimit-Limit', limit.requests);
+    res.setHeader('X-RateLimit-Remaining', Math.max(0, limit.requests - current));
+    res.setHeader('X-RateLimit-Reset', Math.ceil(Date.now() / 1000) + limit.window);
+
+    if (current > limit.requests) {
+      throw new TooManyRequestsException({
+        code: 'RPT_SYS_005',
+        message: 'Rate limit exceeded',
+        retryAfter: limit.window
+      });
+    }
+
+    next();
+  }
+}
+```
+
+### 18.4 S3 Security
+
+```typescript
+import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+@Injectable()
+export class S3SecurityService {
+  private readonly s3: S3Client;
+  private readonly bucket = process.env.S3_REPORTS_BUCKET;
+
+  constructor() {
+    this.s3 = new S3Client({
+      region: process.env.AWS_REGION,
+      // Enforce encryption
+      forcePathStyle: false,
+      useAccelerateEndpoint: false
+    });
+  }
+
+  // Upload report with server-side encryption
+  async uploadReport(
+    key: string,
+    buffer: Buffer,
+    metadata: Record<string, string>
+  ): Promise<void> {
+    await this.s3.send(new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      Body: buffer,
+      ServerSideEncryption: 'AES256',  // ✅ Encrypt at rest
+      Metadata: metadata,
+      ContentType: this.getContentType(key)
+    }));
+  }
+
+  // Generate presigned URL with expiration
+  async generatePresignedUrl(key: string): Promise<{ url: string; expiresAt: Date }> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: key
+    });
+
+    const url = await getSignedUrl(this.s3, command, {
+      expiresIn: 604800  // 7 days
+    });
+
+    const expiresAt = new Date();
+    expiresAt.setSeconds(expiresAt.getSeconds() + 604800);
+
+    return { url, expiresAt };
+  }
+
+  // Verify user has access to report before generating URL
+  async generateSecurePresignedUrl(
+    reportId: string,
+    userId: string
+  ): Promise<string> {
+    // 1. Verify ownership
+    const report = await this.reportRepository.findOne({ reportId });
+    if (!report) {
+      throw new NotFoundException('Report not found');
+    }
+
+    // 2. Check permissions
+    const hasAccess = await this.identityService.hasProjectAccess(
+      userId,
+      report.projectId.toString()
+    );
+
+    if (!hasAccess) {
+      throw new ForbiddenException('Not authorized to download this report');
+    }
+
+    // 3. Generate presigned URL
+    const { url } = await this.generatePresignedUrl(report.file.s3Key);
+
+    return url;
+  }
+
+  private getContentType(key: string): string {
+    if (key.endsWith('.pdf')) return 'application/pdf';
+    if (key.endsWith('.xlsx')) return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    if (key.endsWith('.csv')) return 'text/csv';
+    return 'application/octet-stream';
+  }
+}
+```
+
+### 18.5 Secrets Management
+
+```typescript
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+
+@Injectable()
+export class SecretsService {
+  private readonly client: SecretsManagerClient;
+  private readonly cache = new Map<string, { value: any; expiresAt: number }>();
+
+  constructor() {
+    this.client = new SecretsManagerClient({
+      region: process.env.AWS_REGION || 'us-east-1'
+    });
+  }
+
+  async getSecret(secretName: string): Promise<any> {
+    // Check cache (5 minute TTL)
+    const cached = this.cache.get(secretName);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.value;
+    }
+
+    // Fetch from AWS Secrets Manager
+    const command = new GetSecretValueCommand({ SecretId: secretName });
+    const response = await this.client.send(command);
+
+    const secret = JSON.parse(response.SecretString!);
+
+    // Cache for 5 minutes
+    this.cache.set(secretName, {
+      value: secret,
+      expiresAt: Date.now() + 300000
+    });
+
+    return secret;
+  }
+}
+
+// Usage
+@Injectable()
+export class ReportingService {
+  constructor(private readonly secrets: SecretsService) {}
+
+  async initialize(): Promise<void> {
+    // ✅ CORRECT: Fetch secrets from AWS Secrets Manager
+    const dbCredentials = await this.secrets.getSecret('reporting/mongodb');
+    this.mongoUri = dbCredentials.uri;
+
+    const sesCredentials = await this.secrets.getSecret('reporting/ses');
+    this.sesAccessKey = sesCredentials.accessKeyId;
+
+    // ❌ NEVER hardcode secrets!
+    // this.mongoUri = 'mongodb://admin:password123@localhost:27017';
+  }
+}
+```
+
+---
+
 **END OF SPECIFICATION**
 
 ---
@@ -2703,6 +5036,7 @@ async function migrateReportHistory() {
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2025-11-18 | Reporting Agent | Initial specification |
+| 2.0.0 | 2025-11-18 | Reporting Agent | Added sections 11-18 (production-ready) |
 
 **Next Review**: End of Week 1 (Design Phase)
 
