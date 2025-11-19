@@ -1481,6 +1481,121 @@ This document contains the complete hierarchical backlog for the Clenergize V3 r
 
 ---
 
+### Epic: CLNZ-61 - Activity UI Updates (10 points)
+
+**Goal**: Update frontend to integrate with new Activity Service
+**Phase**: 4 - Hardening & Migration
+
+#### Story: CLNZ-611 - Activity Data Entry Form (3 points)
+**Priority**: High
+**As a** data entry user
+**I want** improved activity entry forms
+**So that** data entry is easier and faster
+
+**Acceptance Criteria**:
+- Redesigned activity entry form
+- Auto-save functionality
+- Inline validation feedback
+- Responsive mobile layout
+- Field prefill from history
+
+**Tasks**:
+- CLNZ-611.1: Design new form layout (1 pt)
+- CLNZ-611.2: Implement form components (1 pt)
+- CLNZ-611.3: Add validation and auto-save (1 pt)
+
+#### Story: CLNZ-612 - Activity List View (3 points)
+**Priority**: High
+**As a** user
+**I want** better activity list display
+**So that** I can quickly find activities
+
+**Acceptance Criteria**:
+- Filterable activity list
+- Sortable columns
+- Bulk actions support
+- Export functionality
+- Pagination/infinite scroll
+
+**Tasks**:
+- CLNZ-612.1: Create list component (1 pt)
+- CLNZ-612.2: Add filters and sorting (1 pt)
+- CLNZ-612.3: Implement bulk actions (1 pt)
+
+#### Story: CLNZ-613 - Bulk Import UI (4 points)
+**Priority**: High
+**As a** data manager
+**I want** improved bulk import interface
+**So that** large imports are manageable
+
+**Acceptance Criteria**:
+- Drag-and-drop file upload
+- Column mapping interface
+- Real-time validation feedback
+- Error correction workflow
+- Progress tracking
+
+**Tasks**:
+- CLNZ-613.1: Build upload component (1 pt)
+- CLNZ-613.2: Create mapping interface (2 pts)
+- CLNZ-613.3: Add progress tracking (1 pt)
+
+---
+
+### Epic: CLNZ-63 - Frontend Cutover (5 points)
+
+**Goal**: Complete frontend migration to new backend services
+**Phase**: 4 - Hardening & Migration
+
+#### Story: CLNZ-631 - Remove Legacy API Calls (2 points)
+**Priority**: Critical
+**As a** developer
+**I want** all legacy API calls removed
+**So that** old backend can be decommissioned
+
+**Acceptance Criteria**:
+- Audit all API calls
+- Replace with new service clients
+- Remove dead code
+- Update error handling
+- Test all user flows
+
+**Tasks**:
+- CLNZ-631.1: Audit legacy calls (1 pt)
+- CLNZ-631.2: Replace and test (1 pt)
+
+#### Story: CLNZ-632 - Feature Flag Cleanup (2 points)
+**Priority**: High
+**As a** developer
+**I want** feature flags removed
+**So that** code is simplified
+
+**Acceptance Criteria**:
+- Remove all feature flag checks
+- Clean up conditional code
+- Update documentation
+- Test all features
+- Deploy to production
+
+**Tasks**:
+- CLNZ-632.1: Remove flags (1 pt)
+- CLNZ-632.2: Test and deploy (1 pt)
+
+#### Story: CLNZ-633 - Production Cutover Verification (1 point)
+**Priority**: Critical
+**As a** DevOps engineer
+**I want** cutover verification
+**So that** production is stable
+
+**Acceptance Criteria**:
+- Smoke tests passing
+- Performance within SLOs
+- Error rates acceptable
+- User acceptance confirmed
+- Rollback plan ready
+
+---
+
 ## Sprint Allocation
 
 ### Phase 0 Sprints (Months 1-2)

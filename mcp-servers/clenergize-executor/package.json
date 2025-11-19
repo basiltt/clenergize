@@ -1,18 +1,30 @@
 {
   "name": "clenergize-executor",
-  "version": "1.0.0",
+  "version": "2.0.0-secure",
+  "description": "Secure MCP executor for Clenergize V3 development operations",
+  "type": "module",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "clenergize",
+    "mongodb",
+    "executor"
+  ],
+  "author": "Clenergize Development Team",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.22.0",
     "@octokit/rest": "^22.0.1",
     "child_process": "^1.0.2",
+    "dotenv": "^16.6.1",
     "mongodb": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
