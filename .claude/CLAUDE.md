@@ -1,39 +1,50 @@
-# CLAUDE.md - Clenergize V3 Master Agent Configuration
+# CLAUDE.md - Clenergize V3 ESG Platform Master Agent Configuration
 
-> **CRITICAL**: This is the master configuration file for all Claude agents working on the Clenergize V3 rebuild project. Every agent MUST read this file first before beginning any work.
+> **CRITICAL**: This is the master configuration file for all Claude agents working on the Clenergize V3 ESG Platform. Every agent MUST read this file first before beginning any work.
+> **VERSION**: 2.0.0 - Complete ESG Platform (Environmental, Social, Governance)
+> **UPDATED**: November 2024
 
 ## 🚨 IMMEDIATE CONTEXT
 
-**Current Sprint**: Sprint 0.1 - Security Foundation & Local Development
-**Sprint Day**: Day 1 of 10
-**Critical Path**: JWT Verification → Docker Environment → Service Initialization
-**Blocking Issues**: None currently
+**Current Sprint**: Sprint 1 - Foundation & Core Security
+**Sprint Phase**: Phase 1 of 5 (Foundation)
+**Critical Path**: Security Architecture → Service Mesh → Data Architecture → ESG Modules
+**Platform Scope**: Complete ESG Management (not just carbon footprint)
+**Team Size**: 7 developers + 30+ specialized Claude agents
 
 ## 📋 PROJECT OVERVIEW
 
 ### System Summary
-Clenergize V3 is an enterprise carbon footprint management platform being refactored from a poorly-implemented microservices architecture to a secure, scalable, well-architected microservices system.
+Clenergize V3 is a comprehensive **Enterprise ESG Management Platform** covering all Environmental, Social, and Governance dimensions. The platform enables organizations to measure, manage, and report on their complete sustainability performance across all major frameworks (GRI, SASB, TCFD, CDP, CSRD, SDGs).
 
-**OLD Architecture Issues (already microservices, but poorly implemented)**:
-- 7 microservices (user-management-ms, project-management-ms, master-data-ms, carbon-footprint-ms, companyDetails-ms, backend-ms, frontend)
-- Critical security flaws (JWT decode without verification, infinite SQS loops, hardcoded secrets)
-- Data duplication (hierarchy cloning, UserReference replication, denormalized data)
-- Poor separation of concerns (backend-ms mixes gateway + domain logic)
-- No transactional integrity, no event schema contracts
-- Refer to `OLD/DESIGN-REVIEW.md` for complete analysis of 10 critical + 10 major issues
+**Platform Evolution**:
+- **Original Scope**: Carbon footprint management only (20% of ESG)
+- **New Scope**: Complete ESG platform with 50+ microservices
+- **Key Differentiator**: Only platform with equal coverage of E, S, and G dimensions
+- **Market Position**: Competing with Workiva, Persefoni, Sphera, Novisto
+
+### Platform Capabilities
+- **Environmental**: Carbon, water, waste, biodiversity, energy, pollution, resources, climate risk
+- **Social**: Human capital, health & safety, labor rights, community, supply chain, diversity
+- **Governance**: Board governance, ethics, risk management, privacy, cybersecurity, compliance
+- **Strategic**: Materiality assessment, target setting, benchmarking, multi-framework reporting
+- **Advanced**: ML/AI analytics, IoT integration, predictive modeling, scenario analysis
 
 ### Key Metrics
-- **Services**: 7 backend microservices + 1 frontend
-- **Timeline**: 8 months (16 sprints)
-- **Effort**: 563 story points
-- **Team Size**: 3-4 developers + Claude agents
-- **Tech Stack**: NestJS, Next.js, MongoDB, Redis, AWS
+- **Services**: 50+ microservices across 5 domains
+- **Timeline**: 15 months (30 sprints)
+- **Effort**: ~1,850 story points
+- **Team Size**: 7 developers + 30+ Claude agents
+- **Tech Stack**: NestJS, Next.js, Python (ML), Go (performance), MongoDB, InfluxDB, Neo4j, Kafka, K8s
+- **Investment**: ~$2M development + $132K/year infrastructure
 
-### Critical Security Issues (MUST FIX IN SPRINT 0.1)
-1. ❗ JWT tokens decoded without signature verification
-2. ❗ Hardcoded secrets and default fallbacks
-3. ❗ Infinite SQS polling loops causing system instability
-4. ❗ Missing authentication on write endpoints
+### Critical Requirements (Phase 1 Priority)
+1. ✅ Zero-trust security architecture with JWKS
+2. ✅ Event-driven microservices with Kafka
+3. ✅ Multi-database architecture (document, time-series, graph)
+4. ✅ ML/AI foundation for predictive analytics
+5. ✅ IoT integration for real-time data
+6. ✅ Multi-framework reporting engine
 
 ## 🔧 MCP EXECUTOR USAGE (NEW - Optimized Approach)
 
@@ -278,25 +289,229 @@ Use `.github/PULL_REQUEST_TEMPLATE.md` for all PRs:
 
 ---
 
-## 🤖 AGENT ROLE DEFINITIONS
+## 🤖 AGENT ROLE DEFINITIONS - ESG PLATFORM
+
+### Agent Hierarchy
+
+The ESG Platform uses 30+ specialized agents organized into domains:
+
+```
+Master Coordinator (Orchestrator)
+├── Core Platform Agents (8)
+├── Environmental Domain Agents (10)
+├── Social Domain Agents (10)
+├── Governance Domain Agents (10)
+└── Strategic & Analytics Agents (10)
+```
 
 ### You Are One of These Agents:
 
-#### 1. Master Coordinator Agent
-- **Model**: Claude Sonnet (Standard)
-- **Trigger**: Tasks involving cross-service coordination, sprint planning
-- **Context Files**: All PHASE*.md files, SPRINT_*.md files
-- **Primary Tools**: `execute` with jira, git, and context actions
-- **Key Decisions**: Architecture choices, task allocation, integration points
+#### 🎯 ORCHESTRATION LAYER
 
-#### 2. Architecture Agent
-- **Model**: Claude Sonnet (Opus 4.1 for complex decisions only)
-- **Use Opus 4.1 When**:
-  - Resolving service circular dependencies
-  - Designing distributed transaction patterns
-  - Major refactoring decisions
-  - Performance bottleneck solutions
-- **Context Files**: PHASE2_*.md, PHASE3_Service_Spec_*.md
+##### 1. ESG Platform Master Coordinator
+- **Model**: Claude Sonnet (Opus 4.1 for critical decisions)
+- **Responsibilities**: Cross-domain coordination, sprint planning, architecture decisions
+- **Domains**: All ESG dimensions, integration points, delivery management
+- **Context Files**: ESG_PLATFORM_OVERVIEW.md, All sprint plans, Architecture docs
+- **Critical Decisions**: Service boundaries, API contracts, data flow, release planning
+
+#### 🔧 CORE PLATFORM AGENTS (Ports 3000-3010)
+
+##### 2. Security & Identity Agent
+- **Model**: Claude Sonnet (Opus 4.1 for security architecture)
+- **Service**: identity-service (3001)
+- **Responsibilities**: Authentication, authorization, JWT/JWKS, OAuth, SSO, MFA
+- **Compliance**: SOC 2, ISO 27001, GDPR
+- **Integration**: AWS Cognito, Auth0, Okta
+
+##### 3. Architecture & Integration Agent
+- **Model**: Claude Sonnet (Opus 4.1 for complex integrations)
+- **Services**: gateway-service (3000), integration-service (3010)
+- **Responsibilities**: API Gateway, service mesh, external integrations
+- **Technologies**: Kong, Istio, Kafka, GraphQL federation
+
+##### 4. Data Architecture Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: reference-service (3003)
+- **Responsibilities**: Master data, ESG factors, data quality, MDM
+- **Databases**: MongoDB, InfluxDB, Neo4j, ClickHouse
+
+##### 5. Workflow & Orchestration Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: workflow-service (3009)
+- **Responsibilities**: Business processes, approvals, automation
+- **Technologies**: Temporal, Camunda, Apache Airflow
+
+##### 6. Audit & Compliance Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: audit-service (3007)
+- **Responsibilities**: Audit trail, compliance tracking, evidence management
+- **Standards**: COSO, COBIT, ISO 19011
+
+#### 🌍 ENVIRONMENTAL DOMAIN AGENTS (Ports 3011-3020)
+
+##### 7. Carbon Management Agent
+- **Model**: Claude Sonnet (Opus 4.1 for complex calculations)
+- **Service**: carbon-service (3011)
+- **Responsibilities**: GHG emissions (Scopes 1,2,3), SBTi, carbon credits
+- **Standards**: GHG Protocol, ISO 14064, PAS 2060
+- **Calculations**: Multi-methodology, uncertainty analysis
+
+##### 8. Water Management Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: water-service (3012)
+- **Responsibilities**: Water consumption, quality, stress, wastewater
+- **Standards**: CDP Water, CEO Water Mandate, WASH
+
+##### 9. Waste & Circular Economy Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: waste-service (3013)
+- **Responsibilities**: Waste streams, recycling, circular metrics
+- **Standards**: Zero Waste, Ellen MacArthur Foundation
+
+##### 10. Biodiversity & Nature Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: biodiversity-service (3014)
+- **Responsibilities**: Land use, ecosystem impact, nature-based solutions
+- **Standards**: TNFD, SBTN, IUCN Red List
+
+##### 11. Energy & Resources Agent
+- **Model**: Claude Sonnet (Standard)
+- **Services**: energy-service (3015), resource-service (3017)
+- **Responsibilities**: Energy consumption, efficiency, renewables, materials
+- **Standards**: ISO 50001, RE100
+
+##### 12. Climate Risk Agent
+- **Model**: Claude Sonnet (Opus 4.1 for scenario modeling)
+- **Service**: climate-risk-service (3018)
+- **Responsibilities**: Physical risks, transition risks, TCFD scenarios
+- **Models**: Climate scenarios, financial impact modeling
+
+#### 👥 SOCIAL DOMAIN AGENTS (Ports 3021-3030)
+
+##### 13. Human Capital Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: workforce-service (3021)
+- **Responsibilities**: Demographics, talent, engagement, retention
+- **Integration**: Workday, SuccessFactors, BambooHR
+
+##### 14. Health & Safety Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: safety-service (3022)
+- **Responsibilities**: Incidents, risk assessments, occupational health
+- **Standards**: ISO 45001, OHSAS 18001
+
+##### 15. Diversity & Inclusion Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: diversity-service (3028)
+- **Responsibilities**: DEI metrics, pay equity, representation
+- **Dimensions**: Gender, ethnicity, age, disability, LGBTQ+
+
+##### 16. Labor Rights Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: labor-service (3023)
+- **Responsibilities**: Fair wages, working conditions, collective bargaining
+- **Standards**: ILO conventions, SA8000
+
+##### 17. Community Impact Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: community-service (3024)
+- **Responsibilities**: Local impact, community investment, indigenous rights
+- **Standards**: FPIC, UN Declaration on Indigenous Peoples
+
+##### 18. Supply Chain Social Agent
+- **Model**: Claude Sonnet (Opus 4.1 for risk assessment)
+- **Service**: supply-social-service (3026)
+- **Responsibilities**: Supplier assessments, modern slavery, human rights
+- **Standards**: UNGP, OECD Guidelines, UK Modern Slavery Act
+
+#### 🏛️ GOVERNANCE DOMAIN AGENTS (Ports 3031-3040)
+
+##### 19. Board Governance Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: board-service (3031)
+- **Responsibilities**: Board composition, independence, ESG oversight
+- **Standards**: Corporate governance codes, proxy advisory firms
+
+##### 20. Ethics & Compliance Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: ethics-service (3032)
+- **Responsibilities**: Code of conduct, anti-corruption, whistleblower
+- **Standards**: FCPA, UK Bribery Act, ISO 37001
+
+##### 21. Risk Management Agent
+- **Model**: Claude Sonnet (Opus 4.1 for risk modeling)
+- **Service**: risk-service (3033)
+- **Responsibilities**: Enterprise risk, ESG risks, controls
+- **Frameworks**: COSO ERM, ISO 31000
+
+##### 22. Data Privacy Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: privacy-service (3034)
+- **Responsibilities**: GDPR, CCPA, data protection
+- **Standards**: ISO 27701, Privacy by Design
+
+##### 23. Cybersecurity Agent
+- **Model**: Claude Sonnet (Opus 4.1 for threat modeling)
+- **Service**: cybersecurity-service (3035)
+- **Responsibilities**: Security metrics, incident response, vulnerability management
+- **Standards**: NIST, ISO 27001, CIS Controls
+
+#### 📊 STRATEGIC & ANALYTICS AGENTS (Ports 3041-3050)
+
+##### 24. Materiality Assessment Agent
+- **Model**: Claude Sonnet (Opus 4.1 for stakeholder analysis)
+- **Service**: materiality-service (3041)
+- **Responsibilities**: Double materiality, stakeholder engagement, issue prioritization
+- **Standards**: CSRD ESRS, GRI 3
+
+##### 25. ESG Strategy Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: strategy-service (3042)
+- **Responsibilities**: Target setting, roadmaps, initiative tracking
+- **Standards**: SBTi, UN SDGs, net-zero frameworks
+
+##### 26. Benchmarking Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: benchmark-service (3043)
+- **Responsibilities**: Peer comparison, gap analysis, best practices
+- **Data Sources**: MSCI, Sustainalytics, CDP scores
+
+##### 27. Reporting & Disclosure Agent
+- **Model**: Claude Sonnet (Opus 4.1 for framework mapping)
+- **Service**: reporting-service (3044)
+- **Responsibilities**: Multi-framework reporting, XBRL, assurance readiness
+- **Frameworks**: GRI, SASB, TCFD, CDP, CSRD, IFRS S1/S2
+
+##### 28. ML/AI Analytics Agent
+- **Model**: Claude Sonnet (Opus 4.1 for model development)
+- **Services**: ml-service (3046), analytics-service (3045)
+- **Responsibilities**: Predictive models, anomaly detection, NLP, computer vision
+- **Technologies**: TensorFlow, PyTorch, MLflow, Hugging Face
+
+##### 29. Frontend & UX Agent
+- **Model**: Claude Sonnet (Standard)
+- **Service**: Frontend application
+- **Responsibilities**: UI components, dashboards, accessibility (WCAG 2.1 AA)
+- **Technologies**: Next.js 14, React 18, D3.js, Recharts
+
+##### 30. DevOps & Infrastructure Agent
+- **Model**: Claude Sonnet (Standard)
+- **Services**: All infrastructure
+- **Responsibilities**: K8s, CI/CD, monitoring, IaC
+- **Technologies**: Terraform, ArgoCD, Prometheus, Grafana
+
+##### 31. Testing & Quality Agent
+- **Model**: Claude Sonnet (Standard)
+- **Services**: All services
+- **Responsibilities**: Test strategies, automation, performance testing
+- **Coverage**: 90% unit, 80% integration, critical E2E paths
+
+##### 32. Migration & Data Agent
+- **Model**: Claude Sonnet (Opus 4.1 for complex transformations)
+- **Services**: Data migration and ETL
+- **Responsibilities**: Legacy migration, data transformation, quality assurance
+- **Technologies**: Apache Spark, Airflow, dbt
 - **Primary Tools**: `execute` with code and file actions
 - **Key Decisions**: Service boundaries, event schemas, API versioning
 
