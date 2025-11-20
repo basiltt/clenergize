@@ -1,0 +1,284 @@
+# CODEOWNERS for Clenergize V3
+# Documentation: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Purpose: Automatically assign reviewers based on file paths
+# Policy: See Docs/CODE_REVIEW_POLICY.md for complete review requirements
+#
+# Format: path-pattern @owner1 @owner2
+# Example: *.js @javascript-owner
+#
+# Note: Replace GitHub usernames (@username) with actual team members
+
+# ============================================================================
+# DEFAULT OWNER (fallback for unmatched paths)
+# ============================================================================
+
+# All files require at least one review from the Clenergize team
+* @clenergize-team
+
+# ============================================================================
+# SECURITY-CRITICAL CODE (requires Security Lead + 1 team member)
+# ============================================================================
+
+# Authentication & Authorization
+NEW/identity-service/src/domain/services/**/*.ts @security-lead @clenergize-team
+NEW/identity-service/src/application/commands/auth/**/*.ts @security-lead @clenergize-team
+NEW/*/src/infrastructure/auth/**/*.ts @security-lead @clenergize-team
+
+# JWT/JWKS Implementation
+NEW/*/src/infrastructure/auth/jwt*.ts @security-lead @clenergize-team
+
+# Secrets Management
+NEW/*/src/infrastructure/secrets/**/*.ts @security-lead @clenergize-team
+**/.env.example @security-lead @clenergize-team
+
+# Input Validation & Sanitization
+NEW/*/src/application/validators/**/*.ts @security-lead @clenergize-team
+NEW/*/src/domain/validators/**/*.ts @security-lead @clenergize-team
+
+# MCP Executor (code injection risk - CRITICAL)
+mcp-servers/clenergize-executor/**/*.js @security-lead @architecture-lead @clenergize-team
+mcp-servers/clenergize-executor/index.js @security-lead @architecture-lead @clenergize-team
+mcp-servers/clenergize-executor/test/**/*.js @security-lead @clenergize-team
+
+# Security Documentation
+Docs/*SECURITY*.md @security-lead @clenergize-team
+Docs/STRIDE*.md @security-lead @clenergize-team
+Docs/MCP_EXECUTOR_SECURITY_AUDIT_REPORT.md @security-lead @clenergize-team
+
+# ============================================================================
+# ARCHITECTURE-CRITICAL CODE (requires Architect + 1 team member)
+# ============================================================================
+
+# Service Boundaries & API Contracts
+NEW/*/src/infrastructure/http/controllers/**/*.ts @architecture-lead @clenergize-team
+NEW/shared/contracts/**/*.ts @architecture-lead @clenergize-team
+
+# Event Schemas (CRITICAL - affects all services)
+NEW/shared/contracts/src/events/**/*.ts @architecture-lead @clenergize-team
+Docs/EVENT_SCHEMA_REGISTRY.md @architecture-lead @clenergize-team
+
+# Database Schemas & Migrations
+NEW/*/src/infrastructure/database/schemas/**/*.ts @architecture-lead @database-expert @clenergize-team
+NEW/*/src/infrastructure/database/migrations/**/*.ts @architecture-lead @database-expert @clenergize-team
+
+# Service Creation (new microservices)
+NEW/*-service/package.json @architecture-lead @clenergize-team
+
+# API Gateway Configuration
+NEW/gateway/**/*.ts @architecture-lead @devops-lead @clenergize-team
+
+# Architecture Documentation
+Docs/PHASE*.md @architecture-lead @clenergize-team
+Docs/SERVICE_DEPENDENCY_DIAGRAM.md @architecture-lead @clenergize-team
+Docs/TRANSACTION_BOUNDARY_SPEC.md @architecture-lead @clenergize-team
+
+# ============================================================================
+# INFRASTRUCTURE & DEVOPS (requires DevOps + 1 team member)
+# ============================================================================
+
+# Docker Configuration
+**/Dockerfile @devops-lead @clenergize-team
+**/docker-compose*.yml @devops-lead @clenergize-team
+docker-compose.dev.yml @devops-lead @clenergize-team
+
+# CI/CD Pipelines
+.github/workflows/**/*.yml @devops-lead @clenergize-team
+.github/workflows/**/*.yaml @devops-lead @clenergize-team
+
+# Terraform Infrastructure
+terraform/**/*.tf @devops-lead @architecture-lead @clenergize-team
+terraform/**/*.tfvars @devops-lead @security-lead @clenergize-team
+
+# Kubernetes Manifests
+k8s/**/*.yaml @devops-lead @clenergize-team
+k8s/**/*.yml @devops-lead @clenergize-team
+
+# Environment Configuration
+**/.env.example @devops-lead @security-lead @clenergize-team
+
+# GitHub Actions Reusable Workflows
+.github/actions/**/*.yml @devops-lead @clenergize-team
+
+# Scripts
+scripts/**/*.sh @devops-lead @clenergize-team
+scripts/deploy*.sh @devops-lead @architecture-lead @clenergize-team
+
+# Makefile
+Makefile @devops-lead @clenergize-team
+
+# ============================================================================
+# DATA & DATABASE (requires Database Expert + 1 team member)
+# ============================================================================
+
+# Database Migrations (CRITICAL)
+NEW/*/src/infrastructure/database/migrations/**/*.ts @database-expert @architecture-lead @clenergize-team
+
+# Data Migration Scripts (CRITICAL)
+NEW/migration-scripts/**/*.ts @database-expert @architecture-lead @clenergize-team
+Docs/DATA_MIGRATION_*.md @database-expert @architecture-lead @clenergize-team
+Docs/HIERARCHY_MIGRATION_ALGORITHM.md @database-expert @architecture-lead @clenergize-team
+
+# Seeder Scripts
+NEW/*/src/infrastructure/database/seeders/**/*.ts @database-expert @clenergize-team
+
+# MongoDB Indexes
+NEW/*/src/infrastructure/database/indexes/**/*.ts @database-expert @clenergize-team
+
+# ============================================================================
+# SERVICE-SPECIFIC OWNERSHIP
+# ============================================================================
+
+# Identity Service (Port 3001)
+NEW/identity-service/** @identity-agent-owner @clenergize-team
+Docs/PHASE3_Service_Spec_01_Identity.md @identity-agent-owner @architecture-lead
+
+# Organization Service (Port 3002)
+NEW/organization-service/** @organization-agent-owner @clenergize-team
+Docs/PHASE3_Service_Spec_02_Organization.md @organization-agent-owner @architecture-lead
+
+# Reference Service (Port 3003)
+NEW/reference-service/** @reference-agent-owner @clenergize-team
+Docs/PHASE3_Service_Spec_03_Reference.md @reference-agent-owner @architecture-lead
+
+# Activity Service (Port 3004)
+NEW/activity-service/** @activity-agent-owner @clenergize-team
+Docs/PHASE3_Service_Spec_04_Activity.md @activity-agent-owner @architecture-lead
+
+# Calculation Service (Port 3005)
+NEW/calculation-service/** @calculation-agent-owner @clenergize-team
+Docs/PHASE3_Service_Spec_05_Calculation.md @calculation-agent-owner @architecture-lead
+
+# Reporting Service (Port 3006)
+NEW/reporting-service/** @reporting-agent-owner @clenergize-team
+Docs/PHASE3_Service_Spec_06_Reporting.md @reporting-agent-owner @architecture-lead
+
+# Audit Service (Port 3007)
+NEW/audit-service/** @audit-agent-owner @clenergize-team
+Docs/PHASE3_Service_Spec_07_Audit.md @audit-agent-owner @architecture-lead
+
+# Gateway
+NEW/gateway/** @architecture-lead @devops-lead @clenergize-team
+
+# Frontend
+NEW/frontend/** @frontend-agent-owner @clenergize-team
+
+# ============================================================================
+# SHARED LIBRARIES & CONTRACTS
+# ============================================================================
+
+# Shared Contracts (affects ALL services)
+NEW/shared/contracts/**/*.ts @architecture-lead @clenergize-team
+
+# Shared Utilities
+NEW/shared/utils/**/*.ts @architecture-lead @clenergize-team
+
+# Shared Types
+NEW/shared/types/**/*.ts @architecture-lead @clenergize-team
+
+# ============================================================================
+# TESTING & QUALITY
+# ============================================================================
+
+# E2E Tests
+NEW/e2e-tests/**/*.ts @testing-agent-owner @clenergize-team
+NEW/e2e-tests/**/*.spec.ts @testing-agent-owner @clenergize-team
+
+# Performance Tests
+NEW/performance-tests/**/*.ts @testing-agent-owner @devops-lead @clenergize-team
+NEW/performance-tests/**/*.js @testing-agent-owner @devops-lead @clenergize-team
+
+# Contract Tests (Pact)
+NEW/*/test/pact/**/*.ts @testing-agent-owner @architecture-lead @clenergize-team
+
+# Security Tests
+NEW/*/test/security/**/*.ts @security-lead @testing-agent-owner @clenergize-team
+
+# Test Utilities
+NEW/shared/test-utils/**/*.ts @testing-agent-owner @clenergize-team
+
+# Testing Documentation
+Docs/PHASE5_SDLC_Quality_Strategy.md @testing-agent-owner @architecture-lead
+Docs/TEST_DATA_MANAGEMENT_IMPLEMENTATION.md @testing-agent-owner @database-expert
+
+# ============================================================================
+# CONFIGURATION & BUILD
+# ============================================================================
+
+# Package Dependencies (requires review for security vulnerabilities)
+**/package.json @architecture-lead @security-lead @clenergize-team
+**/package-lock.json @clenergize-team
+
+# TypeScript Configuration
+**/tsconfig.json @architecture-lead @clenergize-team
+**/tsconfig.*.json @architecture-lead @clenergize-team
+
+# ESLint & Prettier
+**/.eslintrc.js @clenergize-team
+**/.eslintrc.json @clenergize-team
+**/.prettierrc @clenergize-team
+**/.prettierrc.json @clenergize-team
+
+# Jest Configuration
+**/jest.config.js @testing-agent-owner @clenergize-team
+**/jest.config.ts @testing-agent-owner @clenergize-team
+
+# Git Configuration
+.gitignore @clenergize-team
+.gitattributes @clenergize-team
+
+# ============================================================================
+# DOCUMENTATION
+# ============================================================================
+
+# Master Configuration (CRITICAL - all agents read this)
+.claude/CLAUDE.md @architecture-lead @security-lead @master-coordinator @clenergize-team
+
+# Code Review Policy
+Docs/CODE_REVIEW_POLICY.md @architecture-lead @security-lead @clenergize-team
+.github/CODEOWNERS @architecture-lead @clenergize-team
+
+# Sprint Planning
+Docs/SPRINT_*.md @master-coordinator @architecture-lead @clenergize-team
+
+# General Documentation (lightweight review)
+*.md @clenergize-team
+Docs/**/*.md @clenergize-team
+
+# README files
+**/README.md @clenergize-team
+
+# ============================================================================
+# MCP SERVERS & AGENT TOOLS
+# ============================================================================
+
+# MCP Server Configuration (CRITICAL)
+mcp-servers/**/*.json @devops-lead @architecture-lead @clenergize-team
+
+# Agent Slash Commands
+.claude/commands/**/*.md @master-coordinator @clenergize-team
+
+# Agent Patterns
+.claude/patterns/**/*.md @architecture-lead @clenergize-team
+
+# ============================================================================
+# LICENSE & LEGAL
+# ============================================================================
+
+# License File
+LICENSE @master-coordinator @clenergize-team
+
+# Code of Conduct
+CODE_OF_CONDUCT.md @master-coordinator @clenergize-team
+
+# ============================================================================
+# NOTES FOR REVIEWERS
+# ============================================================================
+
+# 1. Replace @username placeholders with actual GitHub usernames/teams
+# 2. Create GitHub teams in Organization settings before adding them here
+# 3. Teams require "Write" access to repository to review PRs
+# 4. Order matters - first matching pattern takes precedence
+# 5. Use more specific patterns at the top, general patterns at the bottom
+# 6. Test CODEOWNERS with: https://github.com/owner/repo/settings/code_review_assignment
+# 7. See full policy at: Docs/CODE_REVIEW_POLICY.md

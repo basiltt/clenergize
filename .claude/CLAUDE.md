@@ -133,6 +133,151 @@ execute({ action: 'test', content: 'e2e', options: { service: 'identity' }})
 execute({ action: 'test', content: 'security', options: { service: 'identity' }})
 ```
 
+## 📋 MANDATORY CODE REVIEW POLICY
+
+> **🚨 CRITICAL**: ALL code changes MUST go through mandatory human code review before merging.
+> **This policy applies to ALL agents without exception.**
+
+### Core Principles
+
+**ZERO TRUST**: No code is merged without explicit human approval.
+
+**Policy**: See `Docs/CODE_REVIEW_POLICY.md` for complete requirements.
+
+### Agent Pull Request Workflow
+
+**ALL agents MUST follow this workflow**:
+
+1. ✅ **Create Feature Branch**
+   ```bash
+   git checkout -b feature/CLNZ-XXX-description
+   ```
+
+2. ✅ **Make Code Changes**
+   - Follow coding standards
+   - Add tests (80% coverage minimum)
+   - Update documentation
+
+3. ✅ **Run Tests Locally**
+   ```bash
+   npm test
+   npm run lint
+   ```
+
+4. ✅ **Create Pull Request**
+   - Use PR template (`.github/PULL_REQUEST_TEMPLATE.md`)
+   - Fill out ALL checklist items
+   - Target `develop` branch (NOT `main`)
+   - Add correlation ID for tracing
+
+5. ✅ **Wait for CI/CD**
+   - Unit tests must pass
+   - Integration tests must pass (if applicable)
+   - Security scan must pass
+   - Lint must pass
+
+6. ✅ **Request Human Review**
+   - GitHub will auto-assign reviewers via CODEOWNERS
+   - Notify reviewer: "PR ready for review: [PR URL]"
+
+7. ✅ **Respond to Feedback**
+   - Address all reviewer comments
+   - Push fixes as new commits
+   - Re-request review after fixes
+
+8. ⏳ **Wait for Human Approval**
+   - **DO NOT MERGE YOURSELF**
+   - Human reviewer will merge after approval
+   - Update Jira ticket status after merge
+
+### Prohibited Actions
+
+**NEVER DO THESE**:
+- ❌ Merge PRs without human approval
+- ❌ Force push to protected branches (`main`, `develop`, `sprint/*`)
+- ❌ Bypass CI/CD checks
+- ❌ Create PRs with failing tests
+- ❌ Skip PR template checklist items
+- ❌ Auto-merge PRs (even with approvals)
+
+### Review Requirements
+
+| Change Type | Required Reviewers |
+|-------------|-------------------|
+| Agent-Generated Code | 1 human |
+| Security-Critical (auth, JWT, secrets) | Security Lead + 1 team member |
+| Architecture (service boundaries, events) | Architect + 1 team member |
+| Infrastructure (Docker, CI/CD, Terraform) | DevOps + 1 team member |
+| Database Migration | Database Expert + 1 team member |
+
+### CODEOWNERS File
+
+Automatic reviewer assignment via `.github/CODEOWNERS`:
+- **Security-critical code** → @security-lead
+- **Architecture changes** → @architecture-lead
+- **Infrastructure changes** → @devops-lead
+- **Service-specific code** → Service agent owner
+- **All code** → @clenergize-team (fallback)
+
+### Pull Request Template
+
+Use `.github/PULL_REQUEST_TEMPLATE.md` for all PRs:
+- ✅ Description of changes
+- ✅ Change type classification
+- ✅ Agent information (if applicable)
+- ✅ Testing checklist
+- ✅ Review checklist (code quality, security, architecture)
+- ✅ Deployment plan
+- ✅ Rollback plan
+
+### Emergency Procedures
+
+**Production Hotfix** (critical bugs only):
+- Label PR with `priority: critical`
+- Notify @security-lead and @architecture-lead immediately
+- Target 1-hour review SLA
+- Merge after 1 approval (if low-risk) or 2 approvals (if security/architecture impact)
+
+**Admin Override** (critical outage, no reviewers available):
+- Project Administrator ONLY
+- Document in incident ticket
+- Add `[EMERGENCY OVERRIDE]` to commit message
+- Requires post-incident review within 24 hours
+
+### Enforcement
+
+**Branch Protection Enabled**:
+- ✅ `main` branch: Require PR + 1-2 approvals + CI/CD pass
+- ✅ `develop` branch: Require PR + 1 approval + CI/CD pass
+- ✅ `sprint/*` branches: Require PR + 1 approval + CI/CD pass
+- ❌ Force push DISABLED
+- ❌ Delete DISABLED
+- ✅ Administrators MUST follow these rules
+
+**Violations**:
+- First violation: Warning + required team training
+- Second violation: Suspend write access for 1 sprint
+- Third violation: Remove from project
+
+### Success Criteria
+
+**Your task is NOT complete until**:
+- ✅ PR created with complete template
+- ✅ CI/CD tests passing
+- ✅ Human reviewer approves
+- ✅ PR merged by human
+- ✅ Jira ticket updated to "Done"
+
+### References
+
+- **Full Policy**: `Docs/CODE_REVIEW_POLICY.md`
+- **CODEOWNERS**: `.github/CODEOWNERS`
+- **PR Template**: `.github/PULL_REQUEST_TEMPLATE.md`
+- **Service Dependencies**: `Docs/SERVICE_DEPENDENCY_DIAGRAM.md` (check for circular deps)
+- **Event Schemas**: `Docs/EVENT_SCHEMA_REGISTRY.md`
+
+---
+
 ## 🤖 AGENT ROLE DEFINITIONS
 
 ### You Are One of These Agents:
