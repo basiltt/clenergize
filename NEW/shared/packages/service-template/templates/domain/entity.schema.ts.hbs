@@ -1,0 +1,81 @@
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+
+export type {{entityNameCapitalized}}Document = {{entityNameCapitalized}} & Document;
+
+/**
+ * {{entityNameCapitalized}} Entity
+ *
+ * Core domain entity for {{serviceName}}
+ */
+@Schema({
+  timestamps: true,
+  collection: '{{entityNamePlural}}',
+})
+export class {{entityNameCapitalized}} {
+  _id: Types.ObjectId;
+
+  @Prop({ required: true, trim: true, index: true })
+  name: string;
+
+  @Prop({ required: true, enum: ['active', 'inactive', 'deleted'], default: 'active' })
+  status: string;
+
+  @Prop({ type: Object, default: {} })
+  metadata: Record<string, any>;
+
+  @Prop({ index: true })
+  organizationId: string;
+
+  @Prop()
+  description?: string;
+
+  @Prop()
+  createdBy: string;
+
+  @Prop()
+  updatedBy?: string;
+
+  @Prop()
+  deletedAt?: Date;
+
+  // Timestamps
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export const {{entityNameCapitalized}}Schema = SchemaFactory.createForClass({{entityNameCapitalized}});
+
+// Indexes
+{{entityNameCapitalized}}Schema.index({ name: 1, organizationId: 1 }, { unique: true });
+{{entityNameCapitalized}}Schema.index({ status: 1, createdAt: -1 });
+{{entityNameCapitalized}}Schema.index({ '$**': 'text' }); // Text search
+
+// Virtual properties
+{{entityNameCapitalized}}Schema.virtual('isActive').get(function () {
+  return this.status === 'active';
+});
+
+// Hooks
+{{entityNameCapitalized}}Schema.pre('save', function (next) {
+  if (this.isNew) {
+    this.createdAt = new Date();
+  }
+  this.updatedAt = new Date();
+  next();
+});
+
+// Methods
+{{entityNameCapitalized}}Schema.methods.softDelete = function () {
+  this.status = 'deleted';
+  this.deletedAt = new Date();
+  return this.save();
+};
+
+{{entityNameCapitalized}}Schema.methods.toJSON = function () {
+  const obj = this.toObject();
+  obj.id = obj._id;
+  delete obj._id;
+  delete obj.__v;
+  return obj;
+};

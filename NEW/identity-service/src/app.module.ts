@@ -10,11 +10,11 @@ import { AuthController } from './infrastructure/http/controllers/auth.controlle
 import { AuthService } from './application/services/auth.service';
 import { UserRepository } from './infrastructure/database/repositories/user.repository';
 import { User, UserSchema } from './domain/entities/user.entity';
-import { PasswordService, JwtAuthGuard, JwtStrategy } from '@clenergize/auth-lib';
-import { ConfigService as ClenergizeConfigService, IdentityServiceConfigSchema } from '@clenergize/config-lib';
+import { PasswordService } from '@clenergize/auth-lib';
 import { EventBridgeEventBus } from '@clenergize/event-lib';
 import { APP_GUARD, Reflector } from '@nestjs/core';
-import { LocalJwtGuard } from './infrastructure/auth/local-jwt.guard';
+import { JwksService } from './infrastructure/auth/jwks.service';
+import { JwksAuthGuard, RolesGuard } from './infrastructure/auth/jwks-auth.guard';
 import { CorrelationService } from './shared/correlation/correlation.service';
 import { CorrelationMiddleware } from './infrastructure/http/middleware/correlation.middleware';
 
@@ -43,16 +43,39 @@ import { CorrelationMiddleware } from './infrastructure/http/middleware/correlat
     // Passport module
     PassportModule,
 
-    // JWT module
+    // JWT module - configured for RS256 with JWKS
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'dev-secret-change-in-production',
-        signOptions: {
-          expiresIn: '1h',
-          issuer: configService.get<string>('JWT_ISSUER') || 'clenergize-identity',
-        },
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const privateKey = configService.get<string>('JWT_PRIVATE_KEY');
+        const useJwks = !!configService.get<string>('JWKS_URI') || !!privateKey;
+
+        // Use RS256 if we have JWKS or private key, otherwise fallback to HS256 for dev
+        if (useJwks && privateKey) {
+          return {
+            privateKey,
+            publicKey: configService.get<string>('JWT_PUBLIC_KEY'),
+            signOptions: {
+              algorithm: 'RS256',
+              expiresIn: '1h',
+              issuer: configService.get<string>('JWT_ISSUER') || 'clenergize-identity',
+              audience: configService.get<string>('JWT_AUDIENCE') || 'clenergize-api',
+              keyid: configService.get<string>('JWT_KEY_ID') || 'dev-key',
+            },
+          };
+        }
+
+        // Fallback for initial development (should be replaced with RS256)
+        console.warn('⚠️  Using HS256 for JWT signing. Run "npm run generate-keys" to create RSA keys.');
+        return {
+          secret: configService.get<string>('JWT_SECRET') || 'temporary-dev-secret-run-generate-keys',
+          signOptions: {
+            algorithm: 'HS256',
+            expiresIn: '1h',
+            issuer: configService.get<string>('JWT_ISSUER') || 'clenergize-identity',
+          },
+        };
+      },
       inject: [ConfigService],
     }),
 
@@ -72,23 +95,20 @@ import { CorrelationMiddleware } from './infrastructure/http/middleware/correlat
     AuthService,
     UserRepository,
     PasswordService,
-    LocalJwtGuard,
+    JwksService,
+    JwksAuthGuard,
+    RolesGuard,
     Reflector,
     CorrelationService,
+    // Global authentication guard
     {
-      provide: 'JWT_CONFIG',
-      useFactory: (configService: ConfigService) => ({
-        jwksUri: configService.get<string>('JWKS_URI'),
-        issuer: configService.get<string>('JWT_ISSUER') || 'clenergize-identity',
-        audience: configService.get<string>('JWT_AUDIENCE') || 'clenergize-api',
-        secret: configService.get<string>('JWT_SECRET') || 'dev-jwt-secret-change-in-production-12345678',
-      }),
-      inject: [ConfigService],
+      provide: APP_GUARD,
+      useClass: JwksAuthGuard,
     },
+    // Global roles guard (runs after auth guard)
     {
-      provide: JwtStrategy,
-      useFactory: (jwtConfig: any) => new JwtStrategy(jwtConfig),
-      inject: ['JWT_CONFIG'],
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
     {
       provide: EventBridgeEventBus,

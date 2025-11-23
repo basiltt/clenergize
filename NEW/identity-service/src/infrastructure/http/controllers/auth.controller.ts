@@ -5,7 +5,6 @@ import {
   HttpCode,
   HttpStatus,
   Ip,
-  UseGuards,
   Get,
   Request,
 } from '@nestjs/common';
@@ -19,8 +18,7 @@ import {
   RefreshTokenDto,
   ChangePasswordDto,
 } from '../../../application/dtos/auth.dto';
-import { Public } from '@clenergize/auth-lib';
-import { LocalJwtGuard } from '../../auth/local-jwt.guard';
+import { Public } from '../../auth/jwks-auth.guard';
 
 @ApiTags('Authentication')
 @Controller('api/v1/auth')
@@ -68,7 +66,6 @@ export class AuthController {
     return this.authService.login(loginDto, ipAddress);
   }
 
-  @UseGuards(LocalJwtGuard)
   @ApiBearerAuth()
   @Get('me')
   @ApiOperation({ summary: 'Get current user profile' })
@@ -86,7 +83,6 @@ export class AuthController {
     return req.user;
   }
 
-  @UseGuards(LocalJwtGuard)
   @ApiBearerAuth()
   @Post('change-password')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -131,7 +127,6 @@ export class AuthController {
     throw new Error('Not implemented yet');
   }
 
-  @UseGuards(LocalJwtGuard)
   @ApiBearerAuth()
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)

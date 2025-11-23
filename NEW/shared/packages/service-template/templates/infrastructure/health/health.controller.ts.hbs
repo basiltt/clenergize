@@ -1,0 +1,154 @@
+import { Controller, Get } from '@nestjs/common';
+import {
+  HealthCheck,
+  HealthCheckService,
+  MongooseHealthIndicator,
+  MemoryHealthIndicator,
+  DiskHealthIndicator,
+} from '@nestjs/terminus';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Public } from '../decorators/public.decorator';
+import { RedisHealthIndicator } from './redis-health.indicator';
+import { ServiceHealthIndicator } from './service-health.indicator';
+
+/**
+ * Health check controller
+ *
+ * Provides comprehensive health status for the service
+ */
+@ApiTags('health')
+@Controller('health')
+export class HealthController {
+  constructor(
+    private health: HealthCheckService,
+    private mongoose: MongooseHealthIndicator,
+    private memory: MemoryHealthIndicator,
+    private disk: DiskHealthIndicator,
+    private redis: RedisHealthIndicator,
+    private service: ServiceHealthIndicator,
+  ) {}
+
+  /**
+   * Basic health check
+   */
+  @Get()
+  @Public()
+  @ApiOperation({ summary: 'Basic health check' })
+  @ApiResponse({ status: 200, description: 'Service is healthy' })
+  async check() {
+    return {
+      status: 'ok',
+      service: '{{serviceName}}',
+      version: process.env.VERSION || '1.0.0',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+    };
+  }
+
+  /**
+   * Liveness probe for Kubernetes
+   */
+  @Get('live')
+  @Public()
+  @HealthCheck()
+  @ApiOperation({ summary: 'Liveness probe' })
+  @ApiResponse({ status: 200, description: 'Service is alive' })
+  async liveness() {
+    return this.health.check([
+      () => this.memory.checkHeap('memory_heap', 512 * 1024 * 1024), // 512MB
+      () => this.memory.checkRSS('memory_rss', 768 * 1024 * 1024), // 768MB
+    ]);
+  }
+
+  /**
+   * Readiness probe for Kubernetes
+   */
+  @Get('ready')
+  @Public()
+  @HealthCheck()
+  @ApiOperation({ summary: 'Readiness probe' })
+  @ApiResponse({ status: 200, description: 'Service is ready' })
+  @ApiResponse({ status: 503, description: 'Service is not ready' })
+  async readiness() {
+    return this.health.check([
+      () => this.mongoose.pingCheck('mongodb'),
+      () => this.redis.isHealthy('redis'),
+      () => this.service.isHealthy('service-dependencies'),
+    ]);
+  }
+
+  /**
+   * Detailed health check
+   */
+  @Get('details')
+  @Public()
+  @HealthCheck()
+  @ApiOperation({ summary: 'Detailed health check' })
+  @ApiResponse({ status: 200, description: 'Detailed health status' })
+  @ApiResponse({ status: 503, description: 'One or more checks failed' })
+  async detailed() {
+    return this.health.check([
+      // Database
+      () => this.mongoose.pingCheck('mongodb', { timeout: 3000 }),
+
+      // Cache
+      () => this.redis.isHealthy('redis-cache'),
+
+      // Memory
+      () => this.memory.checkHeap('memory_heap', 512 * 1024 * 1024),
+      () => this.memory.checkRSS('memory_rss', 768 * 1024 * 1024),
+
+      // Disk
+      () =>
+        this.disk.checkStorage('disk_storage', {
+          path: '/',
+          thresholdPercent: 0.9, // 90% threshold
+        }),
+
+      // External services
+      () => this.service.isHealthy('identity-service'),
+      () => this.service.isHealthy('event-bus'),
+    ]);
+  }
+
+  /**
+   * Metrics endpoint
+   */
+  @Get('metrics')
+  @Public()
+  @ApiOperation({ summary: 'Service metrics' })
+  @ApiResponse({ status: 200, description: 'Service metrics' })
+  async metrics() {
+    const memoryUsage = process.memoryUsage();
+    const cpuUsage = process.cpuUsage();
+
+    return {
+      service: '{{serviceName}}',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: {
+        rss: memoryUsage.rss,
+        heapTotal: memoryUsage.heapTotal,
+        heapUsed: memoryUsage.heapUsed,
+        external: memoryUsage.external,
+        arrayBuffers: memoryUsage.arrayBuffers,
+      },
+      cpu: {
+        user: cpuUsage.user,
+        system: cpuUsage.system,
+      },
+      process: {
+        pid: process.pid,
+        version: process.version,
+        platform: process.platform,
+        arch: process.arch,
+      },
+      environment: {
+        nodeEnv: process.env.NODE_ENV,
+        port: process.env.PORT,
+        service: process.env.SERVICE_NAME,
+      },
+    };
+  }
+}

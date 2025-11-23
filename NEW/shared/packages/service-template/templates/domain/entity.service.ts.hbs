@@ -1,0 +1,245 @@
+import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
+import { EventBusService } from '@clenergize/event-bus';
+import { MongooseUnitOfWorkFactory } from '@clenergize/repository';
+import { {{entityNameCapitalized}}Repository } from './{{entityName}}.repository';
+import { Create{{entityNameCapitalized}}Dto } from './dto/create-{{entityName}}.dto';
+import { Update{{entityNameCapitalized}}Dto } from './dto/update-{{entityName}}.dto';
+import { {{entityNameCapitalized}}Document } from './{{entityName}}.schema';
+
+/**
+ * Service for {{entityNameCapitalized}} business logic
+ */
+@Injectable()
+export class {{entityNameCapitalized}}Service {
+  private readonly logger = new Logger({{entityNameCapitalized}}Service.name);
+
+  constructor(
+    private readonly {{entityName}}Repository: {{entityNameCapitalized}}Repository,
+    private readonly unitOfWorkFactory: MongooseUnitOfWorkFactory,
+    private readonly eventBus: EventBusService,
+  ) {}
+
+  /**
+   * Create a new {{entityName}}
+   */
+  async create(
+    dto: Create{{entityNameCapitalized}}Dto,
+    userId: string,
+  ): Promise<{{entityNameCapitalized}}Document> {
+    this.logger.log(`Creating {{entityName}}: ${dto.name}`);
+
+    // Check for duplicates
+    const existing = await this.{{entityName}}Repository.findByNameAndOrganization(
+      dto.name,
+      dto.organizationId,
+    );
+
+    if (existing) {
+      throw new ConflictException(`{{entityNameCapitalized}} with name "${dto.name}" already exists`);
+    }
+
+    // Create with transaction
+    const unitOfWork = await this.unitOfWorkFactory.create();
+
+    const {{entityName}} = await unitOfWork.execute(async (uow) => {
+      const session = uow.getSession();
+
+      const created = await this.{{entityName}}Repository.create(
+        {
+          ...dto,
+          createdBy: userId,
+        },
+        { session },
+      );
+
+      // Publish event
+      await this.eventBus.publish({
+        type: '{{serviceName}}.{{entityName}}.created.v1',
+        payload: {
+          {{entityName}}Id: created.id,
+          name: created.name,
+          organizationId: created.organizationId,
+          createdBy: userId,
+        },
+      });
+
+      return created;
+    });
+
+    this.logger.log(`{{entityNameCapitalized}} created: ${{{entityName}}.id}`);
+    return {{entityName}};
+  }
+
+  /**
+   * Find a {{entityName}} by ID
+   */
+  async findById(id: string): Promise<{{entityNameCapitalized}}Document> {
+    const {{entityName}} = await this.{{entityName}}Repository.findById(id);
+
+    if (!{{entityName}} || {{entityName}}.status === 'deleted') {
+      throw new NotFoundException(`{{entityNameCapitalized}} not found: ${id}`);
+    }
+
+    return {{entityName}};
+  }
+
+  /**
+   * Find all {{entityNamePlural}}
+   */
+  async findAll(
+    organizationId?: string,
+    status?: string,
+  ): Promise<{{entityNameCapitalized}}Document[]> {
+    const filter: any = {};
+
+    if (organizationId) {
+      filter.organizationId = organizationId;
+    }
+
+    if (status) {
+      filter.status = status;
+    } else {
+      filter.status = { $ne: 'deleted' };
+    }
+
+    return await this.{{entityName}}Repository.findMany(filter, {
+      sort: '-createdAt',
+    });
+  }
+
+  /**
+   * Update a {{entityName}}
+   */
+  async update(
+    id: string,
+    dto: Update{{entityNameCapitalized}}Dto,
+    userId: string,
+  ): Promise<{{entityNameCapitalized}}Document> {
+    this.logger.log(`Updating {{entityName}}: ${id}`);
+
+    const {{entityName}} = await this.findById(id);
+
+    // Check for name conflicts if name is being changed
+    if (dto.name && dto.name !== {{entityName}}.name) {
+      const existing = await this.{{entityName}}Repository.findByNameAndOrganization(
+        dto.name,
+        {{entityName}}.organizationId,
+      );
+
+      if (existing) {
+        throw new ConflictException(`{{entityNameCapitalized}} with name "${dto.name}" already exists`);
+      }
+    }
+
+    const updated = await this.{{entityName}}Repository.updateById(id, {
+      ...dto,
+      updatedBy: userId,
+    });
+
+    if (!updated) {
+      throw new NotFoundException(`{{entityNameCapitalized}} not found: ${id}`);
+    }
+
+    // Publish event
+    await this.eventBus.publish({
+      type: '{{serviceName}}.{{entityName}}.updated.v1',
+      payload: {
+        {{entityName}}Id: updated.id,
+        changes: dto,
+        updatedBy: userId,
+      },
+    });
+
+    this.logger.log(`{{entityNameCapitalized}} updated: ${id}`);
+    return updated;
+  }
+
+  /**
+   * Delete a {{entityName}} (soft delete)
+   */
+  async delete(id: string, userId: string): Promise<void> {
+    this.logger.log(`Deleting {{entityName}}: ${id}`);
+
+    const {{entityName}} = await this.findById(id);
+
+    await this.{{entityName}}Repository.softDelete(id);
+
+    // Publish event
+    await this.eventBus.publish({
+      type: '{{serviceName}}.{{entityName}}.deleted.v1',
+      payload: {
+        {{entityName}}Id: id,
+        deletedBy: userId,
+      },
+    });
+
+    this.logger.log(`{{entityNameCapitalized}} deleted: ${id}`);
+  }
+
+  /**
+   * Search {{entityNamePlural}}
+   */
+  async search(
+    query: string,
+    organizationId?: string,
+  ): Promise<{{entityNameCapitalized}}Document[]> {
+    return await this.{{entityName}}Repository.search(query, organizationId);
+  }
+
+  /**
+   * Get statistics
+   */
+  async getStatistics(organizationId?: string): Promise<any> {
+    return await this.{{entityName}}Repository.getStatistics(organizationId);
+  }
+
+  /**
+   * Bulk import {{entityNamePlural}}
+   */
+  async bulkImport(
+    data: Create{{entityNameCapitalized}}Dto[],
+    userId: string,
+  ): Promise<{ successful: number; failed: number }> {
+    this.logger.log(`Bulk importing ${data.length} {{entityNamePlural}}`);
+
+    const unitOfWork = await this.unitOfWorkFactory.create();
+
+    const result = await unitOfWork.execute(async (uow) => {
+      const session = uow.getSession();
+      let successful = 0;
+      let failed = 0;
+
+      for (const item of data) {
+        try {
+          await this.{{entityName}}Repository.create(
+            {
+              ...item,
+              createdBy: userId,
+            },
+            { session },
+          );
+          successful++;
+        } catch (error) {
+          this.logger.error(`Failed to import {{entityName}}: ${item.name}`, error);
+          failed++;
+        }
+      }
+
+      // Publish bulk event
+      await this.eventBus.publish({
+        type: '{{serviceName}}.{{entityName}}.bulk-imported.v1',
+        payload: {
+          total: data.length,
+          successful,
+          failed,
+          importedBy: userId,
+        },
+      });
+
+      return { successful, failed };
+    });
+
+    this.logger.log(`Bulk import completed: ${result.successful} successful, ${result.failed} failed`);
+    return result;
+  }
+}

@@ -1,0 +1,57 @@
+import { Injectable } from '@nestjs/common';
+import {
+  HealthIndicator,
+  HealthIndicatorResult,
+  HealthCheckError,
+} from '@nestjs/terminus';
+import { RedisService } from '@clenergize/event-bus';
+
+/**
+ * Health indicator for Redis connection
+ */
+@Injectable()
+export class RedisHealthIndicator extends HealthIndicator {
+  constructor(private readonly redisService: RedisService) {
+    super();
+  }
+
+  /**
+   * Check Redis health
+   */
+  async isHealthy(key: string): Promise<HealthIndicatorResult> {
+    try {
+      const start = Date.now();
+
+      // Ping Redis
+      await this.redisService.ping();
+
+      // Test write/read
+      const testKey = `health:${Date.now()}`;
+      const testValue = 'test';
+
+      await this.redisService.set(testKey, testValue, 1); // 1 second TTL
+      const readValue = await this.redisService.get(testKey);
+
+      if (readValue !== testValue) {
+        throw new Error('Redis read/write test failed');
+      }
+
+      const responseTime = Date.now() - start;
+
+      return this.getStatus(key, true, {
+        status: 'connected',
+        responseTime: `${responseTime}ms`,
+        type: 'redis',
+      });
+    } catch (error) {
+      throw new HealthCheckError(
+        'Redis health check failed',
+        this.getStatus(key, false, {
+          status: 'disconnected',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          type: 'redis',
+        })
+      );
+    }
+  }
+}

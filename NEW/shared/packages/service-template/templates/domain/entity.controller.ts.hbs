@@ -1,0 +1,231 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { {{entityNameCapitalized}}Service } from './{{entityName}}.service';
+import { Create{{entityNameCapitalized}}Dto } from './dto/create-{{entityName}}.dto';
+import { Update{{entityNameCapitalized}}Dto } from './dto/update-{{entityName}}.dto';
+import { {{entityNameCapitalized}}ResponseDto } from './dto/{{entityName}}-response.dto';
+import { CurrentUser } from '../../infrastructure/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
+import { RolesGuard } from '../../infrastructure/auth/roles.guard';
+import { Roles } from '../../infrastructure/decorators/roles.decorator';
+
+/**
+ * Controller for {{entityNameCapitalized}} management
+ */
+@ApiTags('{{entityNamePlural}}')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('{{entityNamePlural}}')
+export class {{entityNameCapitalized}}Controller {
+  constructor(private readonly {{entityName}}Service: {{entityNameCapitalized}}Service) {}
+
+  /**
+   * Create a new {{entityName}}
+   */
+  @Post()
+  @Roles('admin', 'editor')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a new {{entityName}}' })
+  @ApiResponse({
+    status: 201,
+    description: '{{entityNameCapitalized}} created successfully',
+    type: {{entityNameCapitalized}}ResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  @ApiResponse({ status: 409, description: '{{entityNameCapitalized}} already exists' })
+  async create(
+    @Body() dto: Create{{entityNameCapitalized}}Dto,
+    @CurrentUser() user: any,
+  ): Promise<{{entityNameCapitalized}}ResponseDto> {
+    const {{entityName}} = await this.{{entityName}}Service.create(dto, user.id);
+    return this.toResponse({{entityName}});
+  }
+
+  /**
+   * Get all {{entityNamePlural}}
+   */
+  @Get()
+  @Roles('admin', 'editor', 'viewer')
+  @ApiOperation({ summary: 'Get all {{entityNamePlural}}' })
+  @ApiQuery({
+    name: 'organizationId',
+    required: false,
+    description: 'Filter by organization',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['active', 'inactive'],
+    description: 'Filter by status',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of {{entityNamePlural}}',
+    type: [{{entityNameCapitalized}}ResponseDto],
+  })
+  async findAll(
+    @Query('organizationId') organizationId?: string,
+    @Query('status') status?: string,
+  ): Promise<{{entityNameCapitalized}}ResponseDto[]> {
+    const {{entityNamePlural}} = await this.{{entityName}}Service.findAll(organizationId, status);
+    return {{entityNamePlural}}.map(this.toResponse);
+  }
+
+  /**
+   * Search {{entityNamePlural}}
+   */
+  @Get('search')
+  @Roles('admin', 'editor', 'viewer')
+  @ApiOperation({ summary: 'Search {{entityNamePlural}} by text' })
+  @ApiQuery({
+    name: 'q',
+    required: true,
+    description: 'Search query',
+  })
+  @ApiQuery({
+    name: 'organizationId',
+    required: false,
+    description: 'Filter by organization',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Search results',
+    type: [{{entityNameCapitalized}}ResponseDto],
+  })
+  async search(
+    @Query('q') query: string,
+    @Query('organizationId') organizationId?: string,
+  ): Promise<{{entityNameCapitalized}}ResponseDto[]> {
+    const results = await this.{{entityName}}Service.search(query, organizationId);
+    return results.map(this.toResponse);
+  }
+
+  /**
+   * Get statistics
+   */
+  @Get('statistics')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Get {{entityName}} statistics' })
+  @ApiQuery({
+    name: 'organizationId',
+    required: false,
+    description: 'Filter by organization',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Statistics',
+  })
+  async getStatistics(
+    @Query('organizationId') organizationId?: string,
+  ): Promise<any> {
+    return await this.{{entityName}}Service.getStatistics(organizationId);
+  }
+
+  /**
+   * Get a {{entityName}} by ID
+   */
+  @Get(':id')
+  @Roles('admin', 'editor', 'viewer')
+  @ApiOperation({ summary: 'Get a {{entityName}} by ID' })
+  @ApiResponse({
+    status: 200,
+    description: '{{entityNameCapitalized}} details',
+    type: {{entityNameCapitalized}}ResponseDto,
+  })
+  @ApiResponse({ status: 404, description: '{{entityNameCapitalized}} not found' })
+  async findById(@Param('id') id: string): Promise<{{entityNameCapitalized}}ResponseDto> {
+    const {{entityName}} = await this.{{entityName}}Service.findById(id);
+    return this.toResponse({{entityName}});
+  }
+
+  /**
+   * Update a {{entityName}}
+   */
+  @Put(':id')
+  @Roles('admin', 'editor')
+  @ApiOperation({ summary: 'Update a {{entityName}}' })
+  @ApiResponse({
+    status: 200,
+    description: '{{entityNameCapitalized}} updated successfully',
+    type: {{entityNameCapitalized}}ResponseDto,
+  })
+  @ApiResponse({ status: 404, description: '{{entityNameCapitalized}} not found' })
+  @ApiResponse({ status: 409, description: 'Name conflict' })
+  async update(
+    @Param('id') id: string,
+    @Body() dto: Update{{entityNameCapitalized}}Dto,
+    @CurrentUser() user: any,
+  ): Promise<{{entityNameCapitalized}}ResponseDto> {
+    const {{entityName}} = await this.{{entityName}}Service.update(id, dto, user.id);
+    return this.toResponse({{entityName}});
+  }
+
+  /**
+   * Delete a {{entityName}}
+   */
+  @Delete(':id')
+  @Roles('admin')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a {{entityName}}' })
+  @ApiResponse({ status: 204, description: '{{entityNameCapitalized}} deleted successfully' })
+  @ApiResponse({ status: 404, description: '{{entityNameCapitalized}} not found' })
+  async delete(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ): Promise<void> {
+    await this.{{entityName}}Service.delete(id, user.id);
+  }
+
+  /**
+   * Bulk import {{entityNamePlural}}
+   */
+  @Post('bulk-import')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Bulk import {{entityNamePlural}}' })
+  @ApiResponse({
+    status: 200,
+    description: 'Import results',
+  })
+  async bulkImport(
+    @Body() data: Create{{entityNameCapitalized}}Dto[],
+    @CurrentUser() user: any,
+  ): Promise<{ successful: number; failed: number }> {
+    return await this.{{entityName}}Service.bulkImport(data, user.id);
+  }
+
+  /**
+   * Convert entity to response DTO
+   */
+  private toResponse(entity: any): {{entityNameCapitalized}}ResponseDto {
+    return {
+      id: entity.id || entity._id.toString(),
+      name: entity.name,
+      description: entity.description,
+      status: entity.status,
+      organizationId: entity.organizationId,
+      metadata: entity.metadata,
+      createdBy: entity.createdBy,
+      updatedBy: entity.updatedBy,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    };
+  }
+}

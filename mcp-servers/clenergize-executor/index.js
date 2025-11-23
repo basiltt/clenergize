@@ -31,6 +31,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
+import { SecureMongoParser } from './secure-mongo-parser.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -248,7 +249,7 @@ class ClenergizeExecutor {
     }
 
     /**
-     * ✅ SECURITY: Execute MongoDB query safely (NO eval!)
+     * ✅ SECURITY: Execute MongoDB query safely (NO eval, NO Function constructor!)
      */
     async executeMongo(queryString, options = {}) {
         const correlationId = options.correlationId || 'no-correlation-id';
@@ -261,20 +262,19 @@ class ClenergizeExecutor {
         const client = await this.connectMongo();
 
         try {
-            // ✅ SECURITY: Sanitize query first
-            const sanitized = this.sanitizeMongoQuery(queryString);
-
-            // ✅ SECURITY: Use Function constructor (more controlled than eval)
-            // Note: Still requires careful sanitization above
-            const executor = new Function('client', `return ${sanitized}`);
-            const resultPromise = executor(client);
+            // ✅ SECURITY: Use secure parser instead of dangerous Function constructor
+            const parser = new SecureMongoParser(client);
 
             // ✅ SECURITY: Add timeout protection
             const timeoutPromise = new Promise((_, reject) => {
                 setTimeout(() => reject(new Error('Query timeout exceeded')), this.execTimeout);
             });
 
-            const result = await Promise.race([resultPromise, timeoutPromise]);
+            // Execute query using secure parser
+            const result = await Promise.race([
+                parser.execute(queryString),
+                timeoutPromise
+            ]);
 
             // ✅ SECURITY: Serialize result safely (prevent prototype pollution)
             const safeResult = result ? JSON.parse(JSON.stringify(result)) : null;
@@ -349,7 +349,7 @@ class ClenergizeExecutor {
             });
 
             this.logger.info('Bash command succeeded', {
-                command: baseCommand,
+                command: sanitized.split(/\s+/)[0],  // Extract base command for logging
                 outputLength: stdout.length
             });
 
