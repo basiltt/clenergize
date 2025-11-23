@@ -75,7 +75,7 @@ This reduces context usage from 249k to ~30k tokens.
 > - Validate all user input before execution
 > - Use timeout limits on all operations
 >
-> See `Docs/MCP_EXECUTOR_GUIDE.md` for complete security implementation details.
+> See `Docs/SHARED/Development/01-Setup/03_MCP_Executor_Guide.md` for complete security implementation details.
 
 ### How to Use MCP Commands
 
@@ -153,7 +153,7 @@ execute({ action: 'test', content: 'security', options: { service: 'identity' }}
 
 **ZERO TRUST**: No code is merged without explicit human approval.
 
-**Policy**: See `Docs/CODE_REVIEW_POLICY.md` for complete requirements.
+**Policy**: See `Docs/REFERENCE/Governance/CODE_REVIEW_POLICY.md` for complete requirements.
 
 ### Agent Pull Request Workflow
 
@@ -281,11 +281,11 @@ Use `.github/PULL_REQUEST_TEMPLATE.md` for all PRs:
 
 ### References
 
-- **Full Policy**: `Docs/CODE_REVIEW_POLICY.md`
+- **Full Policy**: `Docs/REFERENCE/Governance/CODE_REVIEW_POLICY.md`
 - **CODEOWNERS**: `.github/CODEOWNERS`
 - **PR Template**: `.github/PULL_REQUEST_TEMPLATE.md`
-- **Service Dependencies**: `Docs/SERVICE_DEPENDENCY_DIAGRAM.md` (check for circular deps)
-- **Event Schemas**: `Docs/EVENT_SCHEMA_REGISTRY.md`
+- **Service Dependencies**: `Docs/SHARED/Architecture/06_Service_Dependencies.md` (check for circular deps)
+- **Event Schemas**: `Docs/REFERENCE/Event-Schemas/` (event registry)
 
 ---
 
@@ -531,7 +531,7 @@ Master Coordinator (Orchestrator)
 - **Special Case - Calculation Service**:
   - Use Opus 4.1 for complex emission algorithms
   - Use Opus 4.1 for aggregation optimization
-- **Context Files**: Service-specific specs in PHASE3_Service_Spec_*.md
+- **Context Files**: Service-specific specs in Docs/CURRENT/Services/
 - **Primary Tools**: `execute` with service-specific actions
 - **Port Assignment**:
   - Identity: 3001
@@ -545,21 +545,21 @@ Master Coordinator (Orchestrator)
 #### 11. Frontend Agent
 - **Model**: Claude Sonnet (Standard)
 - **Trigger**: UI components, state management, user experience
-- **Context Files**: PHASE9_Frontend_Adaptation_Plan.md
+- **Context Files**: Docs/CURRENT/Design/ (UI/UX specifications)
 - **Primary Tools**: `execute` with file and test actions
 - **Key Focus**: Accessibility (WCAG 2.1 Level AA)
 
 #### 12. DevOps/Infrastructure Agent
 - **Model**: Claude Sonnet (Standard)
 - **Trigger**: Docker, AWS, CI/CD, monitoring
-- **Context Files**: LOCAL_DEV_ENVIRONMENT_Updates.md
+- **Context Files**: Docs/SHARED/Development/01-Setup/ (Docker and infrastructure setup)
 - **Primary Tools**: `execute` with docker and aws actions
 - **Current Priority**: Docker Compose environment setup
 
 #### 13. Testing Agent
 - **Model**: Claude Sonnet (Standard)
 - **Trigger**: Test strategies, E2E tests, quality metrics
-- **Context Files**: PHASE5_SDLC_Quality_Strategy.md
+- **Context Files**: Docs/SHARED/Testing/ (Testing strategies and guides)
 - **Primary Tools**: `execute` with test actions
 - **Coverage Targets**: 80% unit, 70% integration
 
@@ -605,8 +605,63 @@ ClenergizeV3/
 │   └── clenergize-executor/  # Single MCP executor
 ├── docker-compose.dev.yml
 ├── Makefile
-└── Docs/                     # All documentation
+└── Docs/                     # All documentation (NEW 4-folder structure)
+    ├── CURRENT/              # ✅ Building NOW - Phase 1 (7 services)
+    ├── FUTURE/               # 📋 Planning ONLY - Phases 2-6 (43+ services)
+    ├── SHARED/               # 🔧 Applies to BOTH - Guides, standards
+    └── REFERENCE/            # 📚 Reference materials
 ```
+
+###📖 DOCUMENTATION STRUCTURE (CRITICAL FOR ALL AGENTS)
+
+**All agents MUST understand this structure before creating or modifying documentation.**
+
+#### Quick Reference
+
+```
+Docs/
+├── CURRENT/      ✅ Building NOW - Phase 1 (7 services, 12 weeks)
+├── FUTURE/       📋 Planning ONLY - Phases 2-6 (43+ services, NOT building)
+├── SHARED/       🔧 Applies to BOTH - Development guides, standards, testing
+└── REFERENCE/    📚 Reference materials - Event schemas, governance, archive
+```
+
+#### Folder Decision Matrix
+
+| Document Type | Use This Folder |
+|--------------|-----------------|
+| Service specs for Phase 1 (7 services) | CURRENT/Services/ |
+| Service specs for Phases 2-6 (43+ services) | FUTURE/Services/ |
+| Sprint plans and task checklists | CURRENT/Sprints/ |
+| Testing guides (unit, integration, E2E) | SHARED/Testing/ |
+| Deployment and CI/CD guides | SHARED/Deployment/ |
+| Security policies and compliance | SHARED/Security/ |
+| API design standards | SHARED/API/ |
+| Event schema definitions | REFERENCE/Event-Schemas/ |
+| Code review policy and PR templates | REFERENCE/Governance/ |
+| Historical/deprecated documents | REFERENCE/Archive/ |
+
+#### Agent Examples
+
+**Identity Agent implementing JWT**:
+- Service spec → `Docs/CURRENT/Services/identity-service.md`
+- Security policy → `Docs/SHARED/Security/01_Security_Overview.md`
+- Sprint task → `Docs/CURRENT/Sprints/Sprint_0.1/`
+
+**Testing Agent creating test guide**:
+- Test guide → `Docs/SHARED/Testing/02_Unit_Testing_Guide.md`
+- Service test cases → `Docs/CURRENT/Services/{service-name}.md`
+
+**Architecture Agent planning future water service**:
+- Service spec → `Docs/FUTURE/Services/water-service.md` (planning only, NOT building)
+
+**⚠️ Common Mistakes**:
+- ❌ WRONG: `CURRENT/Services/water-service.md` (water is Phase 2, not Phase 1)
+- ✅ RIGHT: `FUTURE/Services/water-service.md`
+- ❌ WRONG: `CURRENT/Testing/unit-testing.md` (testing guides apply to both)
+- ✅ RIGHT: `SHARED/Testing/02_Unit_Testing_Guide.md`
+
+**Complete Guide**: See `Docs/STRUCTURE_GUIDE.md` for detailed agent instructions.
 
 ### OLD → NEW Service Mapping
 
@@ -681,7 +736,7 @@ Swagger UI:             8080
 ### MCP Server Connections
 
 > **Important**: All connection strings MUST use environment variables.
-> See `Docs/ENVIRONMENT_CONFIGURATION_GUIDE.md` for complete .env setup.
+> See `Docs/SHARED/Development/01-Setup/01_Environment_Configuration.md` for complete .env setup.
 >
 > **STANDARD**: Always use `MONGODB_URI` (not `MONGO_URI`, `MONGO_URL`, or other variations)
 
@@ -1135,7 +1190,7 @@ pactWith({ consumer: 'OrganizationService', provider: 'IdentityService' }, (prov
 npm run test:pact:verify
 ```
 
-**Complete Implementation Guide**: See [Docs/PHASE5_SDLC_Quality_Strategy.md](Docs/PHASE5_SDLC_Quality_Strategy.md#contract-testing-with-pact) for:
+**Complete Implementation Guide**: See [Docs/SHARED/Testing/](Docs/SHARED/Testing/) for:
 - Consumer-driven contract workflow
 - Provider verification setup
 - CI/CD integration
@@ -1574,10 +1629,11 @@ make performance-test # Run performance tests
 
 ### Priority Reading Order
 1. **This file** (CLAUDE.md) - Always read first
-2. **Current Sprint** (SPRINT_0.1_Task_Checklist.md)
-3. **Your Service Spec** (PHASE3_Service_Spec_XX.md)
-4. **Architecture Overview** (PHASE2_Target_Architecture_Overview.md)
-5. **Security Requirements** (Security stories CLNZ-101 to CLNZ-108)
+2. **Documentation Structure** (Docs/STRUCTURE_GUIDE.md) - Understand folder structure
+3. **Current Sprint** (Docs/CURRENT/Sprints/Sprint_0.1/)
+4. **Your Service Spec** (Docs/CURRENT/Services/)
+5. **Architecture Overview** (Docs/SHARED/Getting-Started/03_Architecture_Summary.md)
+6. **Security Requirements** (Security stories CLNZ-101 to CLNZ-108 in JIRA)
 
 ### Quick Links
 - [Jira Board](https://yourcompany.atlassian.net/jira/software/projects/CLNZ)
