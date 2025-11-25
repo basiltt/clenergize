@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, develop, 'sprint/*']
+    branches: [main, develop, 'sprint/*', 'feature/*']
   pull_request:
     branches: [main, develop]
   workflow_dispatch:
@@ -269,7 +269,7 @@ jobs:
           done
 
       - name: Publish contracts to Pact Broker
-        if: github.ref == 'refs/heads/develop' && secrets.PACT_BROKER_TOKEN != ''
+        if: ${{ github.ref == 'refs/heads/develop' && secrets.PACT_BROKER_TOKEN != '' }}
         continue-on-error: true
         env:
           PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
