@@ -76,22 +76,46 @@ CLNZ-903: CLNZ-TBD  # Production Readiness
 > Alternatively, use Jira's REST API: `GET /rest/agile/1.0/board/{boardId}/sprint`
 
 ```yaml
-# Sprint IDs for CLNZ Project (Update these after creating sprints in Jira)
+# Sprint IDs for CLNZ Project (Created 2025-11-25)
 sprints:
   sprint_0.1:
-    name: "Sprint 0.1 - Infrastructure Foundation"
-    jira_sprint_id: null  # TODO: Update with actual Sprint ID from Jira
+    name: "Sprint 0.1 - Infrastructure"
+    jira_sprint_id: 35
     start_date: null
     end_date: null
 
   sprint_0.2:
-    name: "Sprint 0.2 - Security & Shared Libraries"
-    jira_sprint_id: null  # TODO: Update with actual Sprint ID from Jira
+    name: "Sprint 0.2 - Security"
+    jira_sprint_id: 36
+    start_date: null
+    end_date: null
+
+  sprint_1.1:
+    name: "Sprint 1.1 - Identity & Org"
+    jira_sprint_id: 37
+    start_date: null
+    end_date: null
+
+  sprint_1.2:
+    name: "Sprint 1.2 - Reference & Data"
+    jira_sprint_id: 38
+    start_date: null
+    end_date: null
+
+  sprint_1.3:
+    name: "Sprint 1.3 - Calc & Reports"
+    jira_sprint_id: 39
+    start_date: null
+    end_date: null
+
+  sprint_1.4:
+    name: "Sprint 1.4 - Audit & Integ"
+    jira_sprint_id: 40
     start_date: null
     end_date: null
 
 # Current active sprint for /pick-issue command
-active_sprint_id: null  # Set this to the jira_sprint_id of the current sprint
+active_sprint_id: 35  # Sprint 0.1 - Infrastructure
 ```
 
 ---
@@ -101,12 +125,12 @@ active_sprint_id: null  # Set this to the jira_sprint_id of the current sprint
 | Field | Value |
 |-------|-------|
 | **Sprint** | 0.1 |
-| **Sprint Name** | Infrastructure Foundation |
+| **Sprint Name** | Infrastructure |
 | **Epic** | CLNZ-E01 |
 | **Sprint Start** | TBD |
 | **Sprint End** | TBD |
 | **Velocity Target** | 50 SP |
-| **Jira Sprint ID** | TBD (Configure above) |
+| **Jira Sprint ID** | 35 |
 
 ---
 
