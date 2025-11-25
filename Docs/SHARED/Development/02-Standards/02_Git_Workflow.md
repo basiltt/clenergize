@@ -9,9 +9,9 @@ This document defines the Git workflow, branching strategy, and commit standards
 ```
 main (production)
 ├── develop (integration)
-│   ├── feature/SCRUM-XXX-description
-│   ├── bugfix/SCRUM-XXX-description
-│   ├── hotfix/SCRUM-XXX-description
+│   ├── feature/CLNZ-XXX-description
+│   ├── bugfix/CLNZ-XXX-description
+│   ├── hotfix/CLNZ-XXX-description
 │   └── release/vX.Y.Z
 ```
 
@@ -30,22 +30,22 @@ main (production)
 - **Deploy to**: Development environment
 
 #### `feature/*`
-- **Naming**: `feature/SCRUM-XXX-brief-description`
-- **Example**: `feature/SCRUM-101-jwt-verification`
+- **Naming**: `feature/CLNZ-XXX-brief-description`
+- **Example**: `feature/CLNZ-101-jwt-verification`
 - **Created from**: `develop`
 - **Merged to**: `develop`
 - **Lifetime**: Deleted after merge
 
 #### `bugfix/*`
-- **Naming**: `bugfix/SCRUM-XXX-brief-description`
-- **Example**: `bugfix/SCRUM-150-token-expiry`
+- **Naming**: `bugfix/CLNZ-XXX-brief-description`
+- **Example**: `bugfix/CLNZ-150-token-expiry`
 - **Created from**: `develop`
 - **Merged to**: `develop`
 - **Lifetime**: Deleted after merge
 
 #### `hotfix/*`
-- **Naming**: `hotfix/SCRUM-XXX-brief-description`
-- **Example**: `hotfix/SCRUM-200-critical-auth-bypass`
+- **Naming**: `hotfix/CLNZ-XXX-brief-description`
+- **Example**: `hotfix/CLNZ-200-critical-auth-bypass`
 - **Created from**: `main`
 - **Merged to**: `main` AND `develop`
 - **Lifetime**: Deleted after merge
@@ -104,7 +104,7 @@ git commit -m "feat(identity): implement JWKS-based JWT verification
 - Added token expiry and claims checking
 - Replaced jwt.decode with jwt.verify
 
-Resolves: SCRUM-101"
+Resolves: CLNZ-101"
 
 # Bug fix commit
 git commit -m "fix(calculation): correct emission factor multiplication
@@ -112,7 +112,7 @@ git commit -m "fix(calculation): correct emission factor multiplication
 - Fixed decimal precision issue in CO2 calculations
 - Added unit tests for edge cases
 
-Fixes: SCRUM-145"
+Fixes: CLNZ-145"
 
 # Documentation commit
 git commit -m "docs: update API documentation for v2 endpoints
@@ -139,7 +139,7 @@ git checkout develop
 git pull origin develop
 
 # Create feature branch
-git checkout -b feature/SCRUM-XXX-description
+git checkout -b feature/CLNZ-XXX-description
 
 # Update Jira
 # Move ticket to "In Progress"
@@ -160,7 +160,7 @@ git fetch origin
 git rebase origin/develop
 
 # Push to remote
-git push origin feature/SCRUM-XXX-description
+git push origin feature/CLNZ-XXX-description
 ```
 
 ### 3. Creating Pull Request
@@ -172,14 +172,14 @@ npm run test:e2e
 npm run security:scan
 
 # Push final changes
-git push origin feature/SCRUM-XXX-description
+git push origin feature/CLNZ-XXX-description
 
 # Create PR via GitHub
 ```
 
 #### PR Title Format
 ```
-[SCRUM-XXX] Brief description of changes
+[CLNZ-XXX] Brief description of changes
 ```
 
 #### PR Description Template
@@ -188,7 +188,7 @@ git push origin feature/SCRUM-XXX-description
 Brief description of what this PR does
 
 ## 🔗 Related Issue
-Resolves: SCRUM-XXX
+Resolves: CLNZ-XXX
 
 ## ✅ Changes Made
 - [ ] Change 1
@@ -236,10 +236,10 @@ Resolves: SCRUM-XXX
 # Use "Create a merge commit" for release/hotfix
 
 # Delete remote branch after merge
-git push origin --delete feature/SCRUM-XXX-description
+git push origin --delete feature/CLNZ-XXX-description
 
 # Delete local branch
-git branch -d feature/SCRUM-XXX-description
+git branch -d feature/CLNZ-XXX-description
 ```
 
 ## 🏷️ Tagging & Releases
@@ -289,25 +289,25 @@ git branch -d release/v1.0.0
 # Create from main
 git checkout main
 git pull origin main
-git checkout -b hotfix/SCRUM-XXX-critical-fix
+git checkout -b hotfix/CLNZ-XXX-critical-fix
 
 # Make fixes
 # Test thoroughly
 
 # Merge to main
 git checkout main
-git merge --no-ff hotfix/SCRUM-XXX-critical-fix
+git merge --no-ff hotfix/CLNZ-XXX-critical-fix
 git tag -a v1.0.1 -m "Hotfix: Critical security patch"
 
 # Merge to develop
 git checkout develop
-git merge --no-ff hotfix/SCRUM-XXX-critical-fix
+git merge --no-ff hotfix/CLNZ-XXX-critical-fix
 
 # Push changes
 git push origin main develop --tags
 
 # Delete hotfix branch
-git branch -d hotfix/SCRUM-XXX-critical-fix
+git branch -d hotfix/CLNZ-XXX-critical-fix
 ```
 
 ## 📊 Git Hooks (Pre-commit)
@@ -385,7 +385,7 @@ git branch --merged | grep -v "\*" | xargs -n 1 git branch -d
 git blame <file>
 
 # Search commits
-git log --grep="SCRUM-101"
+git log --grep="CLNZ-101"
 ```
 
 ## 📚 Additional Resources
@@ -399,11 +399,11 @@ git log --grep="SCRUM-101"
 
 | Action | Command |
 |--------|---------|
-| New feature | `git checkout -b feature/SCRUM-XXX-description` |
+| New feature | `git checkout -b feature/CLNZ-XXX-description` |
 | Commit feature | `git commit -m "feat(service): description"` |
-| New bugfix | `git checkout -b bugfix/SCRUM-XXX-description` |
+| New bugfix | `git checkout -b bugfix/CLNZ-XXX-description` |
 | Commit fix | `git commit -m "fix(service): description"` |
-| New hotfix | `git checkout -b hotfix/SCRUM-XXX-description` |
+| New hotfix | `git checkout -b hotfix/CLNZ-XXX-description` |
 | Update branch | `git rebase origin/develop` |
 | Create PR | Push branch and use GitHub UI |
 | Tag release | `git tag -a v1.0.0 -m "Release v1.0.0"` |

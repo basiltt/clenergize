@@ -37,7 +37,7 @@ This checklist ensures consistent, high-quality delivery for every story in the 
   ```bash
   git checkout develop
   git pull origin develop
-  git checkout -b feature/SCRUM-XXX-description
+  git checkout -b feature/CLNZ-XXX-description
   ```
 
 ## 💻 Development Checklist
@@ -154,7 +154,7 @@ This checklist ensures consistent, high-quality delivery for every story in the 
 
 ### PR Creation
 - [ ] **PR Details**
-    - [ ] Title format: `[SCRUM-XXX] Brief description`
+    - [ ] Title format: `[CLNZ-XXX] Brief description`
     - [ ] Description template filled
     - [ ] Jira ticket linked
     - [ ] Screenshots added (if UI changes)
@@ -167,7 +167,7 @@ This checklist ensures consistent, high-quality delivery for every story in the 
   [What this PR does]
   
   ## Related Issue
-  Resolves: SCRUM-XXX
+  Resolves: CLNZ-XXX
   
   ## Changes Made
   - Change 1
@@ -235,7 +235,7 @@ This checklist ensures consistent, high-quality delivery for every story in the 
   ```bash
   git checkout develop
   git pull origin develop
-  git branch -d feature/SCRUM-XXX-description
+  git branch -d feature/CLNZ-XXX-description
   ```
 
 - [ ] **Verification**

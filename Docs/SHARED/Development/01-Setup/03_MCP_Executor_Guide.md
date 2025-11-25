@@ -146,7 +146,7 @@ execute({ action: 'bash', content: 'git init' })
 execute({ action: 'git', content: 'status' })
 
 // Create and switch branch
-execute({ action: 'git', content: 'checkout -b feature/SCRUM-101-jwt-verification' })
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-101-jwt-verification' })
 
 // Add files
 execute({ action: 'bash', content: 'git add .' })
@@ -156,7 +156,7 @@ execute({ action: 'bash', content: 'git add NEW/identity-service/*' })
 execute({ action: 'bash', content: 'git commit -m "feat(identity): implement JWT verification with JWKS"' })
 
 // Push to remote
-execute({ action: 'git', content: 'push origin feature/SCRUM-101-jwt-verification' })
+execute({ action: 'git', content: 'push origin feature/CLNZ-101-jwt-verification' })
 
 // Pull latest changes
 execute({ action: 'git', content: 'pull origin develop' })
@@ -169,7 +169,7 @@ execute({
   action: 'github',
   content: 'create-pr',
   options: {
-    title: '[SCRUM-101] JWT Verification with JWKS',
+    title: '[CLNZ-101] JWT Verification with JWKS',
     body: `## Purpose
     Implements proper JWT verification using JWKS endpoint
     
@@ -183,9 +183,9 @@ execute({
     - Integration tests: ✅
     - Security scan: ✅
     
-    Resolves: SCRUM-101`,
+    Resolves: CLNZ-101`,
     base: 'develop',
-    head: 'feature/SCRUM-101-jwt-verification'
+    head: 'feature/CLNZ-101-jwt-verification'
   }
 })
 ```
@@ -195,12 +195,12 @@ Complete Jira integration:
 
 ```javascript
 // Update ticket status
-execute({ action: 'jira', content: 'SCRUM-101', options: { status: 'In Progress' }})
+execute({ action: 'jira', content: 'CLNZ-101', options: { status: 'In Progress' }})
 
 // Add comment
 execute({ 
   action: 'jira',
-  content: 'SCRUM-101',
+  content: 'CLNZ-101',
   options: { 
     comment: 'JWT implementation completed, tests passing, ready for review'
   }
@@ -209,7 +209,7 @@ execute({
 // Log work
 execute({ 
   action: 'jira',
-  content: 'SCRUM-101',
+  content: 'CLNZ-101',
   options: { 
     logWork: '4h',
     comment: 'Implemented JWT verification service and tests'
@@ -570,16 +570,16 @@ execute({ action: 'bash', content: 'cd NEW/identity-service && npm run format' }
 
 ## Sprint 0.1 Complete Workflow Example
 
-Here's the complete workflow for implementing JWT verification (SCRUM-101):
+Here's the complete workflow for implementing JWT verification (CLNZ-101):
 
 ```javascript
 // ========== Day 1: Start Development ==========
 
 // 1. Morning: Update Jira and create branch
-execute({ action: 'jira', content: 'SCRUM-101', options: { status: 'In Progress' }})
+execute({ action: 'jira', content: 'CLNZ-101', options: { status: 'In Progress' }})
 execute({ action: 'git', content: 'checkout develop' })
 execute({ action: 'git', content: 'pull origin develop' })
-execute({ action: 'git', content: 'checkout -b feature/SCRUM-101-jwt-verification' })
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-101-jwt-verification' })
 
 // 2. Generate identity service
 execute({ 
@@ -718,28 +718,28 @@ execute({ action: 'test', content: 'security', options: { service: 'identity' }}
 execute({ action: 'bash', content: 'git add .' })
 execute({ 
   action: 'bash',
-  content: 'git commit -m "feat(identity): implement JWT verification with JWKS\n\n- Added JwtVerificationService with JWKS support\n- Implemented RS256 algorithm validation\n- Added token expiry and claims checking\n- Replaced jwt.decode with jwt.verify\n- Added comprehensive security tests\n\nResolves: SCRUM-101"'
+  content: 'git commit -m "feat(identity): implement JWT verification with JWKS\n\n- Added JwtVerificationService with JWKS support\n- Implemented RS256 algorithm validation\n- Added token expiry and claims checking\n- Replaced jwt.decode with jwt.verify\n- Added comprehensive security tests\n\nResolves: CLNZ-101"'
 })
 
 // 9. Push to remote
-execute({ action: 'git', content: 'push origin feature/SCRUM-101-jwt-verification' })
+execute({ action: 'git', content: 'push origin feature/CLNZ-101-jwt-verification' })
 
 // 10. Create pull request
 execute({ 
   action: 'github',
   content: 'create-pr',
   options: {
-    title: '[SCRUM-101] JWT Verification with JWKS',
+    title: '[CLNZ-101] JWT Verification with JWKS',
     body: 'Implements secure JWT verification using JWKS endpoint',
     base: 'develop',
-    head: 'feature/SCRUM-101-jwt-verification'
+    head: 'feature/CLNZ-101-jwt-verification'
   }
 })
 
 // 11. Update Jira
 execute({ 
   action: 'jira',
-  content: 'SCRUM-101',
+  content: 'CLNZ-101',
   options: { 
     status: 'In Review',
     comment: 'Implementation complete, PR created, all tests passing'
@@ -749,7 +749,7 @@ execute({
 // ========== Day 2: After Code Review ==========
 
 // 1. Address review comments
-execute({ action: 'git', content: 'checkout feature/SCRUM-101-jwt-verification' })
+execute({ action: 'git', content: 'checkout feature/CLNZ-101-jwt-verification' })
 
 // 2. Make requested changes
 // ... implement changes ...
@@ -757,14 +757,14 @@ execute({ action: 'git', content: 'checkout feature/SCRUM-101-jwt-verification' 
 // 3. Commit fixes
 execute({ action: 'bash', content: 'git add .' })
 execute({ action: 'bash', content: 'git commit -m "fix: address PR review comments"' })
-execute({ action: 'git', content: 'push origin feature/SCRUM-101-jwt-verification' })
+execute({ action: 'git', content: 'push origin feature/CLNZ-101-jwt-verification' })
 
 // 4. After approval, merge PR
 execute({ 
   action: 'github',
   content: 'merge-pr',
   options: {
-    pr: 'SCRUM-101',
+    pr: 'CLNZ-101',
     method: 'squash'
   }
 })
@@ -772,7 +772,7 @@ execute({
 // 5. Update Jira to Done
 execute({ 
   action: 'jira',
-  content: 'SCRUM-101',
+  content: 'CLNZ-101',
   options: { 
     status: 'Done',
     comment: 'Merged to develop'
@@ -782,7 +782,7 @@ execute({
 // 6. Clean up branch
 execute({ action: 'git', content: 'checkout develop' })
 execute({ action: 'git', content: 'pull origin develop' })
-execute({ action: 'bash', content: 'git branch -d feature/SCRUM-101-jwt-verification' })
+execute({ action: 'bash', content: 'git branch -d feature/CLNZ-101-jwt-verification' })
 ```
 
 ## Troubleshooting

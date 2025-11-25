@@ -169,7 +169,7 @@ execute({ action: 'file', content: 'write', options: { path: 'path/to/file', dat
 execute({ action: 'mongodb', content: 'db("clenergize_identity").collection("users").find({})' })
 
 // Git operations
-execute({ action: 'git', content: 'checkout -b feature/SCRUM-101' })
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-101' })
 
 // Service generation
 execute({ action: 'generate-service', content: 'identity', options: { port: 3001 }})

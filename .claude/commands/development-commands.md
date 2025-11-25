@@ -104,7 +104,7 @@ execute({
 execute({ action: 'git', content: 'status' })
 
 // Create and switch to feature branch
-execute({ action: 'git', content: 'checkout -b feature/SCRUM-101-jwt-verification' })
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-101-jwt-verification' })
 
 // Switch branches
 execute({ action: 'git', content: 'checkout develop' })
@@ -134,10 +134,10 @@ execute({ action: 'bash', content: 'git commit --amend -m "feat(identity): imple
 ### Remote Operations
 ```javascript
 // Push to remote
-execute({ action: 'git', content: 'push origin feature/SCRUM-101-jwt-verification' })
+execute({ action: 'git', content: 'push origin feature/CLNZ-101-jwt-verification' })
 
 // Force push (use carefully)
-execute({ action: 'git', content: 'push -f origin feature/SCRUM-101-jwt-verification' })
+execute({ action: 'git', content: 'push -f origin feature/CLNZ-101-jwt-verification' })
 
 // Fetch remote changes
 execute({ action: 'git', content: 'fetch origin' })
@@ -147,10 +147,10 @@ execute({
   action: 'github',
   content: 'create-pr',
   options: {
-    title: '[SCRUM-101] JWT Verification with JWKS',
+    title: '[CLNZ-101] JWT Verification with JWKS',
     body: 'Implements proper JWT verification using JWKS endpoint',
     base: 'develop',
-    head: 'feature/SCRUM-101-jwt-verification'
+    head: 'feature/CLNZ-101-jwt-verification'
   }
 })
 ```
@@ -266,12 +266,12 @@ execute({ action: 'bash', content: 'docker-compose -f docker-compose.dev.yml ps'
 ### Ticket Management
 ```javascript
 // Update ticket status
-execute({ action: 'jira', content: 'SCRUM-101', options: { status: 'In Progress' }})
+execute({ action: 'jira', content: 'CLNZ-101', options: { status: 'In Progress' }})
 
 // Add comment to ticket
 execute({
   action: 'jira',
-  content: 'SCRUM-101',
+  content: 'CLNZ-101',
   options: {
     comment: 'JWT implementation completed, moving to testing phase'
   }
@@ -293,7 +293,7 @@ execute({
 // Assign ticket
 execute({
   action: 'jira',
-  content: 'SCRUM-101',
+  content: 'CLNZ-101',
   options: {
     assignee: 'developer@company.com'
   }
@@ -319,7 +319,7 @@ execute({
   content: 'sprint',
   options: {
     action: 'add-story',
-    story: 'SCRUM-102'
+    story: 'CLNZ-102'
   }
 })
 ```
@@ -588,7 +588,7 @@ execute({
 | Generate service | `execute({ action: 'generate-service', content: 'identity', options: { port: 3001 }})` |
 | Run tests | `execute({ action: 'test', content: 'unit', options: { service: 'identity' }})` |
 | Git commit | `execute({ action: 'bash', content: 'git add . && git commit -m "message"' })` |
-| Update Jira | `execute({ action: 'jira', content: 'SCRUM-101', options: { status: 'In Progress' }})` |
+| Update Jira | `execute({ action: 'jira', content: 'CLNZ-101', options: { status: 'In Progress' }})` |
 | MongoDB query | `execute({ action: 'mongodb', content: 'db("clenergize_identity").collection("users").find({})' })` |
 | Docker logs | `execute({ action: 'docker', content: 'logs container-name' })` |
 | Install packages | `execute({ action: 'bash', content: 'cd service && npm install' })` |

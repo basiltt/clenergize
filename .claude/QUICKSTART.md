@@ -42,14 +42,14 @@ execute({ action: 'bash', content: 'git remote add origin https://github.com/you
 
 ## 3. Quick Sprint 0.1 Start
 
-### JWT Implementation (SCRUM-101) - Quick Commands
+### JWT Implementation (CLNZ-101) - Quick Commands
 
 ```javascript
 // 1. Start work - Update Jira
-execute({ action: 'jira', content: 'SCRUM-101', options: { status: 'In Progress' }})
+execute({ action: 'jira', content: 'CLNZ-101', options: { status: 'In Progress' }})
 
 // 2. Create feature branch
-execute({ action: 'git', content: 'checkout -b feature/SCRUM-101-jwt' })
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-101-jwt' })
 
 // 3. Generate identity service
 execute({ action: 'generate-service', content: 'identity', options: { port: 3001 }})
@@ -64,10 +64,10 @@ execute({ action: 'test', content: 'all', options: { service: 'identity' }})
 execute({ action: 'bash', content: 'git add . && git commit -m "feat(identity): implement JWT verification with JWKS"' })
 
 // 7. Push and create PR
-execute({ action: 'git', content: 'push origin feature/SCRUM-101-jwt' })
+execute({ action: 'git', content: 'push origin feature/CLNZ-101-jwt' })
 
 // 8. Update Jira
-execute({ action: 'jira', content: 'SCRUM-101', options: { status: 'In Review' }})
+execute({ action: 'jira', content: 'CLNZ-101', options: { status: 'In Review' }})
 ```
 
 ## 4. Common Quick Commands
@@ -140,11 +140,11 @@ execute({ action: 'bash', content: 'docker-compose -f docker-compose.infra.yml d
 
 ### Week 1: Security Foundation
 
-#### Day 1-2: JWT Verification (SCRUM-101)
+#### Day 1-2: JWT Verification (CLNZ-101)
 ```javascript
 // Morning
-execute({ action: 'jira', content: 'SCRUM-101', options: { status: 'In Progress' }})
-execute({ action: 'git', content: 'checkout -b feature/SCRUM-101-jwt' })
+execute({ action: 'jira', content: 'CLNZ-101', options: { status: 'In Progress' }})
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-101-jwt' })
 execute({ action: 'generate-service', content: 'identity', options: { port: 3001 }})
 
 // Implement
@@ -155,15 +155,15 @@ execute({ action: 'test', content: 'all', options: { service: 'identity' }})
 
 // Complete
 execute({ action: 'bash', content: 'git add . && git commit -m "feat: JWT verification"' })
-execute({ action: 'git', content: 'push origin feature/SCRUM-101-jwt' })
-execute({ action: 'jira', content: 'SCRUM-101', options: { status: 'Done' }})
+execute({ action: 'git', content: 'push origin feature/CLNZ-101-jwt' })
+execute({ action: 'jira', content: 'CLNZ-101', options: { status: 'Done' }})
 ```
 
-#### Day 3-4: Secrets Management (SCRUM-102)
+#### Day 3-4: Secrets Management (CLNZ-102)
 ```javascript
 // Start
-execute({ action: 'jira', content: 'SCRUM-102', options: { status: 'In Progress' }})
-execute({ action: 'git', content: 'checkout -b feature/SCRUM-102-secrets' })
+execute({ action: 'jira', content: 'CLNZ-102', options: { status: 'In Progress' }})
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-102-secrets' })
 
 // Implement AWS Secrets Manager integration
 execute({ action: 'apply-skill', content: 'secrets-management', options: { service: 'all' }})
@@ -173,15 +173,15 @@ execute({ action: 'test', content: 'all', options: { service: 'identity' }})
 
 // Complete
 execute({ action: 'bash', content: 'git add . && git commit -m "feat: secrets management"' })
-execute({ action: 'git', content: 'push origin feature/SCRUM-102-secrets' })
-execute({ action: 'jira', content: 'SCRUM-102', options: { status: 'Done' }})
+execute({ action: 'git', content: 'push origin feature/CLNZ-102-secrets' })
+execute({ action: 'jira', content: 'CLNZ-102', options: { status: 'Done' }})
 ```
 
-#### Day 5: GitHub Actions (SCRUM-141)
+#### Day 5: GitHub Actions (CLNZ-141)
 ```javascript
 // Start
-execute({ action: 'jira', content: 'SCRUM-141', options: { status: 'In Progress' }})
-execute({ action: 'git', content: 'checkout -b feature/SCRUM-141-github-actions' })
+execute({ action: 'jira', content: 'CLNZ-141', options: { status: 'In Progress' }})
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-141-github-actions' })
 
 // Create CI/CD pipeline
 execute({
@@ -211,40 +211,40 @@ jobs:
 
 // Complete
 execute({ action: 'bash', content: 'git add . && git commit -m "ci: add GitHub Actions"' })
-execute({ action: 'git', content: 'push origin feature/SCRUM-141-github-actions' })
-execute({ action: 'jira', content: 'SCRUM-141', options: { status: 'Done' }})
+execute({ action: 'git', content: 'push origin feature/CLNZ-141-github-actions' })
+execute({ action: 'jira', content: 'CLNZ-141', options: { status: 'Done' }})
 ```
 
 ### Week 2: Core Services
 
-#### Day 6-7: Rate Limiting (SCRUM-103)
+#### Day 6-7: Rate Limiting (CLNZ-103)
 ```javascript
-execute({ action: 'jira', content: 'SCRUM-103', options: { status: 'In Progress' }})
-execute({ action: 'git', content: 'checkout -b feature/SCRUM-103-rate-limiting' })
+execute({ action: 'jira', content: 'CLNZ-103', options: { status: 'In Progress' }})
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-103-rate-limiting' })
 execute({ action: 'apply-skill', content: 'rate-limiting', options: { service: 'all' }})
 execute({ action: 'test', content: 'all', options: { service: 'identity' }})
 execute({ action: 'bash', content: 'git add . && git commit -m "feat: rate limiting"' })
-execute({ action: 'jira', content: 'SCRUM-103', options: { status: 'Done' }})
+execute({ action: 'jira', content: 'CLNZ-103', options: { status: 'Done' }})
 ```
 
-#### Day 8-9: Input Validation (SCRUM-104)
+#### Day 8-9: Input Validation (CLNZ-104)
 ```javascript
-execute({ action: 'jira', content: 'SCRUM-104', options: { status: 'In Progress' }})
-execute({ action: 'git', content: 'checkout -b feature/SCRUM-104-validation' })
+execute({ action: 'jira', content: 'CLNZ-104', options: { status: 'In Progress' }})
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-104-validation' })
 execute({ action: 'apply-skill', content: 'input-validation', options: { service: 'all' }})
 execute({ action: 'test', content: 'all', options: { service: 'identity' }})
 execute({ action: 'bash', content: 'git add . && git commit -m "feat: input validation"' })
-execute({ action: 'jira', content: 'SCRUM-104', options: { status: 'Done' }})
+execute({ action: 'jira', content: 'CLNZ-104', options: { status: 'Done' }})
 ```
 
-#### Day 10: Error Handling (SCRUM-105)
+#### Day 10: Error Handling (CLNZ-105)
 ```javascript
-execute({ action: 'jira', content: 'SCRUM-105', options: { status: 'In Progress' }})
-execute({ action: 'git', content: 'checkout -b feature/SCRUM-105-error-handling' })
+execute({ action: 'jira', content: 'CLNZ-105', options: { status: 'In Progress' }})
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-105-error-handling' })
 execute({ action: 'apply-skill', content: 'error-handling', options: { service: 'all' }})
 execute({ action: 'test', content: 'all', options: { service: 'identity' }})
 execute({ action: 'bash', content: 'git add . && git commit -m "feat: error handling"' })
-execute({ action: 'jira', content: 'SCRUM-105', options: { status: 'Done' }})
+execute({ action: 'jira', content: 'CLNZ-105', options: { status: 'Done' }})
 ```
 
 ## 6. Quick Debugging Commands
@@ -300,10 +300,10 @@ execute({ action: 'git', content: 'pull origin develop' })
 execute({ action: 'bash', content: 'docker-compose -f docker-compose.infra.yml up -d' })
 
 // 4. Pick up ticket
-execute({ action: 'jira', content: 'SCRUM-XXX', options: { status: 'In Progress' }})
+execute({ action: 'jira', content: 'CLNZ-XXX', options: { status: 'In Progress' }})
 
 // 5. Create feature branch
-execute({ action: 'git', content: 'checkout -b feature/SCRUM-XXX-description' })
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-XXX-description' })
 ```
 
 ### During Development
@@ -327,10 +327,10 @@ execute({ action: 'test', content: 'all', options: { service: 'identity' }})
 execute({ action: 'bash', content: 'git add . && git commit -m "feat: completed feature"' })
 
 // 3. Push to remote
-execute({ action: 'git', content: 'push origin feature/SCRUM-XXX-description' })
+execute({ action: 'git', content: 'push origin feature/CLNZ-XXX-description' })
 
 // 4. Update Jira
-execute({ action: 'jira', content: 'SCRUM-XXX', options: { comment: 'Progress update' }})
+execute({ action: 'jira', content: 'CLNZ-XXX', options: { comment: 'Progress update' }})
 
 // 5. Stop services (optional)
 execute({ action: 'bash', content: 'docker-compose -f docker-compose.infra.yml down' })
@@ -437,7 +437,7 @@ execute({ action: 'mongodb', content: 'db.dropDatabase()' })
 
 1. **Read**: [CLAUDE.md](.claude/CLAUDE.md) - Master configuration
 2. **Review**: [development-commands.md](.claude/commands/development-commands.md) - All available commands
-3. **Start**: Begin with JWT verification (SCRUM-101) above
+3. **Start**: Begin with JWT verification (CLNZ-101) above
 4. **Ask**: Use Master Coordinator for questions
 
 Ready to start development! 🚀
