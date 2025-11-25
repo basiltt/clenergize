@@ -1,0 +1,139 @@
+{
+  "// OPTIMIZATION GUIDE": {
+    "original_servers": 19,
+    "optimized_servers": 5,
+    "estimated_savings": "75-80% context reduction (~75k tokens saved)",
+    "instructions": "Copy mcpServers section to C:\\Users\\ttbasil\\.claude\\.claude.json"
+  },
+
+  "mcpServers": {
+    "// CORE - Always enabled (~12k tokens)": "-------------------------------------------",
+
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\ttbasil\\Desktop\\Projects\\FullStackProjects\\ClenergizeV3"
+      ],
+      "env": {},
+      "description": "Filesystem access for Clenergize V3 project"
+    },
+
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {},
+      "description": "Persistent context and memory across sessions"
+    },
+
+    "fetch": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_fetch"
+      ],
+      "env": {},
+      "description": "HTTP/HTTPS fetch for API documentation and web resources"
+    },
+
+    "// DATABASE - Single server replaces 8 MongoDB servers (~6k tokens vs ~48k)": "---",
+
+    "mongodb-general": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mongodb-mcp-server@latest",
+        "--readOnly"
+      ],
+      "env": {
+        "MDB_MCP_CONNECTION_STRING": "mongodb://admin:localdev123@localhost:27017/?authSource=admin"
+      },
+      "description": "MongoDB - use 'database' param: clenergize_identity, clenergize_organization, etc."
+    },
+
+    "// GITHUB - Keep for PR/commit management (~5k tokens)": "---",
+
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+      },
+      "description": "GitHub integration for clenergize-v3-rebuild repository"
+    }
+  },
+
+  "// DISABLED_SERVERS": {
+    "// Enable via /mcp command when needed": "---",
+
+    "_mongodb-identity": "CONSOLIDATED - Use mongodb-general with database: clenergize_identity",
+    "_mongodb-organization": "CONSOLIDATED - Use mongodb-general with database: clenergize_organization",
+    "_mongodb-reference": "CONSOLIDATED - Use mongodb-general with database: clenergize_reference",
+    "_mongodb-activity": "CONSOLIDATED - Use mongodb-general with database: clenergize_activity",
+    "_mongodb-calculation": "CONSOLIDATED - Use mongodb-general with database: clenergize_calculation",
+    "_mongodb-reporting": "CONSOLIDATED - Use mongodb-general with database: clenergize_reporting",
+    "_mongodb-audit": "CONSOLIDATED - Use mongodb-general with database: clenergize_audit",
+
+    "_atlassian": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse"],
+      "description": "Enable when working with Jira/Confluence"
+    },
+
+    "_redis": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-redis", "redis://localhost:6379"],
+      "description": "Enable when working with Redis cache"
+    },
+
+    "_localstack": {
+      "command": "npx",
+      "args": ["-y", "@localstack/localstack-mcp-server"],
+      "env": {
+        "AWS_ACCESS_KEY_ID": "test",
+        "AWS_SECRET_ACCESS_KEY": "test",
+        "AWS_REGION": "us-east-1",
+        "LOCALSTACK_ENDPOINT_URL": "http://localhost:4566"
+      },
+      "description": "Enable when working with AWS services"
+    },
+
+    "_sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "description": "Enable for complex problem-solving"
+    },
+
+    "_playwright": {
+      "command": "npx",
+      "args": ["-y", "@executeautomation/playwright-mcp-server"],
+      "description": "Enable for E2E testing"
+    },
+
+    "_docker": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-docker"],
+      "description": "Enable for container management"
+    },
+
+    "_time": {
+      "command": "npx",
+      "args": ["-y", "time-mcp"],
+      "description": "Enable when time utilities needed"
+    }
+  },
+
+  "// USAGE_INSTRUCTIONS": {
+    "step1": "Replace mcpServers in C:\\Users\\ttbasil\\.claude\\.claude.json with the optimized version above",
+    "step2": "Restart Claude Code",
+    "step3": "Use /mcp to toggle servers on/off during sessions",
+    "step4": "For MongoDB queries, specify database in the query: mcp__mongodb-general__find({ database: 'clenergize_identity', collection: 'users' })"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Identity Service Development profile (~20k tokens)",
+  "mcpServers": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-server-filesystem", "C:\\Users\\ttbasil\\Desktop\\Projects\\FullStackProjects\\ClenergizeV3"]
+    },
+    "mongodb-identity": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "mcp-mongo-server"],
+      "env": {
+        "MCP_MONGODB_URI": "mongodb://admin:localdev123@localhost:27017/clenergize_identity?authSource=admin",
+        "MCP_MONGODB_READONLY": "false"
+      }
+    },
+    "memory": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-server-memory"]
+    },
+    "fetch": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-server-fetch"]
+    }
+  }
+}
