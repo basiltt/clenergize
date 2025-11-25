@@ -61,103 +61,79 @@ Clenergize V3 is a comprehensive **Enterprise ESG Management Platform** covering
 5. ✅ IoT integration for real-time data
 6. ✅ Multi-framework reporting engine
 
-## 🔧 MCP EXECUTOR USAGE (NEW - Optimized Approach)
+## 🔧 MCP TOOLS (Direct Integration)
 
-As of Sprint 0.1, we use a single MCP executor following Anthropic's code execution pattern.
-This reduces context usage from 249k to ~30k tokens.
+Claude Opus 4.5 has native MCP tool management. All tools are configured in `~/.claude/.claude.json` and are available directly without a custom executor.
 
-> **🚨 CRITICAL SECURITY WARNING**
->
-> The MCP executor implementation MUST follow secure coding practices:
->
-> **NEVER use `eval()` for MongoDB queries** - This creates code injection vulnerabilities!
-> - ❌ WRONG: `const result = await eval(client.${query});`
-> - ✅ CORRECT: Use Function constructor with input sanitization
->
-> **ALWAYS use environment variables** - Never hardcode paths or credentials!
-> - ❌ WRONG: `this.projectRoot = 'C:\\Users\\...'`
-> - ✅ CORRECT: `this.projectRoot = process.env.PROJECT_ROOT`
->
-> **REQUIRED Environment Variables**:
-> - `PROJECT_ROOT` - Absolute path to project root
-> - `MONGODB_URI` - MongoDB connection string
-> - `JIRA_API_TOKEN` - Jira API authentication token
-> - `JIRA_EMAIL` - Jira user email
->
-> **Input Sanitization Requirements**:
-> - Maintain allowlist of permitted MongoDB operations
-> - Block dangerous patterns: `require()`, `import()`, `eval()`, `process.exit`
-> - Validate all user input before execution
-> - Use timeout limits on all operations
->
-> See `Docs/SHARED/Development/01-Setup/03_MCP_Executor_Guide.md` for complete security implementation details.
+### Available MCP Tools
 
-### How to Use MCP Commands
+| MCP Server | Purpose | Key Operations |
+|------------|---------|----------------|
+| **filesystem** | File system access | Read, write, list files in project |
+| **mongodb-general** | Admin MongoDB access | Cross-database queries, admin operations |
+| **mongodb-identity** | Identity service DB | Users, sessions, roles, permissions |
+| **mongodb-organization** | Organization service DB | Companies, projects, hierarchies |
+| **mongodb-reference** | Reference service DB | Emission factors, units, parameters |
+| **mongodb-activity** | Activity service DB | Activity data, evidence, validations |
+| **mongodb-calculation** | Calculation service DB | GHG calculations, aggregations |
+| **mongodb-reporting** | Reporting service DB | Reports, dashboards, exports |
+| **mongodb-audit** | Audit service DB | Audit events, compliance logs |
+| **github** | Source control | PRs, issues, commits, branches |
+| **memory** | Persistent context | Store/retrieve context across sessions |
+| **fetch** | HTTP requests | API docs, external resources |
+| **atlassian** | Jira/Confluence | Tickets, sprints, documentation |
+| **redis** | Cache & pub/sub | Session cache, event messaging |
+| **localstack** | AWS services | S3, SQS, Secrets Manager, EventBridge |
+| **sequential-thinking** | Complex reasoning | Architecture decisions, problem-solving |
+| **playwright** | Browser automation | E2E testing, web scraping |
+| **docker** | Container management | Build, run, manage containers |
+| **time** | Time utilities | Timestamps, timezone operations |
 
-All operations now go through the single `execute` command:
+### MongoDB MCP Servers (Per-Service)
 
-#### File Operations (replaces filesystem MCP)
-```javascript
-// Read file
-execute({ action: 'file', content: 'read', options: { path: 'path/to/file' }})
+Each service has its own MongoDB MCP server for data isolation:
 
-// Write file
-execute({ action: 'file', content: 'write', options: { path: 'path/to/file', data: 'content' }})
+| Service | Port | MCP Server | Database |
+|---------|------|------------|----------|
+| identity-service | 3001 | `mongodb-identity` | `clenergize_identity` |
+| organization-service | 3002 | `mongodb-organization` | `clenergize_organization` |
+| reference-service | 3003 | `mongodb-reference` | `clenergize_reference` |
+| activity-service | 3004 | `mongodb-activity` | `clenergize_activity` |
+| calculation-service | 3005 | `mongodb-calculation` | `clenergize_calculation` |
+| reporting-service | 3006 | `mongodb-reporting` | `clenergize_reporting` |
+| audit-service | 3007 | `mongodb-audit` | `clenergize_audit` |
 
-// List directory
-execute({ action: 'file', content: 'list', options: { path: 'directory/path' }})
+### Using MCP Tools
+
+MCP tools are invoked using the `mcp__<server>__<tool>` pattern:
+
+```
+# MongoDB queries (read-only by default)
+mcp__mongodb-identity__find({ collection: 'users', filter: { status: 'active' } })
+
+# GitHub operations
+mcp__github__create_pull_request({ title: 'feat: JWT implementation', base: 'develop' })
+
+# LocalStack AWS operations
+mcp__localstack__s3_list_buckets()
+mcp__localstack__secrets_get_secret({ secretId: 'jwt-signing-key' })
+
+# Redis operations
+mcp__redis__get({ key: 'session:user123' })
+mcp__redis__set({ key: 'cache:emission-factors', value: '...' })
+
+# Docker operations
+mcp__docker__list_containers()
+mcp__docker__logs({ container: 'clenergize-identity-service' })
 ```
 
-#### MongoDB Operations (replaces all mongodb-* MCPs)
-```javascript
-// Access any database (queries are sanitized by MCP executor)
-execute({ action: 'mongodb', content: 'db("clenergize_identity").collection("users").find({})' })
+### Security Notes
 
-// Insert document
-execute({ action: 'mongodb', content: 'db("clenergize_identity").collection("users").insertOne({name: "test"})' })
-
-// Update document
-execute({ action: 'mongodb', content: 'db("clenergize_identity").collection("users").updateOne({_id: "123"}, {$set: {status: "active"}})' })
-
-// NOTE: The MCP executor automatically sanitizes these queries to prevent code injection.
-// Only allowlisted MongoDB operations (find, insertOne, updateOne, etc.) are permitted.
-// Dangerous patterns like require(), eval(), or process.exit are blocked.
-```
-
-#### Git Operations (replaces github MCP)
-```javascript
-// Create branch
-execute({ action: 'git', content: 'checkout -b feature/SCRUM-101' })
-
-// Commit
-execute({ action: 'bash', content: 'git add . && git commit -m "feat: implement JWT"' })
-
-// Push
-execute({ action: 'git', content: 'push origin feature/SCRUM-101' })
-```
-
-#### Jira Operations (replaces atlassian MCP)
-```javascript
-// Update ticket status
-execute({ action: 'jira', content: 'SCRUM-101', options: { status: 'In Progress' }})
-
-// Add comment
-execute({ action: 'jira', content: 'SCRUM-101', options: { comment: 'JWT implementation started' }})
-```
-
-#### Service Generation
-```javascript
-// Generate complete service
-execute({ action: 'generate-service', content: 'identity', options: { port: 3001 }})
-```
-
-#### Testing
-```javascript
-// Run tests
-execute({ action: 'test', content: 'unit', options: { service: 'identity' }})
-execute({ action: 'test', content: 'e2e', options: { service: 'identity' }})
-execute({ action: 'test', content: 'security', options: { service: 'identity' }})
-```
+- All MongoDB connections are **read-only** by default for safety
+- LocalStack uses test credentials (local dev only)
+- GitHub token stored securely in `.claude.json`
+- Atlassian uses OAuth via mcp-remote SSE connection
+- Never commit `.claude.json` to version control
 
 ## 📋 MANDATORY CODE REVIEW POLICY
 
