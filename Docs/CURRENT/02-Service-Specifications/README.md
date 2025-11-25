@@ -1,11 +1,31 @@
-# Service Specifications Summary - Remaining Services
+# Service Specifications - Phase 1 (7 Services)
 
-## Quick Reference
-This document provides condensed specifications for the remaining 4 services:
-- Activity Service (Port 3004)
-- Calculation Service (Port 3005)
-- Reporting Service (Port 3006)
-- Audit Service (Port 3007)
+> **Scope**: 340 SP | 12 weeks | 7 services | 7 developers
+> **Reference**: [CURRENT_SCOPE.md](../00-Scope/CURRENT_SCOPE.md)
+
+## ESG-Generic Architecture
+
+All services MUST implement ESG-generic data models to support future expansion.
+
+**Required Reading**: [ESG_GENERIC_DATA_MODELS.md](../../SHARED/Architecture/ESG_GENERIC_DATA_MODELS.md)
+
+Phase 1 implements `domain='Environmental'`, `subdomain='Carbon'` only, but uses generic interfaces.
+
+## Service List
+
+| Service | Port | Spec Document |
+|---------|------|---------------|
+| Identity | 3001 | [01_Identity_Service.md](01_Identity_Service.md) |
+| Organization | 3002 | [02_Organization_Service.md](02_Organization_Service.md) |
+| Reference | 3003 | [03_Reference_Service.md](03_Reference_Service.md) |
+| Activity | 3004 | [04_Activity_Service.md](04_Activity_Service.md) |
+| Calculation | 3005 | [05_Calculation_Service.md](05_Calculation_Service.md) |
+| Reporting | 3006 | [06_Reporting_Service.md](06_Reporting_Service.md) |
+| Audit | 3007 | [07_Audit_Service.md](07_Audit_Service.md) |
+
+## Quick Reference (Condensed Specs)
+
+This section provides condensed specifications for services 4-7:
 
 ---
 

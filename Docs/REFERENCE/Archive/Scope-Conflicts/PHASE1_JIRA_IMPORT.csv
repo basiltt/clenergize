@@ -1,0 +1,100 @@
+Issue Type,Summary,Description,Story Points,Priority,Sprint,Component,Labels,Epic Link,Parent
+Epic,CLNZ-001: Platform Foundation,Foundation and infrastructure setup for the platform,89,Critical,Sprint 0.1-0.2,Platform,phase1;infrastructure,,
+Story,CLNZ-101: Development Environment Setup,As a developer I want to have a complete development environment so that I can develop locally,13,Critical,Sprint 0.1,Platform,phase1;technical,CLNZ-001,
+Task,CLNZ-101.1: Create docker-compose.dev.yml,Setup Docker Compose configuration for all services,5,Critical,Sprint 0.1,Platform,phase1;docker,CLNZ-001,CLNZ-101
+Task,CLNZ-101.2: Configure MongoDB with replica set,Setup MongoDB with replica set for transactions,3,Critical,Sprint 0.1,Platform,phase1;database,CLNZ-001,CLNZ-101
+Task,CLNZ-101.3: Setup Redis cluster,Configure Redis for caching and pub/sub,2,Critical,Sprint 0.1,Platform,phase1;cache,CLNZ-001,CLNZ-101
+Task,CLNZ-101.4: Configure LocalStack for AWS services,Setup LocalStack for local AWS service simulation,3,Critical,Sprint 0.1,Platform,phase1;aws,CLNZ-001,CLNZ-101
+Story,CLNZ-102: CI/CD Pipeline Setup,As a developer I want automated CI/CD so that code quality is maintained,8,Critical,Sprint 0.1,Platform,phase1;technical,CLNZ-001,
+Task,CLNZ-102.1: Create GitHub Actions workflows,Setup GitHub Actions for automated testing and deployment,3,Critical,Sprint 0.1,Platform,phase1;cicd,CLNZ-001,CLNZ-102
+Task,CLNZ-102.2: Setup test automation,Configure automated testing in CI pipeline,3,Critical,Sprint 0.1,Platform,phase1;testing,CLNZ-001,CLNZ-102
+Task,CLNZ-102.3: Configure deployment pipeline,Setup deployment automation to staging/production,2,Critical,Sprint 0.1,Platform,phase1;deployment,CLNZ-001,CLNZ-102
+Story,CLNZ-103: Monitoring Stack Implementation,As an operator I want monitoring and observability so that I can track system health,13,Critical,Sprint 0.1,Platform,phase1;technical,CLNZ-001,
+Task,CLNZ-103.1: Deploy Prometheus,Setup Prometheus for metrics collection,3,Critical,Sprint 0.1,Platform,phase1;monitoring,CLNZ-001,CLNZ-103
+Task,CLNZ-103.2: Configure Grafana dashboards,Create monitoring dashboards in Grafana,5,Critical,Sprint 0.1,Platform,phase1;monitoring,CLNZ-001,CLNZ-103
+Task,CLNZ-103.3: Setup Jaeger tracing,Configure distributed tracing with Jaeger,3,Critical,Sprint 0.1,Platform,phase1;monitoring,CLNZ-001,CLNZ-103
+Task,CLNZ-103.4: Configure alerting rules,Setup alert rules and notifications,2,Critical,Sprint 0.1,Platform,phase1;monitoring,CLNZ-001,CLNZ-103
+Epic,CLNZ-200: Identity & Access Management,Complete identity and authentication system,65,Critical,Sprint 1-2,Identity,phase1;security,,
+Story,CLNZ-201: User Registration,As a new user I want to register for an account so that I can access the platform,8,Critical,Sprint 1,Identity,phase1;user,CLNZ-200,
+Task,CLNZ-201.1: Implement registration API,Create user registration endpoints,3,Critical,Sprint 1,Identity,phase1;api,CLNZ-200,CLNZ-201
+Task,CLNZ-201.2: Create registration form UI,Build registration user interface,2,Critical,Sprint 1,Identity,phase1;frontend,CLNZ-200,CLNZ-201
+Task,CLNZ-201.3: Setup email verification,Implement email verification flow,2,Critical,Sprint 1,Identity,phase1;email,CLNZ-200,CLNZ-201
+Task,CLNZ-201.4: Add validation logic,Implement input validation and password rules,1,Critical,Sprint 1,Identity,phase1;validation,CLNZ-200,CLNZ-201
+Story,CLNZ-202: User Login with MFA,As a registered user I want to login with MFA so that my account is secure,13,Critical,Sprint 1,Identity,phase1;user;security,CLNZ-200,
+Task,CLNZ-202.1: Fix JWT/JWKS verification bug,Fix critical JWT verification security issue,5,Critical,Sprint 1,Identity,phase1;security;bugfix,CLNZ-200,CLNZ-202
+Task,CLNZ-202.2: Implement login API,Create login endpoints with token generation,3,Critical,Sprint 1,Identity,phase1;api,CLNZ-200,CLNZ-202
+Task,CLNZ-202.3: Create login UI,Build login user interface,2,Critical,Sprint 1,Identity,phase1;frontend,CLNZ-200,CLNZ-202
+Task,CLNZ-202.4: Setup MFA,Implement multi-factor authentication,3,Critical,Sprint 1,Identity,phase1;security,CLNZ-200,CLNZ-202
+Epic,CLNZ-300: Organization Management,Company and project management system,72,High,Sprint 3-4,Organization,phase1;core,,
+Story,CLNZ-303: Organizational Hierarchy,As an organization admin I want to define company structure so that emissions can be tracked hierarchically,21,Critical,Sprint 4,Organization,phase1;hierarchy,CLNZ-300,
+Task,CLNZ-303.1: Fix hierarchy cloning issue,Replace cloned hierarchies with reference-based system,8,Critical,Sprint 4,Organization,phase1;bugfix;architecture,CLNZ-300,CLNZ-303
+Task,CLNZ-303.2: Implement reference-based hierarchy,Create new reference-based hierarchy system,5,Critical,Sprint 4,Organization,phase1;architecture,CLNZ-300,CLNZ-303
+Task,CLNZ-303.3: Create hierarchy UI,Build hierarchy management interface,3,High,Sprint 4,Organization,phase1;frontend,CLNZ-300,CLNZ-303
+Task,CLNZ-303.4: Add drag-drop reorganization,Implement drag and drop hierarchy reorganization,3,Medium,Sprint 4,Organization,phase1;frontend,CLNZ-300,CLNZ-303
+Task,CLNZ-303.5: Implement snapshots,Create snapshot functionality for reporting periods,2,High,Sprint 4,Organization,phase1;reporting,CLNZ-300,CLNZ-303
+Epic,CLNZ-500: Integration Service,External system integrations and ETL,65,Critical,Sprint 2-3,Integration,phase1;new;integration,,
+Story,CLNZ-501: ERP Integration,As a data manager I want to connect to our ERP system so that data flows automatically,13,Critical,Sprint 2,Integration,phase1;integration,CLNZ-500,
+Task,CLNZ-501.1: Build SAP connector,Create SAP integration adapter,5,Critical,Sprint 2,Integration,phase1;sap,CLNZ-500,CLNZ-501
+Task,CLNZ-501.2: Create Oracle adapter,Build Oracle ERP integration,3,High,Sprint 2,Integration,phase1;oracle,CLNZ-500,CLNZ-501
+Task,CLNZ-501.3: Add field mapping UI,Create field mapping interface,3,High,Sprint 2,Integration,phase1;frontend,CLNZ-500,CLNZ-501
+Task,CLNZ-501.4: Test data sync,Test and validate data synchronization,2,High,Sprint 2,Integration,phase1;testing,CLNZ-500,CLNZ-501
+Epic,CLNZ-600: Notification Service,Multi-channel notification system,55,High,Sprint 2-3,Notification,phase1;new;communication,,
+Story,CLNZ-601: Email Notifications,As a user I want to receive email notifications so that I'm informed of important events,8,High,Sprint 2,Notification,phase1;email,CLNZ-600,
+Task,CLNZ-601.1: Setup SES integration,Configure AWS SES for email delivery,3,High,Sprint 2,Notification,phase1;aws,CLNZ-600,CLNZ-601
+Task,CLNZ-601.2: Create email templates,Build email notification templates,2,High,Sprint 2,Notification,phase1;templates,CLNZ-600,CLNZ-601
+Task,CLNZ-601.3: Build preference UI,Create notification preferences interface,2,Medium,Sprint 2,Notification,phase1;frontend,CLNZ-600,CLNZ-601
+Task,CLNZ-601.4: Add unsubscribe,Implement unsubscribe functionality,1,Medium,Sprint 2,Notification,phase1;email,CLNZ-600,CLNZ-601
+Epic,CLNZ-700: Activity Data Collection,Activity data entry and management,85,High,Sprint 5-6,Activity,phase1;data,,
+Story,CLNZ-701: Manual Data Entry,As a data entry clerk I want to enter activity data manually so that emissions are tracked,13,High,Sprint 5,Activity,phase1;data-entry,CLNZ-700,
+Task,CLNZ-701.1: Create activity APIs,Build activity data CRUD endpoints,5,High,Sprint 5,Activity,phase1;api,CLNZ-700,CLNZ-701
+Task,CLNZ-701.2: Build data entry forms,Create data entry user interface,3,High,Sprint 5,Activity,phase1;frontend,CLNZ-700,CLNZ-701
+Task,CLNZ-701.3: Add validation logic,Implement data validation rules,3,High,Sprint 5,Activity,phase1;validation,CLNZ-700,CLNZ-701
+Task,CLNZ-701.4: Create monthly breakdown UI,Build monthly data entry interface,2,High,Sprint 5,Activity,phase1;frontend,CLNZ-700,CLNZ-701
+Epic,CLNZ-800: Emission Calculations,GHG emission calculation engine,95,Critical,Sprint 7-8,Calculation,phase1;calculations,,
+Story,CLNZ-801: Scope 1 Calculations,As a sustainability analyst I want to calculate direct emissions so that Scope 1 is reported,13,Critical,Sprint 7,Calculation,phase1;scope1,CLNZ-800,
+Task,CLNZ-801.1: Implement calculation engine,Build core calculation engine,5,Critical,Sprint 7,Calculation,phase1;engine,CLNZ-800,CLNZ-801
+Task,CLNZ-801.2: Add stationary combustion,Implement stationary combustion calculations,3,Critical,Sprint 7,Calculation,phase1;scope1,CLNZ-800,CLNZ-801
+Task,CLNZ-801.3: Add mobile combustion,Implement mobile combustion calculations,3,Critical,Sprint 7,Calculation,phase1;scope1,CLNZ-800,CLNZ-801
+Task,CLNZ-801.4: Add fugitive emissions,Implement fugitive emission calculations,2,Critical,Sprint 7,Calculation,phase1;scope1,CLNZ-800,CLNZ-801
+Epic,CLNZ-900: Reporting & Analytics,Reporting and dashboard system,75,High,Sprint 9-10,Reporting,phase1;reporting,,
+Story,CLNZ-901: Executive Dashboard,As an executive I want to view emission dashboard so that I understand our footprint,13,High,Sprint 9,Reporting,phase1;dashboard,CLNZ-900,
+Task,CLNZ-901.1: Create dashboard APIs,Build dashboard data endpoints,5,High,Sprint 9,Reporting,phase1;api,CLNZ-900,CLNZ-901
+Task,CLNZ-901.2: Build dashboard UI,Create dashboard interface,3,High,Sprint 9,Reporting,phase1;frontend,CLNZ-900,CLNZ-901
+Task,CLNZ-901.3: Add charts/graphs,Implement data visualizations,3,High,Sprint 9,Reporting,phase1;charts,CLNZ-900,CLNZ-901
+Task,CLNZ-901.4: Implement real-time updates,Add WebSocket real-time updates,2,Medium,Sprint 9,Reporting,phase1;realtime,CLNZ-900,CLNZ-901
+Epic,CLNZ-1000: Audit & Compliance,Audit trail and compliance features,45,Medium,Sprint 11,Audit,phase1;compliance,,
+Story,CLNZ-1001: Audit Trail,As an auditor I want to view complete audit trail so that compliance is verified,8,Medium,Sprint 11,Audit,phase1;audit,CLNZ-1000,
+Task,CLNZ-1001.1: Implement audit logging,Create comprehensive audit logging system,3,Medium,Sprint 11,Audit,phase1;logging,CLNZ-1000,CLNZ-1001
+Task,CLNZ-1001.2: Create audit UI,Build audit trail interface,2,Medium,Sprint 11,Audit,phase1;frontend,CLNZ-1000,CLNZ-1001
+Task,CLNZ-1001.3: Add search/filter,Implement search and filtering capabilities,2,Medium,Sprint 11,Audit,phase1;search,CLNZ-1000,CLNZ-1001
+Task,CLNZ-1001.4: Generate reports,Create audit report generation,1,Medium,Sprint 11,Audit,phase1;reporting,CLNZ-1000,CLNZ-1001
+Epic,CLNZ-1100: Frontend Application,Complete frontend application development,89,Critical,Sprint 1-12,Frontend,phase1;ui,,
+Story,CLNZ-1101: Login & Authentication UI,As a user I want to access the application so that I can use the platform,8,Critical,Sprint 1,Frontend,phase1;auth;ui,CLNZ-1100,
+Task,CLNZ-1101.1: Create login page,Build login page interface,3,Critical,Sprint 1,Frontend,phase1;auth,CLNZ-1100,CLNZ-1101
+Task,CLNZ-1101.2: Add MFA UI,Create multi-factor authentication interface,2,Critical,Sprint 1,Frontend,phase1;security,CLNZ-1100,CLNZ-1101
+Task,CLNZ-1101.3: Build forgot password,Implement password reset interface,2,High,Sprint 1,Frontend,phase1;auth,CLNZ-1100,CLNZ-1101
+Task,CLNZ-1101.4: Add SSO support,Implement single sign-on support,1,Medium,Sprint 1,Frontend,phase1;auth,CLNZ-1100,CLNZ-1101
+Epic,CLNZ-1200: Testing & Quality,Comprehensive testing and quality assurance,55,High,Sprint 1-12,Testing,phase1;quality,,
+Story,CLNZ-1201: Unit Test Coverage,As a developer I want comprehensive unit tests so that code quality is maintained,13,High,Sprint 11,Testing,phase1;testing,CLNZ-1200,
+Task,CLNZ-1201.1: Write unit tests,Create unit tests for all services,8,High,Sprint 11,Testing,phase1;unit-tests,CLNZ-1200,CLNZ-1201
+Task,CLNZ-1201.2: Setup coverage reports,Configure test coverage reporting,2,Medium,Sprint 11,Testing,phase1;coverage,CLNZ-1200,CLNZ-1201
+Task,CLNZ-1201.3: Add to CI/CD,Integrate tests into CI/CD pipeline,2,High,Sprint 11,Testing,phase1;cicd,CLNZ-1200,CLNZ-1201
+Task,CLNZ-1201.4: Fix failing tests,Resolve all failing test cases,1,High,Sprint 11,Testing,phase1;bugfix,CLNZ-1200,CLNZ-1201
+Epic,CLNZ-1300: Deployment & Operations,Production deployment and operations,45,High,Sprint 12,DevOps,phase1;deployment,,
+Story,CLNZ-1302: Production Deployment,As an operator I want zero-downtime deployment so that service is uninterrupted,13,Critical,Sprint 14,DevOps,phase1;production,CLNZ-1300,
+Task,CLNZ-1302.1: Setup production infra,Provision production infrastructure,5,Critical,Sprint 14,DevOps,phase1;infrastructure,CLNZ-1300,CLNZ-1302
+Task,CLNZ-1302.2: Configure auto-scaling,Setup auto-scaling policies,3,Critical,Sprint 14,DevOps,phase1;scaling,CLNZ-1300,CLNZ-1302
+Task,CLNZ-1302.3: Deploy services,Deploy all services to production,3,Critical,Sprint 14,DevOps,phase1;deployment,CLNZ-1300,CLNZ-1302
+Task,CLNZ-1302.4: Verify health,Validate production deployment health,2,Critical,Sprint 14,DevOps,phase1;validation,CLNZ-1300,CLNZ-1302
+Epic,CLNZ-1400: Data Migration,Migration from OLD to NEW system,55,Critical,Sprint 13,Migration,phase1;migration,,
+Story,CLNZ-1402: Organization Data Migration,As a system admin I want organization data migrated so that no data is lost,13,Critical,Sprint 13,Migration,phase1;data,CLNZ-1400,
+Task,CLNZ-1402.1: Export OLD data,Extract data from OLD system,3,Critical,Sprint 13,Migration,phase1;export,CLNZ-1400,CLNZ-1402
+Task,CLNZ-1402.2: Convert hierarchies,Transform cloned hierarchies to references,5,Critical,Sprint 13,Migration,phase1;transform,CLNZ-1400,CLNZ-1402
+Task,CLNZ-1402.3: Import to NEW,Load data into NEW system,3,Critical,Sprint 13,Migration,phase1;import,CLNZ-1400,CLNZ-1402
+Task,CLNZ-1402.4: Validate references,Verify reference integrity,2,Critical,Sprint 13,Migration,phase1;validation,CLNZ-1400,CLNZ-1402
+Epic,CLNZ-1500: Beta Launch & Stabilization,Beta customer launch and stabilization,34,High,Sprint 14-15,Launch,phase1;beta,,
+Story,CLNZ-1501: Beta Customer Onboarding,As a beta customer I want to start using the platform so that I can provide feedback,8,High,Sprint 15,Launch,phase1;customer,CLNZ-1500,
+Task,CLNZ-1501.1: Create accounts,Setup beta customer accounts,2,High,Sprint 15,Launch,phase1;accounts,CLNZ-1500,CLNZ-1501
+Task,CLNZ-1501.2: Provide training,Deliver customer training,3,High,Sprint 15,Launch,phase1;training,CLNZ-1500,CLNZ-1501
+Task,CLNZ-1501.3: Setup support,Establish support channels,2,High,Sprint 15,Launch,phase1;support,CLNZ-1500,CLNZ-1501
+Task,CLNZ-1501.4: Gather feedback,Collect and analyze feedback,1,High,Sprint 15,Launch,phase1;feedback,CLNZ-1500,CLNZ-1501

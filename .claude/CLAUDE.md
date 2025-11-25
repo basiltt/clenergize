@@ -6,11 +6,13 @@
 
 ## 🚨 IMMEDIATE CONTEXT
 
-**Current Sprint**: Sprint 1 - Foundation & Core Security
-**Sprint Phase**: Phase 1 of 5 (Foundation)
-**Critical Path**: Security Architecture → Service Mesh → Data Architecture → ESG Modules
-**Platform Scope**: Complete ESG Management (not just carbon footprint)
-**Team Size**: 7 developers + 30+ specialized Claude agents
+**Current Sprint**: Sprint 0.1 - Local Development Environment
+**Current Phase**: Phase 0 + Phase 1 (Foundation + Core Services)
+**Phase Duration**: 12 weeks (6 sprints × 2 weeks)
+**Platform Scope**: Rebuild existing carbon footprint app with ESG-generic architecture
+**Team Size**: 7 developers + 5-7 core Claude agents
+
+> **CANONICAL SCOPE**: See [CURRENT_SCOPE.md](Docs/CURRENT/00-Scope/CURRENT_SCOPE.md) for authoritative scope definition
 
 ## 📋 PROJECT OVERVIEW
 
@@ -31,12 +33,25 @@ Clenergize V3 is a comprehensive **Enterprise ESG Management Platform** covering
 - **Advanced**: ML/AI analytics, IoT integration, predictive modeling, scenario analysis
 
 ### Key Metrics
-- **Services**: 50+ microservices across 5 domains
-- **Timeline**: 15 months (30 sprints)
-- **Effort**: ~1,850 story points
-- **Team Size**: 7 developers + 30+ Claude agents
-- **Tech Stack**: NestJS, Next.js, Python (ML), Go (performance), MongoDB, InfluxDB, Neo4j, Kafka, K8s
-- **Investment**: ~$2M development + $132K/year infrastructure
+
+#### CURRENT PHASE (Phase 0 + Phase 1) - APPROVED
+| Metric | Value |
+|--------|-------|
+| **Story Points** | 340 SP |
+| **Duration** | 12 weeks (6 sprints) |
+| **Services** | 7 microservices |
+| **Team Size** | 7 developers + 5-7 Claude agents |
+| **Sprint Velocity** | ~57 SP/sprint |
+
+#### FUTURE PHASES (NOT APPROVED - Planning Only)
+| Metric | Value |
+|--------|-------|
+| **Services** | 50+ microservices across 5 domains |
+| **Timeline** | Additional 15+ months |
+| **Effort** | ~4,750 SP additional |
+
+- **Tech Stack**: NestJS, Next.js, MongoDB, Redis, AWS EventBridge, Docker
+- **Future Tech**: Python (ML), Go (performance), InfluxDB, Neo4j, Kafka, K8s
 
 ### Critical Requirements (Phase 1 Priority)
 1. ✅ Zero-trust security architecture with JWKS
@@ -293,7 +308,20 @@ Use `.github/PULL_REQUEST_TEMPLATE.md` for all PRs:
 
 ### Agent Hierarchy
 
-The ESG Platform uses 30+ specialized agents organized into domains:
+#### CURRENT PHASE: 5-7 Core Agents
+```
+Master Coordinator (Orchestrator)
+├── Security Agent (identity-service)
+├── Organization Agent (organization-service)
+├── Data Agent (reference, activity, calculation services)
+├── Reporting Agent (reporting-service)
+├── DevOps Agent (infrastructure)
+└── Testing Agent (optional, add when needed)
+└── Migration Agent (optional, add when needed)
+```
+
+#### FUTURE PHASES: 30+ Specialized Agents (NOT ACTIVE)
+The full ESG Platform will use 30+ specialized agents organized into domains:
 
 ```
 Master Coordinator (Orchestrator)
@@ -303,6 +331,9 @@ Master Coordinator (Orchestrator)
 ├── Governance Domain Agents (10)
 └── Strategic & Analytics Agents (10)
 ```
+
+> **Note**: The following agent definitions include FUTURE agents for reference.
+> Current phase uses only the 5-7 core agents listed above.
 
 ### You Are One of These Agents:
 
@@ -1629,11 +1660,11 @@ make performance-test # Run performance tests
 
 ### Priority Reading Order
 1. **This file** (CLAUDE.md) - Always read first
-2. **Documentation Structure** (Docs/STRUCTURE_GUIDE.md) - Understand folder structure
-3. **Current Sprint** (Docs/CURRENT/Sprints/Sprint_0.1/)
-4. **Your Service Spec** (Docs/CURRENT/Services/)
-5. **Architecture Overview** (Docs/SHARED/Getting-Started/03_Architecture_Summary.md)
-6. **Security Requirements** (Security stories CLNZ-101 to CLNZ-108 in JIRA)
+2. **Canonical Scope** (Docs/CURRENT/00-Scope/CURRENT_SCOPE.md) - Single source of truth
+3. **Service Mapping** (Docs/CURRENT/00-Scope/SERVICE_MAPPING.md) - OLD to NEW mapping
+4. **ESG-Generic Models** (Docs/SHARED/Architecture/ESG_GENERIC_DATA_MODELS.md) - Data architecture
+5. **Your Service Spec** (Docs/CURRENT/02-Service-Specifications/)
+6. **Sprint Tasks** (Docs/CURRENT/04-Sprint-Documentation/)
 
 ### Quick Links
 - [Jira Board](https://yourcompany.atlassian.net/jira/software/projects/CLNZ)
