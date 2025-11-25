@@ -436,8 +436,10 @@ execute({ action: 'mongodb', content: 'db.dropDatabase()' })
 ## Next Steps
 
 1. **Read**: [CLAUDE.md](.claude/CLAUDE.md) - Master configuration
-2. **Review**: [development-commands.md](.claude/commands/development-commands.md) - All available commands
+2. **Review**: [commands/README.md](.claude/commands/README.md) - All available slash commands
 3. **Start**: Begin with JWT verification (CLNZ-101) above
 4. **Ask**: Use Master Coordinator for questions
+
+> **Note**: All slash commands are individual `.md` files in `.claude/commands/`. Each filename becomes the command name.
 
 Ready to start development! 🚀

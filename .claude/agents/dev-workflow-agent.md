@@ -66,6 +66,9 @@ After completing ANY issue:
 
 ## Workflow Commands
 
+> **Note**: All slash commands are individual `.md` files in `.claude/commands/`. Each filename becomes the command name.
+> See `.claude/commands/README.md` for the complete command reference.
+
 ### /pick-issue [CLNZ-XXX | next | auto]
 
 Pick a Jira issue and start the development workflow.

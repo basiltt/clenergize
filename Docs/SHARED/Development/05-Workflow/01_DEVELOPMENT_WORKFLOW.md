@@ -319,6 +319,9 @@ github:
 
 ## Slash Commands Reference
 
+> **Note**: All slash commands are individual `.md` files in `.claude/commands/`. Each filename becomes the command name.
+> See `.claude/commands/README.md` for the complete command reference.
+
 ### Development Commands
 
 | Command | Description | Agent |

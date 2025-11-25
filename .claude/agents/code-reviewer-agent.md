@@ -135,6 +135,9 @@ Database:
 
 ## Review Commands
 
+> **Note**: All slash commands are individual `.md` files in `.claude/commands/`. Each filename becomes the command name.
+> See `.claude/commands/README.md` for the complete command reference.
+
 ### /review-all
 Run all review stages on the current changes.
 
