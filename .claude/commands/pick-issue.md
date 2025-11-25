@@ -61,17 +61,45 @@ Update `.claude/workflow-state.md`:
 - Mark status as "in_progress"
 - Record the branch name
 
-### Step 9: Transition Jira
+### Step 9: Add to Sprint (CRITICAL)
+Before transitioning, the issue MUST be added to the active Sprint to appear on the Board.
+
+**Important**: In Jira, issues only appear on the Board when they are:
+1. Assigned to an active Sprint
+2. In a workflow status (To Do, In Progress, etc.)
+
+**Check Sprint Configuration**:
+1. Read `workflow-state.md` → Sprint Configuration section
+2. Get `active_sprint_id` value
+3. If `active_sprint_id` is null or not configured:
+   - WARN the user: "Sprint ID not configured. Please configure `active_sprint_id` in `.claude/workflow-state.md`"
+   - Provide instructions from the "How to find Sprint IDs" section
+   - Skip this step but continue with transition
+
+**If Sprint ID is configured**, use mcp__atlassian__editJiraIssue:
+```
+mcp__atlassian__editJiraIssue({
+  cloudId: "321128eb-5b74-4a90-896a-2a44197f6673",
+  issueIdOrKey: "CLNZ-XXX",
+  fields: {
+    "customfield_10020": SPRINT_ID  // Just the integer Sprint ID
+  }
+})
+```
+
+**Note**: Sprint field (customfield_10020) accepts an integer Sprint ID in team-managed Jira projects.
+
+### Step 10: Transition Jira
 Use mcp__atlassian__transitionJiraIssue to move the issue to "In Progress".
 
-### Step 10: Display Context
+### Step 11: Display Context
 Show the user:
 - Issue details (title, description, acceptance criteria)
 - Loaded documentation references
 - Existing code found (if any)
 - Recommended service agent to delegate to
 
-### Step 11: Delegate to Agent
+### Step 12: Delegate to Agent
 Based on the issue content, recommend delegating to the appropriate service agent:
 - identity-agent: Authentication, JWT, User, Login, RBAC
 - organization-agent: Organization, Project, Hierarchy

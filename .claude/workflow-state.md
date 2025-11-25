@@ -64,6 +64,38 @@ CLNZ-903: CLNZ-TBD  # Production Readiness
 
 ---
 
+## Sprint Configuration
+
+> **How to find Sprint IDs**:
+> 1. Go to your Jira Board → Backlog view
+> 2. Create or select a Sprint
+> 3. Open browser DevTools (F12) → Network tab
+> 4. Drag an issue to the Sprint → Look for the API call
+> 5. The Sprint ID will be in the request payload (e.g., `customfield_10020: [1]`)
+>
+> Alternatively, use Jira's REST API: `GET /rest/agile/1.0/board/{boardId}/sprint`
+
+```yaml
+# Sprint IDs for CLNZ Project (Update these after creating sprints in Jira)
+sprints:
+  sprint_0.1:
+    name: "Sprint 0.1 - Infrastructure Foundation"
+    jira_sprint_id: null  # TODO: Update with actual Sprint ID from Jira
+    start_date: null
+    end_date: null
+
+  sprint_0.2:
+    name: "Sprint 0.2 - Security & Shared Libraries"
+    jira_sprint_id: null  # TODO: Update with actual Sprint ID from Jira
+    start_date: null
+    end_date: null
+
+# Current active sprint for /pick-issue command
+active_sprint_id: null  # Set this to the jira_sprint_id of the current sprint
+```
+
+---
+
 ## Current Sprint
 
 | Field | Value |
@@ -74,16 +106,17 @@ CLNZ-903: CLNZ-TBD  # Production Readiness
 | **Sprint Start** | TBD |
 | **Sprint End** | TBD |
 | **Velocity Target** | 50 SP |
+| **Jira Sprint ID** | TBD (Configure above) |
 
 ---
 
 ## Active Issue
 
 ```yaml
-current_issue: null
-branch: null
-started_at: null
-primary_agent: null
+current_issue: CLNZ-20
+branch: feature/CLNZ-101-docker-compose-dev-env
+started_at: 2025-11-25T10:30:00Z
+primary_agent: devops-agent
 supporting_agents: []
 ```
 
@@ -95,7 +128,7 @@ supporting_agents: []
 
 | Issue | Title | SP | Status | Agent | Completed |
 |-------|-------|-----|--------|-------|-----------|
-| CLNZ-101 | Docker Compose Development Environment | 13 | pending | devops-agent | |
+| CLNZ-101 | Docker Compose Development Environment | 13 | in_progress | devops-agent | |
 | CLNZ-102 | Base NestJS Service Templates | 13 | pending | architecture-agent | |
 | CLNZ-103 | Environment Configuration | 8 | pending | devops-agent | |
 | CLNZ-104 | Development Scripts & Makefile | 8 | pending | devops-agent | |
