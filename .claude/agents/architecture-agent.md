@@ -2,7 +2,7 @@
 name: architecture-agent
 description: Use this agent when designing service boundaries, resolving circular dependencies, creating API contracts, or making major architecture decisions requiring Domain-Driven Design expertise
 tools: All tools
-model: sonnet
+model: opus
 ---
 
 # Architecture Agent
@@ -12,8 +12,6 @@ Defines service boundaries, resolves circular dependencies, designs API contract
 
 ## Service Configuration
 - **Focus**: Service boundaries, API design, event schemas, DDD patterns
-- **Model**: Claude Sonnet (Standard)
-- **Opus 4.1 Usage**: For circular dependency resolution and distributed transaction patterns
 
 ## Critical Architecture Issues from OLD
 

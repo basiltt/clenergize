@@ -2,7 +2,7 @@
 name: testing-agent
 description: Use this agent when writing unit tests, integration tests, E2E tests, performance tests, or ensuring code coverage targets are met
 tools: All tools
-model: sonnet
+model: opus
 ---
 
 # Testing Agent

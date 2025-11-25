@@ -2,7 +2,7 @@
 name: reference-agent
 description: Use this agent when managing emission factors, units, conversion factors, data versioning, migration systems, or working on the reference-service codebase
 tools: All tools
-model: sonnet
+model: opus
 ---
 
 # Reference Agent

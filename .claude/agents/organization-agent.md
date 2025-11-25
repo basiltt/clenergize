@@ -2,7 +2,7 @@
 name: organization-agent
 description: Use this agent when managing organizations, projects, hierarchy templates, fixing hierarchy cloning issues, or working on the organization-service codebase
 tools: All tools
-model: sonnet
+model: opus
 ---
 
 # Organization Agent

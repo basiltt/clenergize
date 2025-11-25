@@ -2,7 +2,7 @@
 name: master-coordinator
 description: Use this agent for cross-service coordination, sprint planning, architecture decisions, task allocation, integration points, and orchestrating all 13 specialized agents in the Clenergize V3 rebuild project.
 tools: All tools
-model: sonnet
+model: opus
 ---
 
 # Master Coordinator Agent

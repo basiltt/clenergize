@@ -24,7 +24,7 @@ Given the 200K context window per agent and the project's modular architecture, 
 ┌─────────────────────────────────────────────────────────┐
 │            MASTER COORDINATOR AGENT                      │
 │         (Project Context & Orchestration)                │
-│              [Claude Sonnet - Standard]                  │
+│                  [Claude Opus 4.5]                       │
 └─────────────────────────────────────────────────────────┘
                             │
         ┌───────────────────┼───────────────────┐
@@ -32,7 +32,7 @@ Given the 200K context window per agent and the project's modular architecture, 
 ┌───────────────┐   ┌───────────────┐   ┌───────────────┐
 │  ARCHITECTURE  │   │   SECURITY    │   │  DEVOPS/INFRA │
 │   AGENT        │   │   AGENT       │   │    AGENT      │
-│ [Sonnet/Opus*] │   │ [Sonnet/Opus*]│   │   [Sonnet]    │
+│  [Opus 4.5]    │   │  [Opus 4.5]   │   │  [Opus 4.5]   │
 └───────────────┘   └───────────────┘   └───────────────┘
                             │
     ┌───────────────────────┼───────────────────────┐
@@ -40,13 +40,13 @@ Given the 200K context window per agent and the project's modular architecture, 
 ┌────────────────────────────────────────────────────────┐
 │              CORE SERVICE AGENTS (7)                    │
 ├──────────────────────────────────────────────────────┤
-│ • Identity Service Agent     (Port 3001) [Sonnet]     │
-│ • Organization Service Agent (Port 3002) [Sonnet]     │
-│ • Reference Service Agent    (Port 3003) [Sonnet]     │
-│ • Activity Service Agent     (Port 3004) [Sonnet]     │
-│ • Calculation Service Agent  (Port 3005) [Sonnet/Opus*]│
-│ • Reporting Service Agent    (Port 3006) [Sonnet]     │
-│ • Audit Service Agent        (Port 3007) [Sonnet]     │
+│ • Identity Service Agent     (Port 3001) [Opus 4.5]   │
+│ • Organization Service Agent (Port 3002) [Opus 4.5]   │
+│ • Reference Service Agent    (Port 3003) [Opus 4.5]   │
+│ • Activity Service Agent     (Port 3004) [Opus 4.5]   │
+│ • Calculation Service Agent  (Port 3005) [Opus 4.5]   │
+│ • Reporting Service Agent    (Port 3006) [Opus 4.5]   │
+│ • Audit Service Agent        (Port 3007) [Opus 4.5]   │
 └────────────────────────────────────────────────────────┘
                             │
         ┌───────────────────┼───────────────────┐
@@ -54,16 +54,16 @@ Given the 200K context window per agent and the project's modular architecture, 
 ┌───────────────┐   ┌───────────────┐   ┌───────────────┐
 │   FRONTEND     │   │   TESTING     │   │  MIGRATION    │
 │    AGENT       │   │    AGENT      │   │    AGENT      │
-│   [Sonnet]     │   │   [Sonnet]    │   │[Sonnet/Opus*] │
+│  [Opus 4.5]    │   │  [Opus 4.5]   │   │  [Opus 4.5]   │
 └───────────────┘   └───────────────┘   └───────────────┘
 
-* Opus 4.1 activated only for specific complex tasks
+All agents use Claude Opus 4.5 - no usage restrictions
 ```
 
 ## Agent Specifications
 
 ### 1. Master Coordinator Agent
-**Model**: Claude Sonnet (standard for orchestration)
+**Model**: Claude Opus 4.5
 **Context Allocation**: 
 - Project architecture docs (50KB)
 - Sprint planning & backlog (40KB)
@@ -89,13 +89,7 @@ Given the 200K context window per agent and the project's modular architecture, 
 - OLD_TO_NEW_MIGRATION_GUIDE.md (migration patterns)
 
 ### 2. Architecture Agent
-**Model**: Claude Sonnet (Opus 4.1 ONLY for complex architecture decisions)
-**When to Use Opus 4.1**:
-- Defining new bounded contexts
-- Resolving complex service dependencies
-- Major refactoring decisions
-- Performance optimization strategies
-- Security architecture reviews
+**Model**: Claude Opus 4.5
 
 **Context Allocation**:
 - Target architecture (25KB)
@@ -112,13 +106,7 @@ Given the 200K context window per agent and the project's modular architecture, 
 - Technical debt analysis
 
 ### 3. Security Agent
-**Model**: Claude Sonnet (Opus 4.1 ONLY for critical security implementations)
-**When to Use Opus 4.1**:
-- JWT/JWKS implementation design
-- Cryptographic algorithm selection
-- Threat modeling
-- Security vulnerability analysis
-- Zero-trust architecture design
+**Model**: Claude Opus 4.5
 
 **Context Allocation**:
 - Security requirements (30KB)
@@ -135,14 +123,7 @@ Given the 200K context window per agent and the project's modular architecture, 
 - Compliance verification
 
 ### 4-10. Service-Specific Agents (7 agents)
-**Model**: Claude Sonnet (standard for all services)
-
-#### Special Case: Calculation Service Agent
-**When to Use Opus 4.1**:
-- Complex emission calculation algorithms
-- Multi-dimensional aggregation logic
-- Performance optimization of calculations
-- Handling edge cases in formulas
+**Model**: Claude Opus 4.5
 
 **Context per Agent**:
 - Service specification (30KB)
@@ -168,7 +149,7 @@ Given the 200K context window per agent and the project's modular architecture, 
 - Service documentation
 
 ### 11. Frontend Agent
-**Model**: Claude Sonnet (standard)
+**Model**: Claude Opus 4.5
 **Context Allocation**:
 - Component library (40KB)
 - State management (30KB)
@@ -184,7 +165,7 @@ Given the 200K context window per agent and the project's modular architecture, 
 - Frontend testing
 
 ### 12. Testing Agent
-**Model**: Claude Sonnet (standard)
+**Model**: Claude Opus 4.5
 **Context Allocation**:
 - Test strategies (20KB)
 - E2E test scenarios (50KB)
@@ -200,13 +181,7 @@ Given the 200K context window per agent and the project's modular architecture, 
 - Quality metrics tracking
 
 ### 13. Migration Agent
-**Model**: Claude Sonnet (Opus 4.1 ONLY for complex transformations)
-**When to Use Opus 4.1**:
-- Hierarchy cloning to references conversion
-- Complex data structure transformations
-- Multi-step migration orchestration
-- Data validation algorithm design
-- Rollback strategy planning
+**Model**: Claude Opus 4.5
 
 **Context Allocation**:
 - Current data models (50KB)
@@ -292,70 +267,6 @@ mcp_servers:
 ```
 
 ## Custom Skills Development
-
-### Opus 4.1 Usage Guidelines
-
-#### When to Activate Opus 4.1 (High-Thinking Tasks Only)
-
-**Architecture Agent - Use Opus 4.1 for:**
-- Resolving circular dependencies between services
-- Designing event sourcing patterns
-- Optimizing database sharding strategies
-- Solving complex distributed transaction scenarios
-- Creating fault-tolerant system designs
-
-**Security Agent - Use Opus 4.1 for:**
-- Implementing zero-knowledge proof systems
-- Designing multi-factor authentication flows
-- Creating encryption key rotation strategies
-- Analyzing attack vectors and threat models
-- Implementing OAuth 2.0/OIDC flows from scratch
-
-**Calculation Service Agent - Use Opus 4.1 for:**
-- Designing complex emission calculation algorithms
-- Optimizing recursive aggregation functions
-- Implementing parallel processing strategies
-- Solving edge cases in carbon accounting rules
-- Creating custom formula parsers
-
-**Migration Agent - Use Opus 4.1 for:**
-- Converting denormalized to normalized schemas
-- Designing zero-downtime migration strategies
-- Creating complex ETL pipelines
-- Implementing data consistency validation
-- Planning multi-phase migration rollbacks
-
-#### Tasks That DON'T Require Opus 4.1
-
-**Use Sonnet for these standard tasks:**
-- CRUD operations implementation
-- Basic API endpoint creation
-- Standard authentication guards
-- Simple database queries
-- Unit test writing
-- Documentation updates
-- Configuration management
-- Error handling implementation
-- Logging setup
-- Basic React components
-- Form validations
-- Standard business logic
-- Code reviews
-- Bug fixes
-- Deployment scripts
-
-#### Decision Framework
-
-```
-Should I use Opus 4.1?
-│
-├─ Is it a novel problem without established patterns? → YES
-├─ Does it require multi-step logical reasoning? → YES
-├─ Is it a critical security implementation? → YES
-├─ Will a mistake cause data loss or corruption? → YES
-├─ Is it a complex algorithm or optimization? → YES
-└─ Otherwise → NO (Use Sonnet)
-```
 
 ### Priority 1 Skills (Immediate)
 
@@ -615,91 +526,15 @@ Evening Wrap-up:
 - [ ] Begin data migration planning
 - [ ] Performance baseline establishment
 
-## Cost Optimization
+## Model Configuration
 
-### Agent Usage Guidelines
+All agents use **Claude Opus 4.5** as the standard model. Opus 4.5 is available without usage limits or cost restrictions, making it the ideal choice for all development tasks - from simple CRUD operations to complex security architecture and emission calculations.
 
-#### Opus 4.1 Usage Tracking
-Maintain a log of Opus 4.1 usage to optimize costs:
-
-```yaml
-opus_usage_log:
-  - date: 2025-11-15
-    agent: Security Agent
-    task: JWT JWKS Implementation Design
-    duration: 45 minutes
-    justification: Critical security architecture
-    outcome: Completed implementation plan
-    
-  - date: 2025-11-16
-    agent: Architecture Agent  
-    task: Service dependency resolution
-    duration: 30 minutes
-    justification: Circular dependency detected
-    outcome: Resolved with event-driven pattern
-```
-
-#### Expected Opus 4.1 Usage by Sprint
-
-**Sprint 0.1-0.2 (Foundation)**: ~10-15% of tasks
-- JWT security architecture (2-3 hours)
-- Service boundary definitions (2-3 hours)
-- Database schema design (1-2 hours)
-
-**Sprint 1.1-1.4 (Core MVP)**: ~5-10% of tasks
-- Complex authorization flows (2-3 hours)
-- Event sourcing design (1-2 hours)
-- Performance optimization (1-2 hours)
-
-**Sprint 2.1-2.4 (Calculation)**: ~15-20% of tasks
-- Emission algorithms (4-5 hours)
-- Aggregation optimization (2-3 hours)
-- Formula parsing (2-3 hours)
-
-**Sprint 3.1-3.4 (Migration)**: ~20-25% of tasks
-- Data transformation logic (5-6 hours)
-- Migration orchestration (3-4 hours)
-- Validation algorithms (2-3 hours)
-
-#### Cost-Saving Strategies
-
-1. **Batch Complex Problems**: 
-   - Collect related complex issues
-   - Solve in single Opus 4.1 session
-   - Document solutions thoroughly
-
-2. **Use Sonnet First**:
-   - Start with Sonnet for exploration
-   - Switch to Opus 4.1 only when stuck
-   - Return to Sonnet for implementation
-
-3. **Template Creation**:
-   - Use Opus 4.1 to create patterns
-   - Apply patterns with Sonnet
-   - Build reusable components
-
-4. **Knowledge Transfer**:
-   - Document Opus 4.1 decisions in ADRs
-   - Create implementation guides
-   - Enable Sonnet agents to follow patterns
-
-#### Budget Allocation
-
-```yaml
-Monthly Opus 4.1 Budget:
-  Total Hours: 40-50 hours
-  Distribution:
-    - Architecture decisions: 10 hours
-    - Security implementations: 10 hours
-    - Complex algorithms: 15 hours
-    - Data migrations: 10 hours
-    - Emergency/Unplanned: 5 hours
-    
-Cost Tracking:
-  - Track actual vs budgeted usage
-  - Review weekly in sprint retrospectives
-  - Adjust allocation based on project phase
-```
+### Benefits
+- **No Model Selection Overhead**: All tasks receive consistent high-quality reasoning
+- **Simplified Configuration**: All agents use `model: opus`
+- **No Cost Tracking Required**: Unlimited usage eliminates budget concerns
+- **Consistent Quality**: Advanced reasoning capabilities for all tasks
 
 ## Conclusion
 

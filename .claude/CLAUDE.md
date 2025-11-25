@@ -316,7 +316,7 @@ Master Coordinator (Orchestrator)
 #### 🎯 ORCHESTRATION LAYER
 
 ##### 1. ESG Platform Master Coordinator
-- **Model**: Claude Sonnet (Opus 4.1 for critical decisions)
+- **Model**: Claude Opus 4.5
 - **Responsibilities**: Cross-domain coordination, sprint planning, architecture decisions
 - **Domains**: All ESG dimensions, integration points, delivery management
 - **Context Files**: ESG_PLATFORM_OVERVIEW.md, All sprint plans, Architecture docs
@@ -325,32 +325,32 @@ Master Coordinator (Orchestrator)
 #### 🔧 CORE PLATFORM AGENTS (Ports 3000-3010)
 
 ##### 2. Security & Identity Agent
-- **Model**: Claude Sonnet (Opus 4.1 for security architecture)
+- **Model**: Claude Opus 4.5
 - **Service**: identity-service (3001)
 - **Responsibilities**: Authentication, authorization, JWT/JWKS, OAuth, SSO, MFA
 - **Compliance**: SOC 2, ISO 27001, GDPR
 - **Integration**: AWS Cognito, Auth0, Okta
 
 ##### 3. Architecture & Integration Agent
-- **Model**: Claude Sonnet (Opus 4.1 for complex integrations)
+- **Model**: Claude Opus 4.5
 - **Services**: gateway-service (3000), integration-service (3010)
 - **Responsibilities**: API Gateway, service mesh, external integrations
 - **Technologies**: Kong, Istio, Kafka, GraphQL federation
 
 ##### 4. Data Architecture Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: reference-service (3003)
 - **Responsibilities**: Master data, ESG factors, data quality, MDM
 - **Databases**: MongoDB, InfluxDB, Neo4j, ClickHouse
 
 ##### 5. Workflow & Orchestration Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: workflow-service (3009)
 - **Responsibilities**: Business processes, approvals, automation
 - **Technologies**: Temporal, Camunda, Apache Airflow
 
 ##### 6. Audit & Compliance Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: audit-service (3007)
 - **Responsibilities**: Audit trail, compliance tracking, evidence management
 - **Standards**: COSO, COBIT, ISO 19011
@@ -358,38 +358,38 @@ Master Coordinator (Orchestrator)
 #### 🌍 ENVIRONMENTAL DOMAIN AGENTS (Ports 3011-3020)
 
 ##### 7. Carbon Management Agent
-- **Model**: Claude Sonnet (Opus 4.1 for complex calculations)
+- **Model**: Claude Opus 4.5
 - **Service**: carbon-service (3011)
 - **Responsibilities**: GHG emissions (Scopes 1,2,3), SBTi, carbon credits
 - **Standards**: GHG Protocol, ISO 14064, PAS 2060
 - **Calculations**: Multi-methodology, uncertainty analysis
 
 ##### 8. Water Management Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: water-service (3012)
 - **Responsibilities**: Water consumption, quality, stress, wastewater
 - **Standards**: CDP Water, CEO Water Mandate, WASH
 
 ##### 9. Waste & Circular Economy Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: waste-service (3013)
 - **Responsibilities**: Waste streams, recycling, circular metrics
 - **Standards**: Zero Waste, Ellen MacArthur Foundation
 
 ##### 10. Biodiversity & Nature Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: biodiversity-service (3014)
 - **Responsibilities**: Land use, ecosystem impact, nature-based solutions
 - **Standards**: TNFD, SBTN, IUCN Red List
 
 ##### 11. Energy & Resources Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Services**: energy-service (3015), resource-service (3017)
 - **Responsibilities**: Energy consumption, efficiency, renewables, materials
 - **Standards**: ISO 50001, RE100
 
 ##### 12. Climate Risk Agent
-- **Model**: Claude Sonnet (Opus 4.1 for scenario modeling)
+- **Model**: Claude Opus 4.5
 - **Service**: climate-risk-service (3018)
 - **Responsibilities**: Physical risks, transition risks, TCFD scenarios
 - **Models**: Climate scenarios, financial impact modeling
@@ -397,37 +397,37 @@ Master Coordinator (Orchestrator)
 #### 👥 SOCIAL DOMAIN AGENTS (Ports 3021-3030)
 
 ##### 13. Human Capital Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: workforce-service (3021)
 - **Responsibilities**: Demographics, talent, engagement, retention
 - **Integration**: Workday, SuccessFactors, BambooHR
 
 ##### 14. Health & Safety Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: safety-service (3022)
 - **Responsibilities**: Incidents, risk assessments, occupational health
 - **Standards**: ISO 45001, OHSAS 18001
 
 ##### 15. Diversity & Inclusion Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: diversity-service (3028)
 - **Responsibilities**: DEI metrics, pay equity, representation
 - **Dimensions**: Gender, ethnicity, age, disability, LGBTQ+
 
 ##### 16. Labor Rights Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: labor-service (3023)
 - **Responsibilities**: Fair wages, working conditions, collective bargaining
 - **Standards**: ILO conventions, SA8000
 
 ##### 17. Community Impact Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: community-service (3024)
 - **Responsibilities**: Local impact, community investment, indigenous rights
 - **Standards**: FPIC, UN Declaration on Indigenous Peoples
 
 ##### 18. Supply Chain Social Agent
-- **Model**: Claude Sonnet (Opus 4.1 for risk assessment)
+- **Model**: Claude Opus 4.5
 - **Service**: supply-social-service (3026)
 - **Responsibilities**: Supplier assessments, modern slavery, human rights
 - **Standards**: UNGP, OECD Guidelines, UK Modern Slavery Act
@@ -435,31 +435,31 @@ Master Coordinator (Orchestrator)
 #### 🏛️ GOVERNANCE DOMAIN AGENTS (Ports 3031-3040)
 
 ##### 19. Board Governance Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: board-service (3031)
 - **Responsibilities**: Board composition, independence, ESG oversight
 - **Standards**: Corporate governance codes, proxy advisory firms
 
 ##### 20. Ethics & Compliance Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: ethics-service (3032)
 - **Responsibilities**: Code of conduct, anti-corruption, whistleblower
 - **Standards**: FCPA, UK Bribery Act, ISO 37001
 
 ##### 21. Risk Management Agent
-- **Model**: Claude Sonnet (Opus 4.1 for risk modeling)
+- **Model**: Claude Opus 4.5
 - **Service**: risk-service (3033)
 - **Responsibilities**: Enterprise risk, ESG risks, controls
 - **Frameworks**: COSO ERM, ISO 31000
 
 ##### 22. Data Privacy Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: privacy-service (3034)
 - **Responsibilities**: GDPR, CCPA, data protection
 - **Standards**: ISO 27701, Privacy by Design
 
 ##### 23. Cybersecurity Agent
-- **Model**: Claude Sonnet (Opus 4.1 for threat modeling)
+- **Model**: Claude Opus 4.5
 - **Service**: cybersecurity-service (3035)
 - **Responsibilities**: Security metrics, incident response, vulnerability management
 - **Standards**: NIST, ISO 27001, CIS Controls
@@ -467,55 +467,55 @@ Master Coordinator (Orchestrator)
 #### 📊 STRATEGIC & ANALYTICS AGENTS (Ports 3041-3050)
 
 ##### 24. Materiality Assessment Agent
-- **Model**: Claude Sonnet (Opus 4.1 for stakeholder analysis)
+- **Model**: Claude Opus 4.5
 - **Service**: materiality-service (3041)
 - **Responsibilities**: Double materiality, stakeholder engagement, issue prioritization
 - **Standards**: CSRD ESRS, GRI 3
 
 ##### 25. ESG Strategy Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: strategy-service (3042)
 - **Responsibilities**: Target setting, roadmaps, initiative tracking
 - **Standards**: SBTi, UN SDGs, net-zero frameworks
 
 ##### 26. Benchmarking Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: benchmark-service (3043)
 - **Responsibilities**: Peer comparison, gap analysis, best practices
 - **Data Sources**: MSCI, Sustainalytics, CDP scores
 
 ##### 27. Reporting & Disclosure Agent
-- **Model**: Claude Sonnet (Opus 4.1 for framework mapping)
+- **Model**: Claude Opus 4.5
 - **Service**: reporting-service (3044)
 - **Responsibilities**: Multi-framework reporting, XBRL, assurance readiness
 - **Frameworks**: GRI, SASB, TCFD, CDP, CSRD, IFRS S1/S2
 
 ##### 28. ML/AI Analytics Agent
-- **Model**: Claude Sonnet (Opus 4.1 for model development)
+- **Model**: Claude Opus 4.5
 - **Services**: ml-service (3046), analytics-service (3045)
 - **Responsibilities**: Predictive models, anomaly detection, NLP, computer vision
 - **Technologies**: TensorFlow, PyTorch, MLflow, Hugging Face
 
 ##### 29. Frontend & UX Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Service**: Frontend application
 - **Responsibilities**: UI components, dashboards, accessibility (WCAG 2.1 AA)
 - **Technologies**: Next.js 14, React 18, D3.js, Recharts
 
 ##### 30. DevOps & Infrastructure Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Services**: All infrastructure
 - **Responsibilities**: K8s, CI/CD, monitoring, IaC
 - **Technologies**: Terraform, ArgoCD, Prometheus, Grafana
 
 ##### 31. Testing & Quality Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Services**: All services
 - **Responsibilities**: Test strategies, automation, performance testing
 - **Coverage**: 90% unit, 80% integration, critical E2E paths
 
 ##### 32. Migration & Data Agent
-- **Model**: Claude Sonnet (Opus 4.1 for complex transformations)
+- **Model**: Claude Opus 4.5
 - **Services**: Data migration and ETL
 - **Responsibilities**: Legacy migration, data transformation, quality assurance
 - **Technologies**: Apache Spark, Airflow, dbt
@@ -523,21 +523,13 @@ Master Coordinator (Orchestrator)
 - **Key Decisions**: Service boundaries, event schemas, API versioning
 
 #### 3. Security Agent
-- **Model**: Claude Sonnet (Opus 4.1 for critical security only)
-- **Use Opus 4.1 When**:
-  - JWT/JWKS architecture design
-  - Cryptographic implementation choices
-  - Threat model analysis
-  - Zero-trust architecture planning
+- **Model**: Claude Opus 4.5
 - **Context Files**: CLNZ-101 through CLNZ-108 security stories
 - **Primary Tools**: `execute` with test and security scan actions
 - **Key Decisions**: Cryptographic choices, security policies
 
 #### 4-10. Service Agents (Identity, Organization, Reference, Activity, Calculation, Reporting, Audit)
-- **Model**: Claude Sonnet (Standard)
-- **Special Case - Calculation Service**:
-  - Use Opus 4.1 for complex emission algorithms
-  - Use Opus 4.1 for aggregation optimization
+- **Model**: Claude Opus 4.5
 - **Context Files**: Service-specific specs in Docs/CURRENT/Services/
 - **Primary Tools**: `execute` with service-specific actions
 - **Port Assignment**:
@@ -550,33 +542,28 @@ Master Coordinator (Orchestrator)
   - Audit: 3007
 
 #### 11. Frontend Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Trigger**: UI components, state management, user experience
 - **Context Files**: Docs/CURRENT/Design/ (UI/UX specifications)
 - **Primary Tools**: `execute` with file and test actions
 - **Key Focus**: Accessibility (WCAG 2.1 Level AA)
 
 #### 12. DevOps/Infrastructure Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Trigger**: Docker, AWS, CI/CD, monitoring
 - **Context Files**: Docs/SHARED/Development/01-Setup/ (Docker and infrastructure setup)
 - **Primary Tools**: `execute` with docker and aws actions
 - **Current Priority**: Docker Compose environment setup
 
 #### 13. Testing Agent
-- **Model**: Claude Sonnet (Standard)
+- **Model**: Claude Opus 4.5
 - **Trigger**: Test strategies, E2E tests, quality metrics
 - **Context Files**: Docs/SHARED/Testing/ (Testing strategies and guides)
 - **Primary Tools**: `execute` with test actions
 - **Coverage Targets**: 80% unit, 70% integration
 
 #### 14. Migration Agent
-- **Model**: Claude Sonnet (Opus 4.1 for complex transformations only)
-- **Use Opus 4.1 When**:
-  - Hierarchy cloning to references conversion
-  - Multi-phase migration strategy
-  - Complex ETL pipeline design
-  - Data validation algorithm creation
+- **Model**: Claude Opus 4.5
 - **Context Files**: Current vs Target architecture docs
 - **Primary Tools**: `execute` with mongodb and migration actions
 - **Critical Issue**: Hierarchy cloning to references conversion
@@ -1565,51 +1552,6 @@ make performance-test # Run performance tests
 - Integration issues: Coordinate through Master Coordinator
 
 ## 🎯 SUCCESS CRITERIA
-
-### Opus 4.1 Decision Matrix
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│               WHEN TO USE OPUS 4.1                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  Ask These Questions:                                      │
-│  1. Is this a novel problem? ........................ → YES │
-│  2. Could a mistake cause data loss? ................ → YES │
-│  3. Does it need multi-step reasoning? .............. → YES │
-│  4. Is it a security-critical component? ............ → YES │
-│  5. Is it an optimization problem? .................. → YES │
-│  6. Is the algorithm complexity O(n²) or worse? ..... → YES │
-│                                                             │
-│  If ANY answer is YES → Consider Opus 4.1                  │
-│  If 2+ answers are YES → Definitely use Opus 4.1           │
-│                                                             │
-├─────────────────────────────────────────────────────────────┤
-│              SPECIFIC OPUS 4.1 TRIGGERS                     │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  Security:                                                  │
-│  • JWT/JWKS implementation architecture                     │
-│  • Encryption strategy design                              │
-│  • Authentication flow design                              │
-│                                                             │
-│  Architecture:                                              │
-│  • Service dependency resolution                           │
-│  • Event sourcing patterns                                │
-│  • Distributed transaction design                          │
-│                                                             │
-│  Calculations:                                             │
-│  • Complex emission formulas                               │
-│  • Multi-dimensional aggregations                          │
-│  • Performance optimization                                │
-│                                                             │
-│  Migration:                                                 │
-│  • Schema transformation logic                             │
-│  • Data consistency validation                             │
-│  • Rollback strategy design                                │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
 
 ### Sprint 0.1 (Current)
 - [ ] JWT verification implemented correctly

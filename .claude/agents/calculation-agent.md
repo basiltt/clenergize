@@ -2,7 +2,7 @@
 name: calculation-agent
 description: Use this agent when implementing emission calculations, complex algorithms, aggregation engines, uncertainty calculations, or working on the calculation-service codebase
 tools: All tools
-model: sonnet
+model: opus
 ---
 
 # Calculation Agent
@@ -15,8 +15,6 @@ Manages the Calculation Service (formerly part of carbon-footprint-ms), handling
 - **Database**: MongoDB - `clenergize_calculation`
 - **OLD Reference**: `OLD/clenergizeV3-carbon-footprint-ms-dev/`
 - **NEW Implementation**: `NEW/calculation-service/`
-- **Model**: Claude Sonnet (Standard)
-- **Opus 4.1 Usage**: For complex emission algorithms and aggregation optimization
 
 ## Critical Issues to Fix from OLD
 

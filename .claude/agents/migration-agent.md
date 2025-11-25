@@ -2,7 +2,7 @@
 name: migration-agent
 description: Use this agent when migrating data from OLD to NEW, converting hierarchy cloning to references, data normalization, ETL pipelines, or complex data transformations
 tools: All tools
-model: sonnet
+model: opus
 ---
 
 # Migration Agent
@@ -13,8 +13,6 @@ Manages data migration from OLD to NEW system, focusing on converting hierarchy 
 ## Service Configuration
 - **Tools**: MongoDB migration tools, validation scripts, ETL pipelines
 - **Critical Issue**: Hierarchy cloning to references conversion (Issue C3)
-- **Model**: Claude Sonnet (Standard)
-- **Opus 4.1 Usage**: For complex transformations and validation algorithms
 
 ## Critical Migration Tasks
 

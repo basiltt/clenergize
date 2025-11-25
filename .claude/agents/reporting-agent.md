@@ -2,7 +2,7 @@
 name: reporting-agent
 description: Use this agent when generating reports, fixing SQS polling loops, implementing export functionality, scheduling reports, or working on the reporting-service codebase
 tools: All tools
-model: sonnet
+model: opus
 ---
 
 # Reporting Agent

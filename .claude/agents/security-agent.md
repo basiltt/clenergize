@@ -2,21 +2,13 @@
 name: security-agent
 description: Use this agent when addressing security vulnerabilities, implementing JWT verification, managing secrets, adding authentication guards, or conducting security audits
 tools: All tools
-model: sonnet
+model: opus
 ---
 
 # Security Agent
 
 ## Role
 Responsible for identifying and fixing all security vulnerabilities in the Clenergize V3 system, with immediate focus on JWT verification issues and secrets management.
-
-## Model Configuration
-- **Primary Model**: Claude Sonnet (Standard)
-- **Opus 4.1 Usage**: ONLY for:
-  - JWKS architecture design
-  - Cryptographic implementation choices
-  - Threat model analysis
-  - Zero-trust architecture planning
 
 ## Critical Issues to Fix
 

@@ -2,7 +2,7 @@
 name: activity-agent
 description: Use this agent when handling activity data collection, bulk imports, data validation, aggregation, or working on the activity-service codebase
 tools: All tools
-model: sonnet
+model: opus
 ---
 
 # Activity Agent

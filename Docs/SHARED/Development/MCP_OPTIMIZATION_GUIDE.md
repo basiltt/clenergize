@@ -1,20 +1,121 @@
 # MCP Server Context Optimization Guide
 
 > **Problem**: 19 MCP servers consuming ~100% context before work begins
-> **Solution**: Selective server activation based on task type
+> **Solution**: Minimal base config + runtime toggling via `/mcp`
 
-## Quick Reference
+## Current Configuration
 
-### Context Optimization Strategies
+### Active Servers (4 Essential)
+| Server | Purpose |
+|--------|---------|
+| `filesystem` | File operations |
+| `mongodb-general` | All databases via `database` parameter |
+| `memory` | Context persistence |
+| `fetch` | External resources |
 
-1. **Disable Non-Essential Servers** - Immediate 40-60% reduction
-2. **Use Task-Specific Profiles** - Only load what you need
-3. **Consolidate Similar Tools** - Reduce tool definition overhead
-4. **Monitor with `/context`** - Track improvements
+### Disabled Servers (15)
+Stored in `~/.claude/mcp-servers-disabled.json` for easy re-enabling.
 
 ---
 
-## Strategy 1: Server Categorization
+## Runtime Server Management with `/mcp`
+
+### Quick Commands
+
+```
+/mcp                    # View all servers, toggle on/off
+@github                 # Toggle GitHub server
+@docker                 # Toggle Docker server
+@localstack             # Toggle LocalStack server
+```
+
+### Workflow Example
+
+**Task: Working on Identity Service with GitHub PR**
+
+1. Start Claude Code (loads 4 essential servers)
+2. Type `@github` to enable GitHub tools
+3. Work on your task
+4. Use `/mcp` to disable when done
+
+**Task: DevOps/Infrastructure Work**
+
+1. Type `@docker @localstack` to enable both
+2. Work on containers/AWS simulation
+3. Disable when switching tasks
+
+---
+
+## Context Optimization Strategies
+
+1. **Minimal Base Config** - Only 4 essential servers always loaded
+2. **Runtime Toggling** - Use `/mcp` or `@server-name` as needed
+3. **MongoDB Consolidation** - Single server accesses all DBs
+4. **Monitor with `/context`** - Track context usage
+
+---
+
+## Using MongoDB with Single Server
+
+With `mongodb-general`, access any database by specifying the `database` parameter:
+
+```javascript
+// Query identity service database
+mcp__mongodb-general__find({
+  database: "clenergize_identity",
+  collection: "users",
+  filter: { status: "active" }
+})
+
+// Query organization service database
+mcp__mongodb-general__find({
+  database: "clenergize_organization",
+  collection: "projects"
+})
+
+// Query calculation service database
+mcp__mongodb-general__aggregate({
+  database: "clenergize_calculation",
+  collection: "emissions",
+  pipeline: [{ $match: { year: 2024 } }]
+})
+```
+
+### Database Names Reference
+| Service | Database Name |
+|---------|--------------|
+| Identity | `clenergize_identity` |
+| Organization | `clenergize_organization` |
+| Reference | `clenergize_reference` |
+| Activity | `clenergize_activity` |
+| Calculation | `clenergize_calculation` |
+| Reporting | `clenergize_reporting` |
+| Audit | `clenergize_audit` |
+
+---
+
+## Server Quick Reference
+
+### To Re-enable a Server Permanently
+
+Copy from `~/.claude/mcp-servers-disabled.json` to `~/.claude/.claude.json`:
+
+```json
+{
+  "mcpServers": {
+    // ... existing servers ...
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "your-token" }
+    }
+  }
+}
+```
+
+---
+
+## Detailed Server Categorization
 
 ### Essential (Always Enabled)
 These provide core functionality needed for most tasks:

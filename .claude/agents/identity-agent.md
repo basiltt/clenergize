@@ -2,7 +2,7 @@
 name: identity-agent
 description: Use this agent when working on authentication, authorization, user management, JWT token generation, role-based access control, or the identity-service codebase
 tools: All tools
-model: sonnet
+model: opus
 ---
 
 # Identity Agent
