@@ -1,0 +1,356 @@
+{
+  "dashboard": {
+    "title": "Identity Service - Detailed Metrics",
+    "tags": ["clenergize", "identity-service", "microservices"],
+    "timezone": "browser",
+    "schemaVersion": 39,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "instance",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(up{job=\"identity-service\"}, instance)",
+          "multi": false,
+          "includeAll": false,
+          "refresh": 1
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Service Status",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "up{job=\"identity-service\",instance=\"$instance\"}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            },
+            "mappings": [
+              {"type": "value", "value": "1", "text": "UP"},
+              {"type": "value", "value": "0", "text": "DOWN"}
+            ]
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Request Rate",
+        "type": "stat",
+        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{job=\"identity-service\",instance=\"$instance\"}[5m]))",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value"
+        }
+      },
+      {
+        "id": 3,
+        "title": "Error Rate",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{job=\"identity-service\",instance=\"$instance\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"identity-service\",instance=\"$instance\"}[5m])) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 5, "color": "red"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value"
+        }
+      },
+      {
+        "id": 4,
+        "title": "p95 Response Time",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"identity-service\",instance=\"$instance\"}[5m])) by (le)) * 1000",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 200, "color": "yellow"},
+                {"value": 500, "color": "red"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value"
+        }
+      },
+      {
+        "id": 5,
+        "title": "Requests by Endpoint",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{job=\"identity-service\",instance=\"$instance\"}[5m])) by (endpoint)",
+            "refId": "A",
+            "legendFormat": "{{endpoint}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"},
+          {"format": "short"}
+        ],
+        "legend": {
+          "show": true,
+          "values": true,
+          "current": true,
+          "avg": true,
+          "max": true,
+          "sortDesc": true
+        }
+      },
+      {
+        "id": 6,
+        "title": "Response Time Percentiles",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{job=\"identity-service\",instance=\"$instance\"}[5m])) by (le)) * 1000",
+            "refId": "A",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"identity-service\",instance=\"$instance\"}[5m])) by (le)) * 1000",
+            "refId": "B",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=\"identity-service\",instance=\"$instance\"}[5m])) by (le)) * 1000",
+            "refId": "C",
+            "legendFormat": "p99"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Response Time"},
+          {"format": "short"}
+        ],
+        "legend": {
+          "show": true,
+          "values": true,
+          "current": true,
+          "avg": true,
+          "max": true
+        },
+        "thresholds": [
+          {"value": 200, "op": "gt", "fill": false, "line": true, "lineColor": "rgb(255, 165, 0)"},
+          {"value": 500, "op": "gt", "fill": false, "line": true, "lineColor": "rgb(255, 0, 0)"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "HTTP Status Codes",
+        "type": "piechart",
+        "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(increase(http_requests_total{job=\"identity-service\",instance=\"$instance\"}[5m])) by (status)",
+            "refId": "A",
+            "legendFormat": "{{status}}"
+          }
+        ],
+        "options": {
+          "pieType": "donut",
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["value", "percent"]
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Authentication Events",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(identity_auth_success_total{instance=\"$instance\"}[5m]))",
+            "refId": "A",
+            "legendFormat": "Successful Logins"
+          },
+          {
+            "expr": "sum(rate(identity_auth_failure_total{instance=\"$instance\"}[5m]))",
+            "refId": "B",
+            "legendFormat": "Failed Logins"
+          },
+          {
+            "expr": "sum(rate(identity_token_refresh_total{instance=\"$instance\"}[5m]))",
+            "refId": "C",
+            "legendFormat": "Token Refreshes"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Events/sec"},
+          {"format": "short"}
+        ],
+        "legend": {
+          "show": true,
+          "values": true,
+          "current": true
+        }
+      },
+      {
+        "id": 9,
+        "title": "Database Query Duration",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(mongodb_query_duration_seconds_bucket{service=\"identity-service\"}[5m])) by (le, operation)) * 1000",
+            "refId": "A",
+            "legendFormat": "{{operation}} - p95"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Query Time"},
+          {"format": "short"}
+        ],
+        "legend": {
+          "show": true,
+          "values": true,
+          "current": true,
+          "max": true
+        }
+      },
+      {
+        "id": 10,
+        "title": "Redis Cache Performance",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(identity_cache_hits_total{instance=\"$instance\"}[5m]))",
+            "refId": "A",
+            "legendFormat": "Cache Hits"
+          },
+          {
+            "expr": "sum(rate(identity_cache_misses_total{instance=\"$instance\"}[5m]))",
+            "refId": "B",
+            "legendFormat": "Cache Misses"
+          }
+        ],
+        "yaxes": [
+          {"format": "ops", "label": "Operations/sec"},
+          {"format": "short"}
+        ],
+        "legend": {
+          "show": true,
+          "values": true,
+          "current": true
+        }
+      },
+      {
+        "id": 11,
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 28, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes{job=\"identity-service\",instance=\"$instance\"} / 1024 / 1024",
+            "refId": "A",
+            "legendFormat": "RSS Memory"
+          },
+          {
+            "expr": "nodejs_heap_size_used_bytes{job=\"identity-service\",instance=\"$instance\"} / 1024 / 1024",
+            "refId": "B",
+            "legendFormat": "Heap Used"
+          },
+          {
+            "expr": "nodejs_heap_size_total_bytes{job=\"identity-service\",instance=\"$instance\"} / 1024 / 1024",
+            "refId": "C",
+            "legendFormat": "Heap Total"
+          }
+        ],
+        "yaxes": [
+          {"format": "decmbytes", "label": "Memory"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Event Loop Lag",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 28, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "nodejs_eventloop_lag_seconds{job=\"identity-service\",instance=\"$instance\"} * 1000",
+            "refId": "A",
+            "legendFormat": "Event Loop Lag"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Lag"},
+          {"format": "short"}
+        ],
+        "thresholds": [
+          {"value": 100, "op": "gt", "fill": true, "line": true, "fillColor": "rgba(255, 165, 0, 0.2)"}
+        ]
+      }
+    ]
+  },
+  "overwrite": true,
+  "folderUid": "clenergize-v3",
+  "message": "Identity Service Detailed Dashboard"
+}

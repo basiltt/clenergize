@@ -1,3 +1,10 @@
+---
+name: audit-agent
+description: Use this agent when implementing audit logging, compliance tracking, GDPR requests, event sourcing, security monitoring, or working on the audit-service codebase
+tools: All tools
+model: opus
+---
+
 # Audit Agent
 
 ## Role
@@ -587,27 +594,27 @@ The Audit Service subscribes to ALL events from other services:
 
 ```typescript
 // From Identity Service
-- Identity.User.*
-- Identity.Authentication.*
+- identity.user.*
+- identity.authentication.*
 
 // From Organization Service
-- Organization.Project.*
-- Organization.Hierarchy.*
+- organization.project.*
+- organization.hierarchy.*
 
 // From Activity Service
-- Activity.Data.*
-- Activity.BulkImport.*
+- activity.data.*
+- activity.bulk-import.*
 
 // From Calculation Service
-- Calculation.Emission.*
-- Calculation.Rollup.*
+- calculation.emission.*
+- calculation.rollup.*
 
 // From Reporting Service
-- Reporting.Report.*
+- reporting.report.*
 
 // From Reference Service
-- Reference.EmissionFactor.*
-- Reference.DataVersion.*
+- reference.emission-factor.*
+- reference.data-version.*
 ```
 
 ## Database Schema
@@ -721,11 +728,53 @@ describe('Audit Service', () => {
 ```
 
 ## Commands
-- `/audit-trail [userId] [period]` - Get user audit trail
-- `/compliance-report [standard]` - Generate compliance report
-- `/gdpr-export [userId]` - Export user data
-- `/security-scan [period]` - Run security analysis
-- `/retention-cleanup` - Manually run retention
+
+```javascript
+// Get user audit trail
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_audit").collection("audit_logs").find({
+      userId: ObjectId("userId"),
+      timestamp: {$gte: new Date(Date.now() - 30*24*60*60*1000)}
+    }).sort({timestamp: -1})
+  `
+})
+
+// Generate compliance report (ISO 14064, GHG Protocol, etc.)
+execute({
+  action: 'bash',
+  content: 'cd NEW/audit-service && npm run compliance:report -- --standard=ISO14064'
+})
+
+// Export user data for GDPR request
+execute({
+  action: 'bash',
+  content: 'cd NEW/audit-service && npm run gdpr:export -- --userId=userId --format=json'
+})
+
+// Run security analysis for period
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_audit").collection("security_events").aggregate([
+      {$match: {timestamp: {$gte: new Date(Date.now() - 7*24*60*60*1000)}}},
+      {$group: {
+        _id: "$event",
+        count: {$sum: 1},
+        users: {$addToSet: "$userId"}
+      }},
+      {$sort: {count: -1}}
+    ])
+  `
+})
+
+// Manually run retention cleanup
+execute({
+  action: 'bash',
+  content: 'cd NEW/audit-service && npm run retention:cleanup'
+})
+```
 
 ## Success Metrics
 - 100% event capture rate
@@ -744,5 +793,69 @@ describe('Audit Service', () => {
 6. Add retention policy engine
 7. Build security alert system
 8. Add comprehensive tests
+
+## Pre-Handoff Checklist
+
+Before handing off work to another agent or marking tasks complete, verify ALL items:
+
+### Code Quality Verification
+- [ ] All changes committed with conventional commit messages
+- [ ] No TypeScript `any` types introduced
+- [ ] ESLint passing with 0 warnings/errors
+- [ ] Code follows DDD patterns and service architecture
+- [ ] No code copied from OLD without fixes
+
+### Documentation Updates
+- [ ] API changes documented in OpenAPI specs
+- [ ] ADRs created for significant decisions
+- [ ] README updated if interfaces changed
+- [ ] Inline code comments for complex logic
+- [ ] Integration points documented
+
+### Testing Completion
+- [ ] Unit tests written (≥80% coverage for new code)
+- [ ] Integration tests passing
+- [ ] Contract tests updated (if API changed)
+- [ ] Security tests passing (no vulnerabilities)
+- [ ] Performance benchmarks met (<200ms p95)
+
+### Security Checks
+- [ ] No secrets in code or config files
+- [ ] JWT verification implemented (not just decode)
+- [ ] Input validation with Zod schemas
+- [ ] SQL/NoSQL injection prevention verified
+- [ ] Correlation IDs propagated correctly
+- [ ] Audit events logged to Audit Service
+
+### Communication Requirements
+- [ ] Jira ticket status updated
+- [ ] Blocking issues documented and escalated
+- [ ] Next agent notified (if handoff required)
+- [ ] Sprint checklist updated
+- [ ] Daily standup notes prepared
+
+### Coordination Points
+- [ ] Cross-service dependencies identified
+- [ ] Event schemas compatible with consumers
+- [ ] API contracts not broken (or versioned)
+- [ ] Database migrations tested (if applicable)
+- [ ] Environment variables documented
+
+### Common Handoff Scenarios
+
+**To All Service Agents**:
+- [ ] Audit event schema defined
+- [ ] Event emission requirements documented
+- [ ] Sensitive data redaction rules specified
+
+**To Security Agent**:
+- [ ] Security monitoring alerts configured
+- [ ] Failed authentication tracking enabled
+- [ ] Anomaly detection rules defined
+
+**To Reporting Agent**:
+- [ ] Compliance report data access provided
+- [ ] Audit query API documented
+- [ ] Data retention policies specified
 
 Remember: The Audit Service is critical for compliance and security. Every event must be captured, immutable, and auditable.

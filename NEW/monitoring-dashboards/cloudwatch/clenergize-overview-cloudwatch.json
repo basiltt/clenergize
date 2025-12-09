@@ -1,0 +1,329 @@
+{
+  "dashboardName": "Clenergize-V3-System-Overview",
+  "dashboardBody": {
+    "widgets": [
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 0,
+        "width": 24,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/ECS", "CPUUtilization", {"stat": "Average", "label": "Identity Service"}],
+            ["...", {"stat": "Average", "label": "Organization Service"}],
+            ["...", {"stat": "Average", "label": "Activity Service"}],
+            ["...", {"stat": "Average", "label": "Calculation Service"}],
+            ["...", {"stat": "Average", "label": "Reporting Service"}],
+            ["...", {"stat": "Average", "label": "Audit Service"}]
+          ],
+          "view": "timeSeries",
+          "stacked": false,
+          "region": "us-east-1",
+          "title": "Service CPU Utilization",
+          "period": 300,
+          "yAxis": {
+            "left": {
+              "min": 0,
+              "max": 100,
+              "label": "Percent"
+            }
+          },
+          "annotations": {
+            "horizontal": [
+              {
+                "label": "High CPU Warning",
+                "value": 80,
+                "fill": "above",
+                "color": "#ff9900"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 6,
+        "width": 24,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/ECS", "MemoryUtilization", {"stat": "Average", "label": "Identity Service"}],
+            ["...", {"stat": "Average", "label": "Organization Service"}],
+            ["...", {"stat": "Average", "label": "Activity Service"}],
+            ["...", {"stat": "Average", "label": "Calculation Service"}],
+            ["...", {"stat": "Average", "label": "Reporting Service"}],
+            ["...", {"stat": "Average", "label": "Audit Service"}]
+          ],
+          "view": "timeSeries",
+          "stacked": false,
+          "region": "us-east-1",
+          "title": "Service Memory Utilization",
+          "period": 300,
+          "yAxis": {
+            "left": {
+              "min": 0,
+              "max": 100,
+              "label": "Percent"
+            }
+          },
+          "annotations": {
+            "horizontal": [
+              {
+                "label": "High Memory Warning",
+                "value": 85,
+                "fill": "above",
+                "color": "#ff9900"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 12,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["Clenergize/IdentityService", "RequestCount", {"stat": "Sum", "label": "Identity"}],
+            ["Clenergize/OrganizationService", "RequestCount", {"stat": "Sum", "label": "Organization"}],
+            ["Clenergize/ActivityService", "RequestCount", {"stat": "Sum", "label": "Activity"}],
+            ["Clenergize/CalculationService", "RequestCount", {"stat": "Sum", "label": "Calculation"}],
+            ["Clenergize/ReportingService", "RequestCount", {"stat": "Sum", "label": "Reporting"}],
+            ["Clenergize/AuditService", "RequestCount", {"stat": "Sum", "label": "Audit"}]
+          ],
+          "view": "timeSeries",
+          "stacked": false,
+          "region": "us-east-1",
+          "title": "Request Count by Service",
+          "period": 300,
+          "yAxis": {
+            "left": {
+              "min": 0,
+              "label": "Requests"
+            }
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 12,
+        "y": 12,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["Clenergize/IdentityService", "ErrorRate", {"stat": "Average", "label": "Identity"}],
+            ["Clenergize/OrganizationService", "ErrorRate", {"stat": "Average", "label": "Organization"}],
+            ["Clenergize/ActivityService", "ErrorRate", {"stat": "Average", "label": "Activity"}],
+            ["Clenergize/CalculationService", "ErrorRate", {"stat": "Average", "label": "Calculation"}],
+            ["Clenergize/ReportingService", "ErrorRate", {"stat": "Average", "label": "Reporting"}],
+            ["Clenergize/AuditService", "ErrorRate", {"stat": "Average", "label": "Audit"}]
+          ],
+          "view": "timeSeries",
+          "stacked": false,
+          "region": "us-east-1",
+          "title": "Error Rate by Service (%)",
+          "period": 300,
+          "yAxis": {
+            "left": {
+              "min": 0,
+              "max": 5,
+              "label": "Percent"
+            }
+          },
+          "annotations": {
+            "horizontal": [
+              {
+                "label": "SLO Threshold",
+                "value": 1,
+                "fill": "above",
+                "color": "#d13212"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 18,
+        "width": 24,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["Clenergize/IdentityService", "ResponseTimeP95", {"stat": "Average", "label": "Identity - p95"}],
+            ["Clenergize/OrganizationService", "ResponseTimeP95", {"stat": "Average", "label": "Organization - p95"}],
+            ["Clenergize/ActivityService", "ResponseTimeP95", {"stat": "Average", "label": "Activity - p95"}],
+            ["Clenergize/CalculationService", "ResponseTimeP95", {"stat": "Average", "label": "Calculation - p95"}],
+            ["Clenergize/ReportingService", "ResponseTimeP95", {"stat": "Average", "label": "Reporting - p95"}],
+            ["Clenergize/AuditService", "ResponseTimeP95", {"stat": "Average", "label": "Audit - p95"}]
+          ],
+          "view": "timeSeries",
+          "stacked": false,
+          "region": "us-east-1",
+          "title": "Response Time p95 (ms)",
+          "period": 300,
+          "yAxis": {
+            "left": {
+              "min": 0,
+              "label": "Milliseconds"
+            }
+          },
+          "annotations": {
+            "horizontal": [
+              {
+                "label": "SLO Target",
+                "value": 200,
+                "color": "#2ca02c"
+              },
+              {
+                "label": "Warning",
+                "value": 500,
+                "fill": "above",
+                "color": "#ff9900"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 24,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/ApplicationELB", "TargetResponseTime", {"stat": "Average", "label": "API Gateway"}],
+            ["AWS/ApplicationELB", "RequestCount", {"stat": "Sum", "yAxis": "right", "label": "Total Requests"}]
+          ],
+          "view": "timeSeries",
+          "stacked": false,
+          "region": "us-east-1",
+          "title": "API Gateway Performance",
+          "period": 300,
+          "yAxis": {
+            "left": {
+              "min": 0,
+              "label": "Response Time (s)"
+            },
+            "right": {
+              "label": "Requests"
+            }
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 12,
+        "y": 24,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/ElastiCache", "CacheHitRate", {"stat": "Average", "label": "Redis Cache Hit Rate"}],
+            ["AWS/ElastiCache", "CPUUtilization", {"stat": "Average", "yAxis": "right", "label": "Redis CPU"}]
+          ],
+          "view": "timeSeries",
+          "stacked": false,
+          "region": "us-east-1",
+          "title": "Redis Cache Performance",
+          "period": 300,
+          "yAxis": {
+            "left": {
+              "min": 0,
+              "max": 100,
+              "label": "Hit Rate %"
+            },
+            "right": {
+              "min": 0,
+              "max": 100,
+              "label": "CPU %"
+            }
+          },
+          "annotations": {
+            "horizontal": [
+              {
+                "label": "Minimum Hit Rate",
+                "value": 90,
+                "color": "#2ca02c"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 0,
+        "y": 30,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/DocDB", "DatabaseConnections", {"stat": "Average", "label": "Active Connections"}],
+            ["AWS/DocDB", "CPUUtilization", {"stat": "Average", "yAxis": "right", "label": "CPU Utilization"}]
+          ],
+          "view": "timeSeries",
+          "stacked": false,
+          "region": "us-east-1",
+          "title": "MongoDB (DocumentDB) Performance",
+          "period": 300,
+          "yAxis": {
+            "left": {
+              "min": 0,
+              "label": "Connections"
+            },
+            "right": {
+              "min": 0,
+              "max": 100,
+              "label": "CPU %"
+            }
+          }
+        }
+      },
+      {
+        "type": "metric",
+        "x": 12,
+        "y": 30,
+        "width": 12,
+        "height": 6,
+        "properties": {
+          "metrics": [
+            ["AWS/SQS", "ApproximateNumberOfMessagesVisible", {"stat": "Average", "label": "Messages in Queue"}],
+            ["AWS/SQS", "NumberOfMessagesSent", {"stat": "Sum", "label": "Messages Sent"}],
+            ["AWS/SQS", "NumberOfMessagesReceived", {"stat": "Sum", "label": "Messages Received"}]
+          ],
+          "view": "timeSeries",
+          "stacked": false,
+          "region": "us-east-1",
+          "title": "SQS Queue Metrics",
+          "period": 300,
+          "yAxis": {
+            "left": {
+              "min": 0,
+              "label": "Count"
+            }
+          }
+        }
+      },
+      {
+        "type": "log",
+        "x": 0,
+        "y": 36,
+        "width": 24,
+        "height": 6,
+        "properties": {
+          "query": "SOURCE '/aws/ecs/clenergize-identity-service'\n| SOURCE '/aws/ecs/clenergize-organization-service'\n| SOURCE '/aws/ecs/clenergize-activity-service'\n| SOURCE '/aws/ecs/clenergize-calculation-service'\n| SOURCE '/aws/ecs/clenergize-reporting-service'\n| SOURCE '/aws/ecs/clenergize-audit-service'\n| fields @timestamp, @message, level, correlationId, service\n| filter level = 'error'\n| sort @timestamp desc\n| limit 100",
+          "region": "us-east-1",
+          "stacked": false,
+          "title": "Recent Error Logs (All Services)",
+          "view": "table"
+        }
+      }
+    ]
+  }
+}

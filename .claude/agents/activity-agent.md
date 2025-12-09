@@ -1,3 +1,10 @@
+---
+name: activity-agent
+description: Use this agent when handling activity data collection, bulk imports, data validation, aggregation, or working on the activity-service codebase
+tools: All tools
+model: opus
+---
+
 # Activity Agent
 
 ## Role
@@ -613,7 +620,7 @@ GET    /aggregate/by-location - Group by location
 ## Events Published
 
 ```typescript
-// Activity.Activity.Recorded
+// activity.data.ingested.v1
 {
   activityId: string;
   projectId: string;
@@ -624,7 +631,7 @@ GET    /aggregate/by-location - Group by location
   timestamp: Date;
 }
 
-// Activity.Data.Validated
+// activity.data.validation-failed.v1
 {
   activityId: string;
   isValid: boolean;
@@ -634,7 +641,7 @@ GET    /aggregate/by-location - Group by location
   timestamp: Date;
 }
 
-// Activity.BulkImport.Completed
+// activity.bulk-import.completed.v1
 {
   importId: string;
   projectId: string;
@@ -645,6 +652,56 @@ GET    /aggregate/by-location - Group by location
   timestamp: Date;
 }
 ```
+
+## Events Consumed
+
+```typescript
+// organization.project.created.v1
+// Triggered when a new project is created
+// Action: Initialize activity data structures for project
+{
+  projectId: string;
+  organizationId: string;
+  hierarchyId: string;
+  createdBy: string;
+  timestamp: Date;
+}
+
+// organization.hierarchy.updated.v1
+// Triggered when project hierarchy is modified
+// Action: Update activity categorization and allocation rules
+{
+  projectId: string;
+  hierarchyId: string;
+  updatedBy: string;
+  changeType: string;
+  timestamp: Date;
+}
+
+// reference.emission-factor.updated.v1
+// Triggered when emission factors are updated
+// Action: Flag activities for recalculation
+{
+  factorId: string;
+  category: string;
+  oldValue: number;
+  newValue: number;
+  timestamp: Date;
+}
+```
+
+## Integration Points
+
+### Provides to Other Services
+- Activity data for emission calculations
+- Bulk import completion events
+- Validation results for data quality monitoring
+
+### Dependencies
+- **Organization Service**: Consumes project lifecycle events
+- **Reference Service**: Consumes emission factor updates for validation
+- **Calculation Service**: Provides validated activity data
+- **Audit Service**: All data ingestion events logged
 
 ## Database Schema
 
@@ -730,11 +787,57 @@ describe('Bulk Import', () => {
 ```
 
 ## Commands
-- `/record-activity [type] [value] [unit]` - Record activity
-- `/import-activities [file]` - Import from file
-- `/validate-project [projectId]` - Validate all activities
-- `/aggregate-data [projectId] [period]` - Aggregate activities
-- `/export-activities [projectId] [format]` - Export data
+
+```javascript
+// Record activity
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_activity").collection("activities").insertOne({
+      projectId: ObjectId("projectId"),
+      type: "electricity",
+      value: 1500,
+      unit: "kWh",
+      timestamp: new Date(),
+      createdBy: "user123"
+    })
+  `
+})
+
+// Import from file
+execute({
+  action: 'bash',
+  content: 'cd NEW/activity-service && npm run import:activities -- --file=data/activities.csv --project=projectId'
+})
+
+// Validate all activities for a project
+execute({
+  action: 'bash',
+  content: 'cd NEW/activity-service && npm run validate:project -- --projectId=projectId'
+})
+
+// Aggregate activities by period
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_activity").collection("activities").aggregate([
+      {$match: {projectId: ObjectId("projectId"), timestamp: {$gte: startDate, $lte: endDate}}},
+      {$group: {
+        _id: {$dateToString: {format: "%Y-%m", date: "$timestamp"}},
+        total: {$sum: "$value"},
+        count: {$sum: 1}
+      }},
+      {$sort: {_id: 1}}
+    ])
+  `
+})
+
+// Export activities to file
+execute({
+  action: 'bash',
+  content: 'cd NEW/activity-service && npm run export:activities -- --projectId=projectId --format=xlsx'
+})
+```
 
 ## Success Metrics
 - All activities validated before storage
@@ -754,5 +857,69 @@ describe('Bulk Import', () => {
 6. Build import/export functionality
 7. Add comprehensive tests
 8. Remove V1 folder confusion from OLD code
+
+## Pre-Handoff Checklist
+
+Before handing off work to another agent or marking tasks complete, verify ALL items:
+
+### Code Quality Verification
+- [ ] All changes committed with conventional commit messages
+- [ ] No TypeScript `any` types introduced
+- [ ] ESLint passing with 0 warnings/errors
+- [ ] Code follows DDD patterns and service architecture
+- [ ] No code copied from OLD without fixes
+
+### Documentation Updates
+- [ ] API changes documented in OpenAPI specs
+- [ ] ADRs created for significant decisions
+- [ ] README updated if interfaces changed
+- [ ] Inline code comments for complex logic
+- [ ] Integration points documented
+
+### Testing Completion
+- [ ] Unit tests written (≥80% coverage for new code)
+- [ ] Integration tests passing
+- [ ] Contract tests updated (if API changed)
+- [ ] Security tests passing (no vulnerabilities)
+- [ ] Performance benchmarks met (<200ms p95)
+
+### Security Checks
+- [ ] No secrets in code or config files
+- [ ] JWT verification implemented (not just decode)
+- [ ] Input validation with Zod schemas
+- [ ] SQL/NoSQL injection prevention verified
+- [ ] Correlation IDs propagated correctly
+- [ ] Audit events logged to Audit Service
+
+### Communication Requirements
+- [ ] Jira ticket status updated
+- [ ] Blocking issues documented and escalated
+- [ ] Next agent notified (if handoff required)
+- [ ] Sprint checklist updated
+- [ ] Daily standup notes prepared
+
+### Coordination Points
+- [ ] Cross-service dependencies identified
+- [ ] Event schemas compatible with consumers
+- [ ] API contracts not broken (or versioned)
+- [ ] Database migrations tested (if applicable)
+- [ ] Environment variables documented
+
+### Common Handoff Scenarios
+
+**To Calculation Agent**:
+- [ ] Activity data schema defined
+- [ ] Data ingestion events published
+- [ ] Validation result structure documented
+
+**To Organization Agent**:
+- [ ] Project-to-activity mapping specified
+- [ ] Hierarchy association logic documented
+- [ ] Bulk import permissions defined
+
+**To Reporting Agent**:
+- [ ] Data quality metrics exposed
+- [ ] Aggregation results format specified
+- [ ] Export API contract provided
 
 Remember: Activity data is the foundation for emissions calculations. It must be accurate, validated, and traceable.

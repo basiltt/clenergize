@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "DevOps/Infrastructure profile (~25k tokens)",
+  "mcpServers": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-server-filesystem", "C:\\Users\\ttbasil\\Desktop\\Projects\\FullStackProjects\\ClenergizeV3"]
+    },
+    "docker": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "mcp-docker"]
+    },
+    "localstack": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@localstack/mcp-server-localstack"]
+    },
+    "memory": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-server-memory"]
+    }
+  }
+}

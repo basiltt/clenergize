@@ -1,3 +1,10 @@
+---
+name: organization-agent
+description: Use this agent when managing organizations, projects, hierarchy templates, fixing hierarchy cloning issues, or working on the organization-service codebase
+tools: All tools
+model: opus
+---
+
 # Organization Agent
 
 ## Role
@@ -473,7 +480,7 @@ POST   /hierarchy-templates/:id/clone - Clone template
 ## Events Published
 
 ```typescript
-// Organization.Organization.Created
+// organization.organization.created.v1
 {
   organizationId: string;
   name: string;
@@ -482,7 +489,7 @@ POST   /hierarchy-templates/:id/clone - Clone template
   timestamp: Date;
 }
 
-// Organization.Project.Created
+// organization.project.created.v1
 {
   projectId: string;
   organizationId: string;
@@ -492,7 +499,7 @@ POST   /hierarchy-templates/:id/clone - Clone template
   timestamp: Date;
 }
 
-// Organization.Hierarchy.Customized
+// organization.hierarchy.updated.v1
 {
   projectId: string;
   customizations: HierarchyCustomization;
@@ -500,7 +507,7 @@ POST   /hierarchy-templates/:id/clone - Clone template
   timestamp: Date;
 }
 
-// Organization.Project.StatusChanged
+// organization.project.status-changed.v1
 {
   projectId: string;
   oldStatus: string;
@@ -510,6 +517,47 @@ POST   /hierarchy-templates/:id/clone - Clone template
   timestamp: Date;
 }
 ```
+
+## Events Consumed
+
+```typescript
+// identity.user.created.v1
+// Triggered when a new user is created
+// Action: Set up user's default organization membership
+{
+  userId: string;
+  email: string;
+  organizationId: string;
+  role: string;
+  timestamp: Date;
+}
+
+// identity.user.role-assigned.v1
+// Triggered when user role changes
+// Action: Update organization permissions and access control
+{
+  userId: string;
+  organizationId: string;
+  oldRole: string;
+  newRole: string;
+  assignedBy: string;
+  timestamp: Date;
+}
+```
+
+## Integration Points
+
+### Provides to Other Services
+- Project and hierarchy configuration for activity tracking
+- Organization structure for scoped calculations
+- User organization membership for authorization
+
+### Dependencies
+- **Identity Service**: Consumes user lifecycle events
+- **Activity Service**: Publishes project creation events
+- **Calculation Service**: Publishes project lifecycle events
+- **Reporting Service**: Publishes project lifecycle events
+- **Audit Service**: All organization changes logged
 
 ## Database Schema
 
@@ -639,11 +687,73 @@ describe('Hierarchy Migration', () => {
 ```
 
 ## Commands
-- `/create-org [name] [code]` - Create organization
-- `/create-project [orgId] [name]` - Create project
-- `/migrate-hierarchies` - Run hierarchy migration
-- `/analyze-duplication` - Show duplication stats
-- `/optimize-templates` - Consolidate similar templates
+
+```javascript
+// Create organization
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("organizations").insertOne({
+      name: "Acme Corp",
+      code: "ACME",
+      status: "active",
+      createdAt: new Date()
+    })
+  `
+})
+
+// Create project
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("projects").insertOne({
+      name: "Q1 Emissions Report",
+      organizationId: ObjectId("orgId"),
+      hierarchyTemplateId: ObjectId("templateId"),
+      status: "active",
+      createdAt: new Date()
+    })
+  `
+})
+
+// Run hierarchy migration (fix C3 issue)
+execute({
+  action: 'migration',
+  content: 'extract-unique-hierarchies',
+  options: {
+    sourceDb: 'clenergize_organization',
+    targetDb: 'clenergize_reference',
+    collection: 'hierarchies'
+  }
+})
+
+// Show duplication stats
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("projects").aggregate([
+      {$match: {clonedHierarchy: {$exists: true}}},
+      {$group: {
+        _id: null,
+        count: {$sum: 1},
+        totalSize: {$sum: {$bsonSize: "$clonedHierarchy"}}
+      }}
+    ])
+  `
+})
+
+// Consolidate similar templates
+execute({
+  action: 'migration',
+  content: 'merge-duplicates',
+  options: {
+    db: 'clenergize_reference',
+    collection: 'hierarchy_templates',
+    matchField: 'hash',
+    strategy: 'keep-most-referenced'
+  }
+})
+```
 
 ## Success Metrics
 - Hierarchy data stored as references (not cloned)
@@ -663,5 +773,69 @@ describe('Hierarchy Migration', () => {
 6. Create template deduplication logic
 7. Test migration on sample data
 8. Document migration process
+
+## Pre-Handoff Checklist
+
+Before handing off work to another agent or marking tasks complete, verify ALL items:
+
+### Code Quality Verification
+- [ ] All changes committed with conventional commit messages
+- [ ] No TypeScript `any` types introduced
+- [ ] ESLint passing with 0 warnings/errors
+- [ ] Code follows DDD patterns and service architecture
+- [ ] No code copied from OLD without fixes
+
+### Documentation Updates
+- [ ] API changes documented in OpenAPI specs
+- [ ] ADRs created for significant decisions
+- [ ] README updated if interfaces changed
+- [ ] Inline code comments for complex logic
+- [ ] Integration points documented
+
+### Testing Completion
+- [ ] Unit tests written (≥80% coverage for new code)
+- [ ] Integration tests passing
+- [ ] Contract tests updated (if API changed)
+- [ ] Security tests passing (no vulnerabilities)
+- [ ] Performance benchmarks met (<200ms p95)
+
+### Security Checks
+- [ ] No secrets in code or config files
+- [ ] JWT verification implemented (not just decode)
+- [ ] Input validation with Zod schemas
+- [ ] SQL/NoSQL injection prevention verified
+- [ ] Correlation IDs propagated correctly
+- [ ] Audit events logged to Audit Service
+
+### Communication Requirements
+- [ ] Jira ticket status updated
+- [ ] Blocking issues documented and escalated
+- [ ] Next agent notified (if handoff required)
+- [ ] Sprint checklist updated
+- [ ] Daily standup notes prepared
+
+### Coordination Points
+- [ ] Cross-service dependencies identified
+- [ ] Event schemas compatible with consumers
+- [ ] API contracts not broken (or versioned)
+- [ ] Database migrations tested (if applicable)
+- [ ] Environment variables documented
+
+### Common Handoff Scenarios
+
+**To Reference Agent**:
+- [ ] Hierarchy template structure defined
+- [ ] Entity type reference requirements specified
+- [ ] Custom field schema provided
+
+**To Identity Agent**:
+- [ ] User-to-organization mapping defined
+- [ ] Permission model documented
+- [ ] Role hierarchy specified
+
+**To Migration Agent**:
+- [ ] Hierarchy cloning migration strategy approved
+- [ ] Data deduplication plan validated
+- [ ] Rollback procedures tested
 
 Remember: The hierarchy cloning issue is causing 300% data bloat. This MUST be fixed before production.

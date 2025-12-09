@@ -1,0 +1,63 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+
+// Shared packages
+import { EventBusModule } from '@clenergize/event-bus';
+import { CorrelationModule } from '@clenergize/correlation';
+
+// Infrastructure modules
+import { HealthModule } from './infrastructure/health/health.module';
+import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
+
+// Domain modules
+import { {{entityNameCapitalized}}Module } from './domain/{{entityName}}/{{entityName}}.module';
+
+// Configuration
+import configuration from './config/configuration';
+import { validate } from './config/env.validation';
+
+@Module({
+  imports: [
+    // Configuration
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [configuration],
+      validate,
+      envFilePath: ['.env.local', '.env'],
+    }),
+
+    // Database
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('database.uri'),
+        dbName: configService.get<string>('database.name'),
+        retryWrites: true,
+        w: 'majority',
+      }),
+      inject: [ConfigService],
+    }),
+
+    // Shared modules
+    EventBusModule.forRoot(),
+    CorrelationModule.forRootWithInterceptor({
+      logCorrelation: process.env.NODE_ENV !== 'production',
+    }),
+
+    // Infrastructure modules
+    HealthModule,
+
+    // Domain modules
+    {{entityNameCapitalized}}Module,
+  ],
+  providers: [
+    // Global authentication guard
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
+})
+export class AppModule {}

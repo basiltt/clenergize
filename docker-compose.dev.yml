@@ -74,6 +74,63 @@ services:
       timeout: 10s
       retries: 5
 
+  # InfluxDB - Time-Series Database for ESG Metrics
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: clenergize-influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=localdev123
+      - DOCKER_INFLUXDB_INIT_ORG=clenergize
+      - DOCKER_INFLUXDB_INIT_BUCKET=esg_metrics
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=clenergize-local-token
+      - INFLUXDB_DB=clenergize_timeseries
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+      - ./init-scripts/influx:/docker-entrypoint-initdb.d:ro
+    networks:
+      - clenergize-network
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Neo4j - Graph Database for Relationships
+  neo4j:
+    image: neo4j:5-community
+    container_name: clenergize-neo4j
+    restart: unless-stopped
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    environment:
+      - NEO4J_AUTH=neo4j/localdev123
+      - NEO4J_PLUGINS=["apoc", "graph-data-science"]
+      - NEO4J_dbms_memory_pagecache_size=512M
+      - NEO4J_dbms_memory_heap_max__size=512M
+      - NEO4J_dbms_memory_heap_initial__size=256M
+      - NEO4J_dbms_default__database=clenergize
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+      - neo4j-plugins:/plugins
+      - ./init-scripts/neo4j:/docker-entrypoint-initdb.d:ro
+    networks:
+      - clenergize-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7474"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
   # Mailhog - Email Testing
   mailhog:
     image: mailhog/mailhog:latest
@@ -107,6 +164,8 @@ services:
       - PORT=3001
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_identity?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - JWT_ISSUER=http://localhost:3001
       - JWT_AUDIENCE=clenergize-v3
       - LOCALSTACK_ENDPOINT=http://localstack:4566
@@ -146,6 +205,8 @@ services:
       - PORT=3002
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_organization?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
@@ -180,6 +241,8 @@ services:
       - PORT=3003
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_reference?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
@@ -214,6 +277,8 @@ services:
       - PORT=3004
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_activity?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
@@ -248,6 +313,8 @@ services:
       - PORT=3005
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_calculation?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
@@ -283,6 +350,8 @@ services:
       - PORT=3006
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_reporting?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
@@ -318,6 +387,8 @@ services:
       - PORT=3007
       - MONGODB_URI=mongodb://admin:localdev123@mongodb:27017/clenergize_audit?authSource=admin
       - REDIS_URL=redis://redis:6379
+      - REDIS_CACHE_DB=0
+      - REDIS_PUBSUB_DB=1
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
@@ -457,6 +528,16 @@ volumes:
   redis-data:
     driver: local
   localstack-data:
+    driver: local
+  influxdb-data:
+    driver: local
+  influxdb-config:
+    driver: local
+  neo4j-data:
+    driver: local
+  neo4j-logs:
+    driver: local
+  neo4j-plugins:
     driver: local
 
 # ===========================================

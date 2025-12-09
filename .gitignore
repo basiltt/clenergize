@@ -456,3 +456,16 @@ OLD/
 
 # Ignore .idea directory
 .idea/
+
+# Ignore lock files
+*lock.json
+
+# Claude Code configuration files with secrets
+.claude/*.json
+.claude/settings.local.json
+.claude/optimized-claude-config.json
+.claude/recommended-claude-config.json
+
+# Keep command definitions and documentation
+!.claude/commands/
+!.claude/*.md

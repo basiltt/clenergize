@@ -1,3 +1,10 @@
+---
+name: reference-agent
+description: Use this agent when managing emission factors, units, conversion factors, data versioning, migration systems, or working on the reference-service codebase
+tools: All tools
+model: opus
+---
+
 # Reference Agent
 
 ## Role
@@ -503,7 +510,7 @@ POST   /versions/migrate      - Run migrations (admin)
 ## Events Published
 
 ```typescript
-// Reference.EmissionFactor.Updated
+// reference.emission-factor.updated.v1
 {
   factorId: string;
   oldValue: number;
@@ -513,7 +520,7 @@ POST   /versions/migrate      - Run migrations (admin)
   timestamp: Date;
 }
 
-// Reference.DataVersion.Changed
+// reference.data-version.changed.v1
 {
   oldVersion: string;
   newVersion: string;
@@ -521,7 +528,7 @@ POST   /versions/migrate      - Run migrations (admin)
   timestamp: Date;
 }
 
-// Reference.BulkImport.Completed
+// reference.bulk-import.completed.v1
 {
   importId: string;
   source: string;
@@ -530,6 +537,37 @@ POST   /versions/migrate      - Run migrations (admin)
   timestamp: Date;
 }
 ```
+
+## Events Consumed
+
+```typescript
+// organization.project.created.v1
+// Triggered when a new project is created
+// Action: Ensure required emission factors are available for project scope
+{
+  projectId: string;
+  organizationId: string;
+  industry: string;
+  region: string;
+  timestamp: Date;
+}
+```
+
+**Note**: Reference Service is primarily a foundational data service and consumes minimal events. Most interactions are synchronous API calls from other services for emission factors, units, and conversion data.
+
+## Integration Points
+
+### Provides to Other Services
+- Emission factor lookups (synchronous API)
+- Unit conversion utilities (synchronous API)
+- Data version information for cache invalidation
+- Reference data validation schemas
+
+### Dependencies
+- **Organization Service**: Consumes project events to ensure data availability
+- **Activity Service**: Provides emission factors for validation
+- **Calculation Service**: Provides emission factors for calculations
+- **Audit Service**: All data changes logged
 
 ## Database Schema
 
@@ -613,11 +651,51 @@ describe('Data Migration', () => {
 ```
 
 ## Commands
-- `/import-factors [file]` - Import emission factors from file
-- `/validate-factors` - Validate all emission factors
-- `/refresh-cache` - Clear and rebuild cache
-- `/run-migration [version]` - Run specific migration
-- `/export-factors [format]` - Export factors to CSV/Excel
+
+```javascript
+// Import emission factors from file
+execute({
+  action: 'file',
+  content: 'read',
+  options: { path: 'data/emission-factors.json' }
+})
+// Then import to database
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_reference").collection("emission_factors").insertMany(factorsData)
+  `
+})
+
+// Validate all emission factors
+execute({
+  action: 'bash',
+  content: 'cd NEW/reference-service && npm run validate:factors'
+})
+
+// Clear and rebuild cache
+execute({
+  action: 'redis',
+  content: 'FLUSHDB'
+})
+
+// Run specific migration
+execute({
+  action: 'migration',
+  content: 'run',
+  options: {
+    service: 'reference-service',
+    db: 'clenergize_reference',
+    version: '20251115_emission_factors_v2'
+  }
+})
+
+// Export factors to CSV/Excel
+execute({
+  action: 'bash',
+  content: 'cd NEW/reference-service && npm run export:factors -- --format=csv'
+})
+```
 
 ## Success Metrics
 - No seeding on every startup
@@ -637,5 +715,69 @@ describe('Data Migration', () => {
 6. Build import/export functionality
 7. Add comprehensive tests
 8. Document data sources and methodologies
+
+## Pre-Handoff Checklist
+
+Before handing off work to another agent or marking tasks complete, verify ALL items:
+
+### Code Quality Verification
+- [ ] All changes committed with conventional commit messages
+- [ ] No TypeScript `any` types introduced
+- [ ] ESLint passing with 0 warnings/errors
+- [ ] Code follows DDD patterns and service architecture
+- [ ] No code copied from OLD without fixes
+
+### Documentation Updates
+- [ ] API changes documented in OpenAPI specs
+- [ ] ADRs created for significant decisions
+- [ ] README updated if interfaces changed
+- [ ] Inline code comments for complex logic
+- [ ] Integration points documented
+
+### Testing Completion
+- [ ] Unit tests written (≥80% coverage for new code)
+- [ ] Integration tests passing
+- [ ] Contract tests updated (if API changed)
+- [ ] Security tests passing (no vulnerabilities)
+- [ ] Performance benchmarks met (<200ms p95)
+
+### Security Checks
+- [ ] No secrets in code or config files
+- [ ] JWT verification implemented (not just decode)
+- [ ] Input validation with Zod schemas
+- [ ] SQL/NoSQL injection prevention verified
+- [ ] Correlation IDs propagated correctly
+- [ ] Audit events logged to Audit Service
+
+### Communication Requirements
+- [ ] Jira ticket status updated
+- [ ] Blocking issues documented and escalated
+- [ ] Next agent notified (if handoff required)
+- [ ] Sprint checklist updated
+- [ ] Daily standup notes prepared
+
+### Coordination Points
+- [ ] Cross-service dependencies identified
+- [ ] Event schemas compatible with consumers
+- [ ] API contracts not broken (or versioned)
+- [ ] Database migrations tested (if applicable)
+- [ ] Environment variables documented
+
+### Common Handoff Scenarios
+
+**To Calculation Agent**:
+- [ ] Emission factor schema defined
+- [ ] Unit conversion API documented
+- [ ] Data versioning strategy communicated
+
+**To Organization Agent**:
+- [ ] Hierarchy template entities provided
+- [ ] Entity type definitions shared
+- [ ] Validation rules specified
+
+**To Migration Agent**:
+- [ ] Data migration scripts versioned
+- [ ] Rollback procedures documented
+- [ ] Data source mappings provided
 
 Remember: Reference data is critical for accurate calculations. It must be versioned, validated, and cached properly.

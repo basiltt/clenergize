@@ -1,0 +1,259 @@
+# Prometheus Alerting Rules for Clenergize V3
+
+groups:
+  # Service Health Alerts
+  - name: service_health
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up{job=~".*-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} on instance {{ $labels.instance }} has been down for more than 1 minute."
+          runbook_url: "https://docs.clenergize.com/runbooks/service-down"
+
+      - alert: ServiceFlapping
+        expr: changes(up{job=~".*-service"}[5m]) > 3
+        for: 5m
+        labels:
+          severity: warning
+          category: availability
+        annotations:
+          summary: "Service {{ $labels.job }} is flapping"
+          description: "Service {{ $labels.job }} has restarted {{ $value }} times in the last 5 minutes."
+          runbook_url: "https://docs.clenergize.com/runbooks/service-flapping"
+
+  # Performance Alerts (Response Time)
+  - name: performance_response_time
+    interval: 1m
+    rules:
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=~".*-service"}[5m])) by (job, le)) * 1000 > 500
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High response time for {{ $labels.job }}"
+          description: "p95 response time for {{ $labels.job }} is {{ $value }}ms (threshold: 500ms)."
+          runbook_url: "https://docs.clenergize.com/runbooks/high-response-time"
+
+      - alert: CriticalResponseTime
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=~".*-service"}[5m])) by (job, le)) * 1000 > 1000
+        for: 5m
+        labels:
+          severity: critical
+          category: performance
+        annotations:
+          summary: "Critical response time for {{ $labels.job }}"
+          description: "p95 response time for {{ $labels.job }} is {{ $value }}ms (threshold: 1000ms)."
+          runbook_url: "https://docs.clenergize.com/runbooks/critical-response-time"
+
+  # Error Rate Alerts
+  - name: error_rate
+    interval: 1m
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{job=~".*-service",status=~"5.."}[5m])) by (job)
+          /
+          sum(rate(http_requests_total{job=~".*-service"}[5m])) by (job)
+          * 100 > 1
+        for: 5m
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "High error rate for {{ $labels.job }}"
+          description: "Error rate for {{ $labels.job }} is {{ $value | humanize }}% (threshold: 1%)."
+          runbook_url: "https://docs.clenergize.com/runbooks/high-error-rate"
+
+      - alert: CriticalErrorRate
+        expr: |
+          sum(rate(http_requests_total{job=~".*-service",status=~"5.."}[5m])) by (job)
+          /
+          sum(rate(http_requests_total{job=~".*-service"}[5m])) by (job)
+          * 100 > 5
+        for: 2m
+        labels:
+          severity: critical
+          category: reliability
+        annotations:
+          summary: "Critical error rate for {{ $labels.job }}"
+          description: "Error rate for {{ $labels.job }} is {{ $value | humanize }}% (threshold: 5%)."
+          runbook_url: "https://docs.clenergize.com/runbooks/critical-error-rate"
+
+  # Resource Utilization Alerts
+  - name: resource_utilization
+    interval: 1m
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage on {{ $labels.instance }} is {{ $value | humanize }}% (threshold: 80%)."
+          runbook_url: "https://docs.clenergize.com/runbooks/high-cpu"
+
+      - alert: HighMemoryUsage
+        expr: 100 * (1 - ((node_memory_MemAvailable_bytes) / (node_memory_MemTotal_bytes))) > 85
+        for: 10m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage on {{ $labels.instance }} is {{ $value | humanize }}% (threshold: 85%)."
+          runbook_url: "https://docs.clenergize.com/runbooks/high-memory"
+
+      - alert: DiskSpaceLow
+        expr: 100 - ((node_filesystem_avail_bytes{mountpoint="/",fstype!="rootfs"} * 100) / node_filesystem_size_bytes{mountpoint="/",fstype!="rootfs"}) > 85
+        for: 10m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk usage on {{ $labels.instance }} is {{ $value | humanize }}% (threshold: 85%)."
+          runbook_url: "https://docs.clenergize.com/runbooks/disk-space-low"
+
+  # Database Alerts
+  - name: database
+    interval: 1m
+    rules:
+      - alert: MongoDBHighConnectionCount
+        expr: mongodb_connections{state="current"} > 800
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "High MongoDB connection count"
+          description: "MongoDB has {{ $value }} active connections (threshold: 800)."
+          runbook_url: "https://docs.clenergize.com/runbooks/mongodb-high-connections"
+
+      - alert: MongoDBSlowQueries
+        expr: rate(mongodb_op_durations_seconds_sum{type="query"}[5m]) / rate(mongodb_op_durations_seconds_count{type="query"}[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "MongoDB slow queries detected"
+          description: "Average query duration is {{ $value | humanize }}s (threshold: 1s)."
+          runbook_url: "https://docs.clenergize.com/runbooks/mongodb-slow-queries"
+
+      - alert: MongoDBReplicationLag
+        expr: mongodb_replset_member_optime_date{state="PRIMARY"} - ignoring(state) group_right mongodb_replset_member_optime_date{state="SECONDARY"} > 10
+        for: 5m
+        labels:
+          severity: critical
+          category: database
+        annotations:
+          summary: "MongoDB replication lag detected"
+          description: "Replication lag is {{ $value }}s (threshold: 10s)."
+          runbook_url: "https://docs.clenergize.com/runbooks/mongodb-replication-lag"
+
+  # Cache Alerts
+  - name: cache
+    interval: 1m
+    rules:
+      - alert: LowCacheHitRate
+        expr: rate(redis_keyspace_hits_total[5m]) / (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m])) * 100 < 90
+        for: 10m
+        labels:
+          severity: warning
+          category: cache
+        annotations:
+          summary: "Low Redis cache hit rate"
+          description: "Cache hit rate is {{ $value | humanize }}% (threshold: 90%)."
+          runbook_url: "https://docs.clenergize.com/runbooks/low-cache-hit-rate"
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          category: cache
+        annotations:
+          summary: "High Redis memory usage"
+          description: "Redis memory usage is {{ $value | humanize }}% (threshold: 90%)."
+          runbook_url: "https://docs.clenergize.com/runbooks/redis-high-memory"
+
+  # Business Logic Alerts
+  - name: business_logic
+    interval: 1m
+    rules:
+      - alert: HighAuthenticationFailureRate
+        expr: rate(identity_auth_failure_total[5m]) / rate(identity_auth_total[5m]) * 100 > 10
+        for: 5m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Authentication failure rate is {{ $value | humanize }}% (threshold: 10%)."
+          runbook_url: "https://docs.clenergize.com/runbooks/high-auth-failure"
+
+      - alert: CalculationBacklogGrowing
+        expr: calculation_queue_size > 1000 and deriv(calculation_queue_size[10m]) > 0
+        for: 10m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "Calculation backlog growing"
+          description: "Calculation queue has {{ $value }} pending items and is growing."
+          runbook_url: "https://docs.clenergize.com/runbooks/calculation-backlog"
+
+      - alert: ReportGenerationStuck
+        expr: reporting_jobs_running > 0 and reporting_jobs_completed_total == 0
+        for: 30m
+        labels:
+          severity: critical
+          category: reliability
+        annotations:
+          summary: "Report generation appears stuck"
+          description: "Report jobs have been running for 30+ minutes without completion."
+          runbook_url: "https://docs.clenergize.com/runbooks/report-generation-stuck"
+
+  # SLO Alerts (Service Level Objectives)
+  - name: slo_violations
+    interval: 5m
+    rules:
+      - alert: SLOAvailabilityViolation
+        expr: |
+          (
+            sum(rate(http_requests_total{job=~".*-service",status!~"5.."}[30d]))
+            /
+            sum(rate(http_requests_total{job=~".*-service"}[30d]))
+          ) * 100 < 99.9
+        for: 1h
+        labels:
+          severity: critical
+          category: slo
+        annotations:
+          summary: "SLO availability violation"
+          description: "30-day availability is {{ $value | humanize }}% (SLO: 99.9%)."
+          runbook_url: "https://docs.clenergize.com/runbooks/slo-availability-violation"
+
+      - alert: SLOLatencyViolation
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket{job=~".*-service"}[30d])) by (job, le)
+          ) * 1000 > 200
+        for: 1h
+        labels:
+          severity: warning
+          category: slo
+        annotations:
+          summary: "SLO latency violation for {{ $labels.job }}"
+          description: "30-day p95 latency is {{ $value | humanize }}ms (SLO: 200ms)."
+          runbook_url: "https://docs.clenergize.com/runbooks/slo-latency-violation"

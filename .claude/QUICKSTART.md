@@ -1,338 +1,412 @@
-# 🚀 Claude Code Multi-Agent System - Quick Start Guide
+# 🚀 Quick Start with MCP Executor
 
-> **Welcome to the Clenergize V3 Migration Project!** This guide will help you get started with the Claude Code multi-agent configuration system designed to migrate from problematic legacy code (OLD/) to clean microservices architecture (NEW/).
+> **Welcome to Clenergize V3!** This quick start guide uses the new MCP executor pattern that reduces context usage by 88% (from 249k to 30k tokens).
 
-## 📋 Table of Contents
+## Prerequisites Check
 
-1. [Project Overview](#project-overview)
-2. [Critical Issues We're Fixing](#critical-issues-were-fixing)
-3. [Agent System Architecture](#agent-system-architecture)
-4. [Getting Started](#getting-started)
-5. [Available Commands](#available-commands)
-6. [Using Skills](#using-skills)
-7. [Sprint 0.1 Tasks](#sprint-01-tasks)
-8. [Common Workflows](#common-workflows)
-9. [Troubleshooting](#troubleshooting)
+Before starting, ensure:
+- ✅ Docker Desktop is running
+- ✅ Node.js v18+ installed
+- ✅ Git configured
+- ✅ Claude Desktop with MCP Executor configured
 
-## 🎯 Project Overview
+## 1. Start Infrastructure
 
-**Project**: Clenergize V3 - Enterprise Carbon Footprint Management Platform
-**Architecture**: Microservices (NestJS + Next.js 15)
-**Timeline**: 8 months (16 sprints)
-**Current Sprint**: 0.1 - Security Foundation & Local Development (Day 1/10)
+```javascript
+// Start all Docker services
+execute({ action: 'bash', content: 'docker-compose -f docker-compose.infra.yml up -d' })
 
-### Directory Structure
-```
-ClenergizeV3/
-├── .claude/               # Claude Code configuration
-│   ├── agents/           # 14 specialized agent configs
-│   ├── skills/           # 10 reusable skill patterns
-│   ├── commands/         # 5 command categories
-│   └── CLAUDE.md         # Master configuration
-├── OLD/                  # Legacy code (READ ONLY!)
-│   └── [7 problematic services]
-├── NEW/                  # Clean microservices
-│   ├── identity-service/     (port 3001)
-│   ├── organization-service/ (port 3002)
-│   ├── reference-service/    (port 3003)
-│   ├── activity-service/     (port 3004)
-│   ├── calculation-service/  (port 3005)
-│   ├── reporting-service/    (port 3006)
-│   ├── audit-service/        (port 3007)
-│   └── frontend/            (port 3000)
-└── docker-compose.dev.yml
+// Verify services are running
+execute({ action: 'docker', content: 'ps' })
+
+// Check MongoDB connection
+execute({ action: 'mongodb', content: 'db.adminCommand({ping: 1})' })
 ```
 
-## 🔴 Critical Issues We're Fixing
+## 2. Initialize Git Repository
 
-The OLD codebase has 10 critical issues (C1-C10) that MUST be fixed:
+```javascript
+// Initialize repository
+execute({ action: 'bash', content: 'git init' })
 
-| Code | Issue | Severity | Impact | Fix |
-|------|-------|----------|--------|-----|
-| **C1** | JWT decode without verification | CRITICAL | Security breach | Use JWKS verification |
-| **C2** | Infinite SQS polling loops | HIGH | System crashes | Add cancellation tokens |
-| **C3** | Hierarchy cloning | HIGH | 300% data bloat | Use references |
-| **C6** | No transaction boundaries | HIGH | Data corruption | Add MongoDB transactions |
-| **C7** | Hardcoded secrets | CRITICAL | Security risk | Use AWS Secrets Manager |
+// Create develop branch
+execute({ action: 'git', content: 'checkout -b develop' })
 
-## 🤖 Agent System Architecture
+// Initial commit
+execute({ action: 'bash', content: 'git add .' })
+execute({ action: 'bash', content: 'git commit -m "chore: initial project setup"' })
 
-### The 14 Specialized Agents
-
-1. **Master Coordinator** - Orchestrates all agents
-2. **Security Agent** - Fixes JWT and security issues
-3. **Identity Agent** - User management (port 3001)
-4. **Organization Agent** - Projects & hierarchies (port 3002)
-5. **Reference Agent** - Emission factors (port 3003)
-6. **Activity Agent** - Data collection (port 3004)
-7. **Calculation Agent** - Emissions math (port 3005)
-8. **Reporting Agent** - Reports & exports (port 3006)
-9. **Audit Agent** - Compliance logging (port 3007)
-10. **Frontend Agent** - Next.js UI
-11. **DevOps Agent** - Docker & AWS
-12. **Testing Agent** - Quality assurance
-13. **Migration Agent** - Data transformation
-14. **Architecture Agent** - System design
-
-### When to Use Opus 4.1 (5% Max)
-
-Use Opus 4.1 ONLY for:
-- JWT/JWKS architecture design
-- Complex emission calculations
-- Hierarchy migration logic
-- Distributed transaction patterns
-- Service dependency resolution
-
-## 🚀 Getting Started
-
-### 1. Initial Setup
-```bash
-# Clone the repository
-git clone https://github.com/yourcompany/clenergize-v3-rebuild.git
-cd clenergize-v3-rebuild
-
-# Start Docker environment
-docker-compose -f docker-compose.dev.yml up -d
-
-# Verify services
-curl http://localhost:3001/health  # Identity service
-curl http://localhost:3002/health  # Organization service
-# ... etc
+// Add remote (replace with your repository URL)
+execute({ action: 'bash', content: 'git remote add origin https://github.com/youruser/clenergize-v3.git' })
 ```
 
-### 2. Check Sprint Status
-```bash
-# Use Claude Code command
-/sprint-status
+## 3. Quick Sprint 0.1 Start
 
-# Expected output:
-Sprint 0.1 - Security Foundation & Local Development
-Day: 1 of 10
-Progress: 0% (0 of 45 story points)
-Key Tasks:
-- Fix JWT verification (C1)
-- Setup Docker environment
-- Create base service templates
+### JWT Implementation (CLNZ-101) - Quick Commands
+
+```javascript
+// 1. Start work - Update Jira
+execute({ action: 'jira', content: 'CLNZ-101', options: { status: 'In Progress' }})
+
+// 2. Create feature branch
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-101-jwt' })
+
+// 3. Generate identity service
+execute({ action: 'generate-service', content: 'identity', options: { port: 3001 }})
+
+// 4. Apply JWT security fix (using skill)
+execute({ action: 'apply-skill', content: 'jwt-verification-fix', options: { service: 'identity' }})
+
+// 5. Run tests
+execute({ action: 'test', content: 'all', options: { service: 'identity' }})
+
+// 6. Commit changes
+execute({ action: 'bash', content: 'git add . && git commit -m "feat(identity): implement JWT verification with JWKS"' })
+
+// 7. Push and create PR
+execute({ action: 'git', content: 'push origin feature/CLNZ-101-jwt' })
+
+// 8. Update Jira
+execute({ action: 'jira', content: 'CLNZ-101', options: { status: 'In Review' }})
 ```
 
-### 3. Assign Tasks to Agents
-```bash
-# Assign JWT fix to Security Agent
-/assign-task CLNZ-101 security-agent
+## 4. Common Quick Commands
 
-# Assign Docker setup to DevOps Agent
-/assign-task CLNZ-102 devops-agent
+### Service Operations
+```javascript
+// Generate any service quickly
+execute({ action: 'generate-service', content: 'organization', options: { port: 3002 }})
+execute({ action: 'generate-service', content: 'reference', options: { port: 3003 }})
+
+// Start a service
+execute({ action: 'bash', content: 'cd NEW/identity-service && npm run start:dev' })
+
+// Build a service
+execute({ action: 'bash', content: 'cd NEW/identity-service && npm run build' })
 ```
 
-## 📝 Available Commands
+### Database Quick Access
+```javascript
+// List all databases
+execute({ action: 'mongodb', content: 'db.adminCommand({listDatabases: 1})' })
 
-### Project Management
-- `/sprint-status` - View current sprint progress
-- `/daily-sync` - Collect status from all agents
-- `/assign-task [CLNZ-XXX] [agent]` - Assign ticket to agent
-- `/blocker-report [issue]` - Escalate blocking issues
+// Quick query
+execute({ action: 'mongodb', content: 'db("clenergize_identity").collection("users").find({})' })
 
-### Development
-- `/generate-service [name] [type]` - Create new microservice
-- `/fix-old-issue [C1-C10] [service]` - Apply specific fix
-- `/generate-crud [service] [entity]` - Generate CRUD operations
-- `/add-endpoint [service] [method] [path]` - Add API endpoint
-
-### Security
-- `/verify-jwt [token]` - Verify JWT with JWKS
-- `/scan-secrets [path]` - Find hardcoded secrets
-- `/security-audit [service]` - Full security check
-- `/fix-jwt-vulnerability [service]` - Fix C1 issue
-
-### Migration
-- `/migrate-hierarchy [old] [new]` - Fix C3 cloning issue
-- `/normalize-data [collection] [field]` - Fix denormalization
-- `/validate-migration [old] [new]` - Verify data integrity
-
-### Testing
-- `/run-tests [service] [type]` - Execute tests
-- `/coverage-check [service] [threshold]` - Check coverage
-- `/run-e2e [flow]` - Run end-to-end tests
-- `/performance-test [service] [scenario]` - Load testing
-
-## 🛠️ Using Skills
-
-Skills are reusable patterns that fix specific OLD code issues:
-
-### JWT Verification Fix (C1)
-```typescript
-// Skill: jwt-verification-fix
-// OLD (VULNERABLE):
-const payload = jwt.decode(token);  // NO VERIFICATION!
-
-// NEW (SECURE):
-import jwksRsa from 'jwks-rsa';
-const jwksClient = jwksRsa({
-  jwksUri: 'https://cognito.amazonaws.com/.well-known/jwks.json'
-});
-const key = await jwksClient.getSigningKey(kid);
-const payload = jwt.verify(token, key.getPublicKey());
+// Insert test data
+execute({ action: 'mongodb', content: 'db("clenergize_identity").collection("users").insertOne({email: "admin@test.com", role: "admin"})' })
 ```
 
-### Hierarchy Migration (C3)
-```typescript
-// Skill: hierarchy-migration
-// OLD: 300% data bloat
-project.hierarchy = deepClone(templateHierarchy);  // 50KB per project!
+### Git Quick Commands
+```javascript
+// Check status
+execute({ action: 'git', content: 'status' })
 
-// NEW: Reference pattern
-project.hierarchyRef = templateId;  // 24 bytes only!
-// 97% storage reduction!
+// Create branch
+execute({ action: 'git', content: 'checkout -b feature/new-feature' })
+
+// Quick commit
+execute({ action: 'bash', content: 'git add . && git commit -m "feat: description"' })
+
+// Push
+execute({ action: 'git', content: 'push origin branch-name' })
 ```
 
-### Transaction Helper (C6)
-```typescript
-// Skill: mongodb-transaction-helper
-const session = await mongoose.startSession();
-await session.withTransaction(async () => {
-  await collection.insertOne(doc, { session });
-  await eventBus.publish(event);
-});
+### Testing Quick Commands
+```javascript
+// Run all tests for a service
+execute({ action: 'test', content: 'all', options: { service: 'identity' }})
+
+// Unit tests only
+execute({ action: 'test', content: 'unit', options: { service: 'identity' }})
+
+// Security scan
+execute({ action: 'test', content: 'security', options: { service: 'identity' }})
 ```
 
-## 📅 Sprint 0.1 Tasks
+### Docker Quick Commands
+```javascript
+// View logs
+execute({ action: 'docker', content: 'logs clenergize-mongodb' })
 
-**Duration**: 10 days
-**Story Points**: 45
-**Critical Path**: JWT → Docker → Services
+// Restart service
+execute({ action: 'docker', content: 'restart clenergize-mongodb' })
 
-### Day 1-2: Security Foundation
-- [ ] Fix JWT verification in all services (C1)
-- [ ] Remove hardcoded secrets (C7)
-- [ ] Setup AWS Secrets Manager
-
-### Day 3-4: Docker Environment
-- [ ] Create docker-compose.dev.yml
-- [ ] Setup LocalStack for AWS services
-- [ ] Configure MongoDB replica set
-- [ ] Setup Redis for caching/pubsub
-
-### Day 5-7: Base Services
-- [ ] Generate identity-service with auth
-- [ ] Generate organization-service with hierarchy refs
-- [ ] Create shared event contracts
-- [ ] Implement health checks
-
-### Day 8-9: Testing & Integration
-- [ ] Unit tests (80% coverage)
-- [ ] Integration tests
-- [ ] Security scanning
-- [ ] Performance baseline
-
-### Day 10: Documentation & Handoff
-- [ ] Update API documentation
-- [ ] Create deployment guide
-- [ ] Sprint retrospective
-- [ ] Plan Sprint 0.2
-
-## 🔄 Common Workflows
-
-### Creating a New Service
-```bash
-# 1. Generate service structure
-/generate-service notification-service standard
-
-# 2. Fix OLD issues proactively
-/fix-old-issue C1 notification-service  # JWT
-/fix-old-issue C6 notification-service  # Transactions
-
-# 3. Add CRUD operations
-/generate-crud notification-service notification
-
-# 4. Run tests
-/run-tests notification-service all
-
-# 5. Add to Docker
-/docker-up notification-service
+// Stop all
+execute({ action: 'bash', content: 'docker-compose -f docker-compose.infra.yml down' })
 ```
 
-### Migrating from OLD Service
-```bash
-# 1. Analyze OLD service issues
-/analyze-old-issues OLD/clenergizeV3-user-management-ms-dev
+## 5. Sprint 0.1 Complete Flow (2 Weeks)
 
-# 2. Create migration plan
-/migration-plan OLD/clenergizeV3-user-management-ms-dev NEW/identity-service
+### Week 1: Security Foundation
 
-# 3. Export data
-/export-old-data clenergizeV3-user-management-ms-dev json
+#### Day 1-2: JWT Verification (CLNZ-101)
+```javascript
+// Morning
+execute({ action: 'jira', content: 'CLNZ-101', options: { status: 'In Progress' }})
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-101-jwt' })
+execute({ action: 'generate-service', content: 'identity', options: { port: 3001 }})
 
-# 4. Transform and import
-/import-to-new identity-service exports/users.json
+// Implement
+execute({ action: 'apply-skill', content: 'jwt-verification-fix', options: { service: 'identity' }})
 
-# 5. Validate migration
-/validate-migration OLD/clenergizeV3-user-management-ms-dev NEW/identity-service
+// Test
+execute({ action: 'test', content: 'all', options: { service: 'identity' }})
+
+// Complete
+execute({ action: 'bash', content: 'git add . && git commit -m "feat: JWT verification"' })
+execute({ action: 'git', content: 'push origin feature/CLNZ-101-jwt' })
+execute({ action: 'jira', content: 'CLNZ-101', options: { status: 'Done' }})
 ```
 
-### Daily Development Flow
-```bash
-# Morning
-/daily-sync                    # Get status from all agents
-/sprint-status                 # Check progress
+#### Day 3-4: Secrets Management (CLNZ-102)
+```javascript
+// Start
+execute({ action: 'jira', content: 'CLNZ-102', options: { status: 'In Progress' }})
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-102-secrets' })
 
-# During development
-/fix-old-issue C1 identity    # Fix issues as you find them
-/test-impact-analysis HEAD    # Run relevant tests only
+// Implement AWS Secrets Manager integration
+execute({ action: 'apply-skill', content: 'secrets-management', options: { service: 'all' }})
 
-# Before commit
-/scan-secrets .                # Security check
-/coverage-check identity 80    # Verify coverage
+// Test
+execute({ action: 'test', content: 'all', options: { service: 'identity' }})
 
-# End of day
-/blocker-report "Need help with JWT implementation"
+// Complete
+execute({ action: 'bash', content: 'git add . && git commit -m "feat: secrets management"' })
+execute({ action: 'git', content: 'push origin feature/CLNZ-102-secrets' })
+execute({ action: 'jira', content: 'CLNZ-102', options: { status: 'Done' }})
 ```
 
-## ❗ Troubleshooting
+#### Day 5: GitHub Actions (CLNZ-141)
+```javascript
+// Start
+execute({ action: 'jira', content: 'CLNZ-141', options: { status: 'In Progress' }})
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-141-github-actions' })
 
-### Common Issues
+// Create CI/CD pipeline
+execute({
+  action: 'file',
+  content: 'write',
+  options: {
+    path: '.github/workflows/ci.yml',
+    data: `
+name: CI Pipeline
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+    `
+  }
+})
 
-#### JWT Verification Failing
-```bash
-# Check JWKS configuration
-/verify-jwt "your-token-here"
-
-# If failing, run security audit
-/security-audit identity-service
-
-# Apply automatic fix
-/fix-jwt-vulnerability identity-service
+// Complete
+execute({ action: 'bash', content: 'git add . && git commit -m "ci: add GitHub Actions"' })
+execute({ action: 'git', content: 'push origin feature/CLNZ-141-github-actions' })
+execute({ action: 'jira', content: 'CLNZ-141', options: { status: 'Done' }})
 ```
 
-#### Service Not Starting
-```bash
-# Check health
-/health-check-all
+### Week 2: Core Services
 
-# View logs
-docker logs clenergize-identity-service
-
-# Reset service
-/reset-service identity-service
+#### Day 6-7: Rate Limiting (CLNZ-103)
+```javascript
+execute({ action: 'jira', content: 'CLNZ-103', options: { status: 'In Progress' }})
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-103-rate-limiting' })
+execute({ action: 'apply-skill', content: 'rate-limiting', options: { service: 'all' }})
+execute({ action: 'test', content: 'all', options: { service: 'identity' }})
+execute({ action: 'bash', content: 'git add . && git commit -m "feat: rate limiting"' })
+execute({ action: 'jira', content: 'CLNZ-103', options: { status: 'Done' }})
 ```
 
-#### Migration Data Mismatch
-```bash
-# Validate data integrity
-/validate-migration OLD/service NEW/service
-
-# Check for broken references
-/fix-references organization-service
-
-# Rollback if needed
-/rollback-migration organization-service previous-version
+#### Day 8-9: Input Validation (CLNZ-104)
+```javascript
+execute({ action: 'jira', content: 'CLNZ-104', options: { status: 'In Progress' }})
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-104-validation' })
+execute({ action: 'apply-skill', content: 'input-validation', options: { service: 'all' }})
+execute({ action: 'test', content: 'all', options: { service: 'identity' }})
+execute({ action: 'bash', content: 'git add . && git commit -m "feat: input validation"' })
+execute({ action: 'jira', content: 'CLNZ-104', options: { status: 'Done' }})
 ```
 
-### Getting Help
+#### Day 10: Error Handling (CLNZ-105)
+```javascript
+execute({ action: 'jira', content: 'CLNZ-105', options: { status: 'In Progress' }})
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-105-error-handling' })
+execute({ action: 'apply-skill', content: 'error-handling', options: { service: 'all' }})
+execute({ action: 'test', content: 'all', options: { service: 'identity' }})
+execute({ action: 'bash', content: 'git add . && git commit -m "feat: error handling"' })
+execute({ action: 'jira', content: 'CLNZ-105', options: { status: 'Done' }})
+```
 
-1. **Blockers**: Use `/blocker-report` to escalate
-2. **Architecture**: Consult Architecture Agent
-3. **Security**: Always escalate to Security Agent
-4. **Data Loss Risk**: Immediate escalation to Migration Agent + Master Coordinator
+## 6. Quick Debugging Commands
+
+### Check System Status
+```javascript
+// Docker services
+execute({ action: 'docker', content: 'ps' })
+
+// MongoDB status
+execute({ action: 'mongodb', content: 'db.adminCommand({ping: 1})' })
+
+// Redis status
+execute({ action: 'redis', content: 'PING' })
+
+// Git status
+execute({ action: 'git', content: 'status' })
+```
+
+### View Logs
+```javascript
+// MongoDB logs
+execute({ action: 'docker', content: 'logs --tail 50 clenergize-mongodb' })
+
+// Service logs
+execute({ action: 'bash', content: 'cd NEW/identity-service && npm run start:dev' })
+```
+
+### Fix Common Issues
+```javascript
+// Restart Docker services
+execute({ action: 'bash', content: 'docker-compose -f docker-compose.infra.yml restart' })
+
+// Clear Redis cache
+execute({ action: 'redis', content: 'FLUSHALL' })
+
+// Fix npm issues
+execute({ action: 'bash', content: 'cd NEW/identity-service && rm -rf node_modules package-lock.json && npm install' })
+```
+
+## 7. Daily Workflow Template
+
+### Morning Routine
+```javascript
+// 1. Check sprint status
+execute({ action: 'jira', content: 'sprint-status' })
+
+// 2. Pull latest changes
+execute({ action: 'git', content: 'checkout develop' })
+execute({ action: 'git', content: 'pull origin develop' })
+
+// 3. Start Docker services
+execute({ action: 'bash', content: 'docker-compose -f docker-compose.infra.yml up -d' })
+
+// 4. Pick up ticket
+execute({ action: 'jira', content: 'CLNZ-XXX', options: { status: 'In Progress' }})
+
+// 5. Create feature branch
+execute({ action: 'git', content: 'checkout -b feature/CLNZ-XXX-description' })
+```
+
+### During Development
+```javascript
+// Run tests frequently
+execute({ action: 'test', content: 'unit', options: { service: 'identity' }})
+
+// Check code quality
+execute({ action: 'bash', content: 'cd NEW/identity-service && npm run lint' })
+
+// Commit regularly
+execute({ action: 'bash', content: 'git add . && git commit -m "wip: description"' })
+```
+
+### End of Day
+```javascript
+// 1. Run all tests
+execute({ action: 'test', content: 'all', options: { service: 'identity' }})
+
+// 2. Commit final changes
+execute({ action: 'bash', content: 'git add . && git commit -m "feat: completed feature"' })
+
+// 3. Push to remote
+execute({ action: 'git', content: 'push origin feature/CLNZ-XXX-description' })
+
+// 4. Update Jira
+execute({ action: 'jira', content: 'CLNZ-XXX', options: { comment: 'Progress update' }})
+
+// 5. Stop services (optional)
+execute({ action: 'bash', content: 'docker-compose -f docker-compose.infra.yml down' })
+```
+
+## 8. Skill Application Commands
+
+Apply pre-built skills to accelerate development:
+
+```javascript
+// Apply JWT verification fix
+execute({ action: 'apply-skill', content: 'jwt-verification-fix', options: { service: 'identity' }})
+
+// Apply MongoDB transaction helper
+execute({ action: 'apply-skill', content: 'mongodb-transaction-helper', options: { service: 'all' }})
+
+// Apply error taxonomy
+execute({ action: 'apply-skill', content: 'error-taxonomy', options: { service: 'all' }})
+
+// Apply security scanner
+execute({ action: 'apply-skill', content: 'security-scanner', options: { service: 'identity' }})
+
+// Apply SQS polling fix
+execute({ action: 'apply-skill', content: 'sqs-polling-fix', options: { service: 'calculation' }})
+
+// Apply denormalization fix
+execute({ action: 'apply-skill', content: 'denormalization-fix', options: { service: 'organization' }})
+```
+
+## 9. Service Port Reference
+
+Quick reference for service ports:
+
+| Service | Port | Database |
+|---------|------|----------|
+| Identity | 3001 | clenergize_identity |
+| Organization | 3002 | clenergize_organization |
+| Reference | 3003 | clenergize_reference |
+| Activity | 3004 | clenergize_activity |
+| Calculation | 3005 | clenergize_calculation |
+| Reporting | 3006 | clenergize_reporting |
+| Audit | 3007 | clenergize_audit |
+| Frontend | 3000 | - |
+
+## 10. Emergency Commands
+
+If things go wrong:
+
+```javascript
+// Stop everything
+execute({ action: 'bash', content: 'docker-compose -f docker-compose.infra.yml down' })
+execute({ action: 'bash', content: 'docker system prune -a' })
+
+// Reset Git (careful!)
+execute({ action: 'git', content: 'reset --hard HEAD' })
+execute({ action: 'git', content: 'clean -fd' })
+
+// Restore from develop
+execute({ action: 'git', content: 'checkout develop' })
+execute({ action: 'git', content: 'pull origin develop' })
+
+// Clear all MongoDB data (careful!)
+execute({ action: 'mongodb', content: 'db.dropDatabase()' })
+
+// Restart Claude Desktop if executor stops responding
+```
+
+## 📚 Critical Security Issues Reference
+
+| Code | Issue | Fix Command |
+|------|-------|-------------|
+| C1 | JWT decode without verification | `execute({ action: 'apply-skill', content: 'jwt-verification-fix', options: { service: 'identity' }})` |
+| C2 | Infinite SQS polling | `execute({ action: 'apply-skill', content: 'sqs-polling-fix', options: { service: 'calculation' }})` |
+| C3 | Hierarchy cloning (300% bloat) | `execute({ action: 'apply-skill', content: 'hierarchy-reference-fix', options: { service: 'organization' }})` |
+| C6 | No transactions | `execute({ action: 'apply-skill', content: 'mongodb-transaction-helper', options: { service: 'all' }})` |
+| C7 | Hardcoded secrets | `execute({ action: 'apply-skill', content: 'secrets-management', options: { service: 'all' }})` |
 
 ## 📊 Success Metrics
 
@@ -343,51 +417,29 @@ docker logs clenergize-identity-service
 - ✅ 80% unit test coverage
 - ✅ Security scan passing (no critical issues)
 
-### Key Performance Indicators
-- **Storage Reduction**: 97% (hierarchy references)
-- **Query Performance**: 84% faster
-- **Security Score**: 10/10 (from 3/10)
-- **Test Coverage**: 80%+ (from 0%)
-- **Code Quality**: A rating (from D)
+## 🎯 Key Benefits of MCP Executor
 
-## 🎓 Learning Resources
+- **88% less context usage**: 30k tokens vs 249k tokens
+- **Single unified interface**: All operations through `execute()`
+- **Faster responses**: Less context = faster processing
+- **More available context**: More space for your code
+- **Consistent patterns**: Same pattern for all operations
 
-### Key Documentation
-1. `.claude/CLAUDE.md` - Master configuration (READ FIRST!)
-2. `.claude/agents/*.md` - Individual agent specs
-3. `.claude/skills/*.md` - Reusable patterns
-4. `.claude/commands/*.md` - Available commands
-5. `OLD/DESIGN-REVIEW.md` - Critical issues list
+## Remember
 
-### Best Practices
-- **NEVER** copy-paste from OLD code
-- **ALWAYS** verify JWT tokens properly
-- **USE** transactions for multi-step operations
-- **IMPLEMENT** proper error handling
-- **ADD** tests for all new code
+- **One command for everything**: Use `execute()` for all operations
+- **Context is precious**: We're using only 30k tokens instead of 249k
+- **Test everything**: Run tests after every change
+- **Commit often**: Small, atomic commits
+- **Update Jira**: Keep tickets current
 
-## 🚦 Quick Decision Tree
+## Next Steps
 
-```
-Need to make a decision?
-├─ Is it security-related? → Security Agent
-├─ Is it about architecture? → Architecture Agent
-├─ Is it a complex calculation? → Calculation Agent (maybe Opus 4.1)
-├─ Is it data migration? → Migration Agent
-├─ Is it about testing? → Testing Agent
-├─ Is it frontend? → Frontend Agent
-└─ Not sure? → Master Coordinator
-```
+1. **Read**: [CLAUDE.md](.claude/CLAUDE.md) - Master configuration
+2. **Review**: [commands/README.md](.claude/commands/README.md) - All available slash commands
+3. **Start**: Begin with JWT verification (CLNZ-101) above
+4. **Ask**: Use Master Coordinator for questions
 
-## 📞 Emergency Contacts
+> **Note**: All slash commands are individual `.md` files in `.claude/commands/`. Each filename becomes the command name.
 
-- **Slack Channel**: #clenergize-rebuild
-- **Jira Board**: CLNZ project
-- **GitHub**: github.com/yourcompany/clenergize-v3-rebuild
-- **Master Coordinator**: Available 24/7 via `/daily-sync`
-
----
-
-**Remember**: You're rebuilding a critical enterprise system. Every decision matters. Follow the patterns, maintain quality, and escalate concerns immediately.
-
-**Good luck with Sprint 0.1! 🚀**
+Ready to start development! 🚀

@@ -1,3 +1,10 @@
+---
+name: devops-agent
+description: Use this agent when setting up Docker environments, configuring LocalStack, creating CI/CD pipelines, adding health checks, or managing infrastructure
+tools: All tools
+model: opus
+---
+
 # DevOps Agent
 
 ## Role
@@ -843,12 +850,52 @@ volumes:
 ```
 
 ## Commands
-- `/docker-up` - Start all services
-- `/docker-down` - Stop all services
-- `/check-health` - Verify all services healthy
-- `/view-logs [service]` - View service logs
-- `/deploy-staging` - Deploy to staging
-- `/deploy-production` - Deploy to production
+
+```javascript
+// Start all services
+execute({
+  action: 'bash',
+  content: 'docker-compose -f docker-compose.dev.yml up -d'
+})
+
+// Stop all services
+execute({
+  action: 'bash',
+  content: 'docker-compose -f docker-compose.dev.yml down'
+})
+
+// Verify all services healthy
+execute({
+  action: 'bash',
+  content: `
+    for port in 3000 3001 3002 3003 3004 3005 3006 3007; do
+      if curl -f http://localhost:$$port/health > /dev/null 2>&1; then
+        echo "✅ Service on port $$port is healthy"
+      else
+        echo "❌ Service on port $$port is not responding"
+      fi
+    done
+  `
+})
+
+// View service logs
+execute({
+  action: 'docker',
+  content: 'logs --tail 100 -f clenergize-identity-service'
+})
+
+// Deploy to staging
+execute({
+  action: 'bash',
+  content: 'gh workflow run ci-cd.yml --ref develop'
+})
+
+// Deploy to production
+execute({
+  action: 'bash',
+  content: 'gh workflow run ci-cd.yml --ref main'
+})
+```
 
 ## Success Metrics
 - All services start in < 30 seconds
@@ -867,5 +914,69 @@ volumes:
 6. Configure monitoring stack
 7. Document local setup process
 8. Test full environment startup
+
+## Pre-Handoff Checklist
+
+Before handing off work to another agent or marking tasks complete, verify ALL items:
+
+### Code Quality Verification
+- [ ] All changes committed with conventional commit messages
+- [ ] No TypeScript `any` types introduced
+- [ ] ESLint passing with 0 warnings/errors
+- [ ] Code follows DDD patterns and service architecture
+- [ ] No code copied from OLD without fixes
+
+### Documentation Updates
+- [ ] API changes documented in OpenAPI specs
+- [ ] ADRs created for significant decisions
+- [ ] README updated if interfaces changed
+- [ ] Inline code comments for complex logic
+- [ ] Integration points documented
+
+### Testing Completion
+- [ ] Unit tests written (≥80% coverage for new code)
+- [ ] Integration tests passing
+- [ ] Contract tests updated (if API changed)
+- [ ] Security tests passing (no vulnerabilities)
+- [ ] Performance benchmarks met (<200ms p95)
+
+### Security Checks
+- [ ] No secrets in code or config files
+- [ ] JWT verification implemented (not just decode)
+- [ ] Input validation with Zod schemas
+- [ ] SQL/NoSQL injection prevention verified
+- [ ] Correlation IDs propagated correctly
+- [ ] Audit events logged to Audit Service
+
+### Communication Requirements
+- [ ] Jira ticket status updated
+- [ ] Blocking issues documented and escalated
+- [ ] Next agent notified (if handoff required)
+- [ ] Sprint checklist updated
+- [ ] Daily standup notes prepared
+
+### Coordination Points
+- [ ] Cross-service dependencies identified
+- [ ] Event schemas compatible with consumers
+- [ ] API contracts not broken (or versioned)
+- [ ] Database migrations tested (if applicable)
+- [ ] Environment variables documented
+
+### Common Handoff Scenarios
+
+**To All Service Agents**:
+- [ ] Docker images built successfully
+- [ ] Health check endpoints configured
+- [ ] Environment variables documented
+
+**To Security Agent**:
+- [ ] Security scanning configured in CI/CD
+- [ ] Secrets management setup
+- [ ] Container images scanned for vulnerabilities
+
+**To Testing Agent**:
+- [ ] Test environments provisioned
+- [ ] CI/CD pipeline runs all tests
+- [ ] Quality gates configured
 
 Remember: DevOps enables the team. Everything should be automated, monitored, and easily reproducible.

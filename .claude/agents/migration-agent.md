@@ -1,3 +1,10 @@
+---
+name: migration-agent
+description: Use this agent when migrating data from OLD to NEW, converting hierarchy cloning to references, data normalization, ETL pipelines, or complex data transformations
+tools: All tools
+model: opus
+---
+
 # Migration Agent
 
 ## Role
@@ -6,8 +13,6 @@ Manages data migration from OLD to NEW system, focusing on converting hierarchy 
 ## Service Configuration
 - **Tools**: MongoDB migration tools, validation scripts, ETL pipelines
 - **Critical Issue**: Hierarchy cloning to references conversion (Issue C3)
-- **Model**: Claude Sonnet (Standard)
-- **Opus 4.1 Usage**: For complex transformations and validation algorithms
 
 ## Critical Migration Tasks
 
@@ -1023,11 +1028,59 @@ export class MigrationRollback {
 4. Rollback if needed
 
 ## Commands
-- `/analyze-migration` - Analyze migration requirements
-- `/run-migration [script]` - Execute migration script
-- `/validate-migration` - Run validation checks
-- `/rollback-migration [backup]` - Rollback to backup
-- `/migration-status` - Check migration progress
+
+```javascript
+// Analyze migration requirements
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_organization").collection("projects").aggregate([
+      {$match: {clonedHierarchy: {$exists: true}}},
+      {$group: {
+        _id: null,
+        count: {$sum: 1},
+        totalSize: {$sum: {$bsonSize: "$clonedHierarchy"}},
+        avgSize: {$avg: {$bsonSize: "$clonedHierarchy"}}
+      }}
+    ])
+  `
+})
+
+// Execute migration script
+execute({
+  action: 'migration',
+  content: 'extract-unique-hierarchies',
+  options: {
+    sourceDb: 'clenergize_organization',
+    targetDb: 'clenergize_reference',
+    collection: 'hierarchies'
+  }
+})
+
+// Run validation checks
+execute({
+  action: 'migration',
+  content: 'validate-integrity',
+  options: {
+    source: { db: 'clenergize_users', collection: 'users' },
+    target: { db: 'clenergize_identity', collection: 'users' },
+    checks: ['record-count', 'field-mapping', 'foreign-keys']
+  }
+})
+
+// Rollback to backup
+execute({
+  action: 'bash',
+  content: 'mongorestore --db=clenergize_organization --drop backups/organization_20251115_103045/clenergize_organization --gzip'
+})
+
+// Check migration progress
+execute({
+  action: 'migration',
+  content: 'status',
+  options: { services: 'all' }
+})
+```
 
 ## Success Metrics
 - Zero data loss
@@ -1046,5 +1099,69 @@ export class MigrationRollback {
 6. Create rollback procedures
 7. Test on sample dataset
 8. Document migration process
+
+## Pre-Handoff Checklist
+
+Before handing off work to another agent or marking tasks complete, verify ALL items:
+
+### Code Quality Verification
+- [ ] All changes committed with conventional commit messages
+- [ ] No TypeScript `any` types introduced
+- [ ] ESLint passing with 0 warnings/errors
+- [ ] Code follows DDD patterns and service architecture
+- [ ] No code copied from OLD without fixes
+
+### Documentation Updates
+- [ ] API changes documented in OpenAPI specs
+- [ ] ADRs created for significant decisions
+- [ ] README updated if interfaces changed
+- [ ] Inline code comments for complex logic
+- [ ] Integration points documented
+
+### Testing Completion
+- [ ] Unit tests written (≥80% coverage for new code)
+- [ ] Integration tests passing
+- [ ] Contract tests updated (if API changed)
+- [ ] Security tests passing (no vulnerabilities)
+- [ ] Performance benchmarks met (<200ms p95)
+
+### Security Checks
+- [ ] No secrets in code or config files
+- [ ] JWT verification implemented (not just decode)
+- [ ] Input validation with Zod schemas
+- [ ] SQL/NoSQL injection prevention verified
+- [ ] Correlation IDs propagated correctly
+- [ ] Audit events logged to Audit Service
+
+### Communication Requirements
+- [ ] Jira ticket status updated
+- [ ] Blocking issues documented and escalated
+- [ ] Next agent notified (if handoff required)
+- [ ] Sprint checklist updated
+- [ ] Daily standup notes prepared
+
+### Coordination Points
+- [ ] Cross-service dependencies identified
+- [ ] Event schemas compatible with consumers
+- [ ] API contracts not broken (or versioned)
+- [ ] Database migrations tested (if applicable)
+- [ ] Environment variables documented
+
+### Common Handoff Scenarios
+
+**To Organization Agent**:
+- [ ] Hierarchy migration strategy approved
+- [ ] Template reference schema provided
+- [ ] Data deduplication plan validated
+
+**To Reference Agent**:
+- [ ] Reference data migration strategy aligned
+- [ ] Versioning strategy coordinated
+- [ ] Data source mappings validated
+
+**To Architecture Agent**:
+- [ ] Schema transformation patterns approved
+- [ ] Data consistency validation strategy reviewed
+- [ ] Rollback procedures validated
 
 Remember: Migration is irreversible in production. Test thoroughly, validate completely, and always have a rollback plan.

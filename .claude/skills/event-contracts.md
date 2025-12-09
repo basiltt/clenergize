@@ -31,7 +31,7 @@ export abstract class DomainEvent {
 
 // Typed events
 export class UserCreatedEvent extends DomainEvent {
-  static readonly EVENT_TYPE = 'Identity.User.Created';
+  static readonly EVENT_TYPE = 'identity.user.created.v1';
 
   constructor(
     public readonly userId: string,
@@ -43,7 +43,7 @@ export class UserCreatedEvent extends DomainEvent {
 }
 
 export class ProjectCreatedEvent extends DomainEvent {
-  static readonly EVENT_TYPE = 'Organization.Project.Created';
+  static readonly EVENT_TYPE = 'organization.project.created.v1';
 
   constructor(
     public readonly projectId: string,
@@ -55,7 +55,7 @@ export class ProjectCreatedEvent extends DomainEvent {
 }
 
 export class EmissionCalculatedEvent extends DomainEvent {
-  static readonly EVENT_TYPE = 'Calculation.Emission.Calculated';
+  static readonly EVENT_TYPE = 'calculation.emission.calculated.v1';
 
   constructor(
     public readonly calculationId: string,
@@ -119,7 +119,7 @@ import { z } from 'zod';
 
 // Define schemas
 const UserCreatedSchema = z.object({
-  eventType: z.literal('Identity.User.Created'),
+  eventType: z.literal('identity.user.created.v1'),
   userId: z.string().uuid(),
   email: z.string().email(),
   roles: z.array(z.string())

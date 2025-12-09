@@ -1,0 +1,117 @@
+import { Injectable } from '@nestjs/common';
+import { InjectModel, InjectConnection } from '@nestjs/mongoose';
+import { Model, Connection } from 'mongoose';
+import { MongooseRepository } from '@clenergize/repository';
+import { {{entityNameCapitalized}}, {{entityNameCapitalized}}Document } from './{{entityName}}.schema';
+
+/**
+ * Repository for {{entityNameCapitalized}} entity
+ *
+ * Provides data access layer with transaction support
+ */
+@Injectable()
+export class {{entityNameCapitalized}}Repository extends MongooseRepository<{{entityNameCapitalized}}Document> {
+  constructor(
+    @InjectModel({{entityNameCapitalized}}.name) model: Model<{{entityNameCapitalized}}Document>,
+    @InjectConnection() connection: Connection,
+  ) {
+    super(model, connection);
+  }
+
+  /**
+   * Find by name and organization
+   */
+  async findByNameAndOrganization(
+    name: string,
+    organizationId: string,
+  ): Promise<{{entityNameCapitalized}}Document | null> {
+    return await this.findOne({
+      name,
+      organizationId,
+      status: { $ne: 'deleted' },
+    });
+  }
+
+  /**
+   * Find all active {{entityNamePlural}}
+   */
+  async findActive(organizationId?: string): Promise<{{entityNameCapitalized}}Document[]> {
+    const filter: any = { status: 'active' };
+
+    if (organizationId) {
+      filter.organizationId = organizationId;
+    }
+
+    return await this.findMany(filter, {
+      sort: '-createdAt',
+    });
+  }
+
+  /**
+   * Soft delete a {{entityName}}
+   */
+  async softDelete(id: string): Promise<boolean> {
+    const result = await this.updateById(id, {
+      status: 'deleted',
+      deletedAt: new Date(),
+    } as any);
+
+    return result !== null;
+  }
+
+  /**
+   * Search {{entityNamePlural}} by text
+   */
+  async search(
+    query: string,
+    organizationId?: string,
+  ): Promise<{{entityNameCapitalized}}Document[]> {
+    const filter: any = {
+      $text: { $search: query },
+      status: { $ne: 'deleted' },
+    };
+
+    if (organizationId) {
+      filter.organizationId = organizationId;
+    }
+
+    return await this.findMany(filter, {
+      select: ['name', 'description', 'status'],
+      sort: { score: { $meta: 'textScore' } },
+    });
+  }
+
+  /**
+   * Get statistics for {{entityNamePlural}}
+   */
+  async getStatistics(organizationId?: string): Promise<any> {
+    const pipeline: any[] = [
+      {
+        $match: {
+          ...(organizationId && { organizationId }),
+        },
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$count' },
+          statuses: {
+            $push: {
+              status: '$_id',
+              count: '$count',
+            },
+          },
+        },
+      },
+    ];
+
+    const result = await this.aggregate(pipeline);
+    return result[0] || { total: 0, statuses: [] };
+  }
+}

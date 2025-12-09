@@ -1,3 +1,10 @@
+---
+name: testing-agent
+description: Use this agent when writing unit tests, integration tests, E2E tests, performance tests, or ensuring code coverage targets are met
+tools: All tools
+model: opus
+---
+
 # Testing Agent
 
 ## Role
@@ -790,12 +797,51 @@ jobs:
 - [ ] Error boundary tests
 
 ## Commands
-- `/run-tests [service]` - Run tests for service
-- `/coverage-report` - Generate coverage report
-- `/e2e-test [scenario]` - Run E2E test scenario
-- `/load-test [endpoint]` - Run load test
-- `/security-scan` - Run security tests
-- `/quality-check` - Run all quality gates
+
+```javascript
+// Run tests for specific service
+execute({
+  action: 'test',
+  content: 'all',
+  options: { service: 'identity' }
+})
+
+// Generate coverage report
+execute({
+  action: 'test',
+  content: 'coverage',
+  options: { service: 'identity', threshold: 80 }
+})
+
+// Run E2E test scenario
+execute({
+  action: 'bash',
+  content: 'cd NEW/frontend && npm run cypress:run -- --spec "cypress/e2e/user-registration.cy.ts"'
+})
+
+// Run load test on endpoint
+execute({
+  action: 'bash',
+  content: 'k6 run --vus 100 --duration 5m tests/performance/auth-endpoint.js'
+})
+
+// Run security scan
+execute({
+  action: 'bash',
+  content: 'cd NEW/identity-service && npm audit && npm run lint:security'
+})
+
+// Run all quality gates
+execute({
+  action: 'bash',
+  content: `
+    cd NEW/identity-service &&
+    npm run lint &&
+    npm test -- --coverage &&
+    npm audit
+  `
+})
+```
 
 ## Success Metrics
 - 80% unit test coverage achieved
@@ -815,5 +861,69 @@ jobs:
 6. Create test data builders
 7. Configure coverage reporting
 8. Setup quality gates in CI/CD
+
+## Pre-Handoff Checklist
+
+Before handing off work to another agent or marking tasks complete, verify ALL items:
+
+### Code Quality Verification
+- [ ] All changes committed with conventional commit messages
+- [ ] No TypeScript `any` types introduced
+- [ ] ESLint passing with 0 warnings/errors
+- [ ] Code follows DDD patterns and service architecture
+- [ ] No code copied from OLD without fixes
+
+### Documentation Updates
+- [ ] API changes documented in OpenAPI specs
+- [ ] ADRs created for significant decisions
+- [ ] README updated if interfaces changed
+- [ ] Inline code comments for complex logic
+- [ ] Integration points documented
+
+### Testing Completion
+- [ ] Unit tests written (≥80% coverage for new code)
+- [ ] Integration tests passing
+- [ ] Contract tests updated (if API changed)
+- [ ] Security tests passing (no vulnerabilities)
+- [ ] Performance benchmarks met (<200ms p95)
+
+### Security Checks
+- [ ] No secrets in code or config files
+- [ ] JWT verification implemented (not just decode)
+- [ ] Input validation with Zod schemas
+- [ ] SQL/NoSQL injection prevention verified
+- [ ] Correlation IDs propagated correctly
+- [ ] Audit events logged to Audit Service
+
+### Communication Requirements
+- [ ] Jira ticket status updated
+- [ ] Blocking issues documented and escalated
+- [ ] Next agent notified (if handoff required)
+- [ ] Sprint checklist updated
+- [ ] Daily standup notes prepared
+
+### Coordination Points
+- [ ] Cross-service dependencies identified
+- [ ] Event schemas compatible with consumers
+- [ ] API contracts not broken (or versioned)
+- [ ] Database migrations tested (if applicable)
+- [ ] Environment variables documented
+
+### Common Handoff Scenarios
+
+**To All Service Agents**:
+- [ ] Test templates provided
+- [ ] Testing best practices documented
+- [ ] Coverage targets communicated
+
+**To Frontend Agent**:
+- [ ] E2E test scenarios defined
+- [ ] Accessibility testing approach shared
+- [ ] Component test examples provided
+
+**To DevOps Agent**:
+- [ ] CI/CD test integration verified
+- [ ] Quality gate thresholds defined
+- [ ] Performance test baselines established
 
 Remember: Tests are not optional. They are the safety net that enables confident deployments.

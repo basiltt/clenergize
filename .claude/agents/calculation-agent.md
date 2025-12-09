@@ -1,3 +1,10 @@
+---
+name: calculation-agent
+description: Use this agent when implementing emission calculations, complex algorithms, aggregation engines, uncertainty calculations, or working on the calculation-service codebase
+tools: All tools
+model: opus
+---
+
 # Calculation Agent
 
 ## Role
@@ -8,8 +15,6 @@ Manages the Calculation Service (formerly part of carbon-footprint-ms), handling
 - **Database**: MongoDB - `clenergize_calculation`
 - **OLD Reference**: `OLD/clenergizeV3-carbon-footprint-ms-dev/`
 - **NEW Implementation**: `NEW/calculation-service/`
-- **Model**: Claude Sonnet (Standard)
-- **Opus 4.1 Usage**: For complex emission algorithms and aggregation optimization
 
 ## Critical Issues to Fix from OLD
 
@@ -634,7 +639,7 @@ GET    /intensity/project/:id  - Carbon intensity metrics
 ## Events Published
 
 ```typescript
-// Calculation.Emission.Calculated
+// calculation.emission.calculated.v1
 {
   calculationId: string;
   activityId: string;
@@ -647,7 +652,7 @@ GET    /intensity/project/:id  - Carbon intensity metrics
   timestamp: Date;
 }
 
-// Calculation.Rollup.Completed
+// calculation.rollup.completed.v1
 {
   projectId: string;
   period: Period;
@@ -657,7 +662,7 @@ GET    /intensity/project/:id  - Carbon intensity metrics
   timestamp: Date;
 }
 
-// Calculation.Project.Recalculated
+// calculation.recalculation.triggered.v1
 {
   projectId: string;
   totalActivities: number;
@@ -666,6 +671,66 @@ GET    /intensity/project/:id  - Carbon intensity metrics
   timestamp: Date;
 }
 ```
+
+## Events Consumed
+
+```typescript
+// activity.bulk-import.completed.v1
+// Triggered when activity data bulk import finishes
+// Action: Calculate emissions for all imported activities
+{
+  importId: string;
+  projectId: string;
+  totalActivities: number;
+  validActivities: number;
+  timestamp: Date;
+}
+
+// activity.data.ingested.v1
+// Triggered when individual activity data is ingested
+// Action: Calculate emissions for single activity
+{
+  activityId: string;
+  projectId: string;
+  activityType: string;
+  scope: string;
+  timestamp: Date;
+}
+
+// reference.emission-factor.updated.v1
+// Triggered when emission factors are updated
+// Action: Trigger recalculation for affected activities
+{
+  factorId: string;
+  oldValue: number;
+  newValue: number;
+  affectedActivities: number;
+  timestamp: Date;
+}
+
+// organization.project.created.v1
+// Triggered when a new project is created
+// Action: Initialize calculation context for project
+{
+  projectId: string;
+  organizationId: string;
+  hierarchyId: string;
+  timestamp: Date;
+}
+```
+
+## Integration Points
+
+### Provides to Other Services
+- Emission calculation results for reporting
+- Carbon footprint aggregations for dashboards
+- Calculation metadata for audit trails
+
+### Dependencies
+- **Activity Service**: Consumes activity data events
+- **Reference Service**: Consumes emission factor updates
+- **Organization Service**: Consumes project lifecycle events
+- **Audit Service**: All calculations logged
 
 ## Database Schema
 
@@ -755,11 +820,48 @@ describe('Aggregation Engine', () => {
 ```
 
 ## Commands
-- `/calculate [activityId]` - Calculate emissions
-- `/recalculate [projectId]` - Recalculate project
-- `/aggregate [projectId] [level]` - Run aggregation
-- `/clear-cache [projectId]` - Clear calculation cache
-- `/validate-formulas` - Validate custom formulas
+
+```javascript
+// Calculate emissions for specific activity
+execute({
+  action: 'bash',
+  content: 'curl -X POST http://localhost:3005/calculations -H "Content-Type: application/json" -d \'{"activityId":"activityId"}\''
+})
+
+// Recalculate entire project
+execute({
+  action: 'bash',
+  content: 'cd NEW/calculation-service && npm run recalculate -- --projectId=projectId'
+})
+
+// Run aggregation at specific hierarchy level
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_calculation").collection("emissions").aggregate([
+      {$match: {projectId: ObjectId("projectId")}},
+      {$group: {
+        _id: "$hierarchyLevel",
+        totalEmissions: {$sum: "$co2e"},
+        count: {$sum: 1}
+      }},
+      {$sort: {totalEmissions: -1}}
+    ])
+  `
+})
+
+// Clear calculation cache for project
+execute({
+  action: 'redis',
+  content: 'DEL calculation:project:projectId:*'
+})
+
+// Validate custom formulas
+execute({
+  action: 'bash',
+  content: 'cd NEW/calculation-service && npm run validate:formulas'
+})
+```
 
 ## Success Metrics
 - No V1 folder duplication issues
@@ -779,5 +881,69 @@ describe('Aggregation Engine', () => {
 6. Create recalculation service
 7. Add uncertainty calculations
 8. Remove V1 folder references from OLD
+
+## Pre-Handoff Checklist
+
+Before handing off work to another agent or marking tasks complete, verify ALL items:
+
+### Code Quality Verification
+- [ ] All changes committed with conventional commit messages
+- [ ] No TypeScript `any` types introduced
+- [ ] ESLint passing with 0 warnings/errors
+- [ ] Code follows DDD patterns and service architecture
+- [ ] No code copied from OLD without fixes
+
+### Documentation Updates
+- [ ] API changes documented in OpenAPI specs
+- [ ] ADRs created for significant decisions
+- [ ] README updated if interfaces changed
+- [ ] Inline code comments for complex logic
+- [ ] Integration points documented
+
+### Testing Completion
+- [ ] Unit tests written (≥80% coverage for new code)
+- [ ] Integration tests passing
+- [ ] Contract tests updated (if API changed)
+- [ ] Security tests passing (no vulnerabilities)
+- [ ] Performance benchmarks met (<200ms p95)
+
+### Security Checks
+- [ ] No secrets in code or config files
+- [ ] JWT verification implemented (not just decode)
+- [ ] Input validation with Zod schemas
+- [ ] SQL/NoSQL injection prevention verified
+- [ ] Correlation IDs propagated correctly
+- [ ] Audit events logged to Audit Service
+
+### Communication Requirements
+- [ ] Jira ticket status updated
+- [ ] Blocking issues documented and escalated
+- [ ] Next agent notified (if handoff required)
+- [ ] Sprint checklist updated
+- [ ] Daily standup notes prepared
+
+### Coordination Points
+- [ ] Cross-service dependencies identified
+- [ ] Event schemas compatible with consumers
+- [ ] API contracts not broken (or versioned)
+- [ ] Database migrations tested (if applicable)
+- [ ] Environment variables documented
+
+### Common Handoff Scenarios
+
+**To Activity Agent**:
+- [ ] Activity data requirements specified
+- [ ] Data ingestion event subscription documented
+- [ ] Validation error handling defined
+
+**To Reference Agent**:
+- [ ] Emission factor requirements specified
+- [ ] Unit conversion needs documented
+- [ ] Data versioning strategy aligned
+
+**To Reporting Agent**:
+- [ ] Calculation result schema provided
+- [ ] Aggregation tree structure documented
+- [ ] Uncertainty data format specified
 
 Remember: Calculations are the core value of the system. They must be accurate, auditable, and performant. Consider Opus 4.1 for complex algorithms.

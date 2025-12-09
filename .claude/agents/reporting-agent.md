@@ -1,3 +1,10 @@
+---
+name: reporting-agent
+description: Use this agent when generating reports, fixing SQS polling loops, implementing export functionality, scheduling reports, or working on the reporting-service codebase
+tools: All tools
+model: opus
+---
+
 # Reporting Agent
 
 ## Role
@@ -598,7 +605,7 @@ POST   /schedules/:id/run     - Run scheduled report now
 ## Events Published
 
 ```typescript
-// Reporting.Report.Generated
+// reporting.report.generated.v1
 {
   reportId: string;
   type: string;
@@ -608,7 +615,7 @@ POST   /schedules/:id/run     - Run scheduled report now
   size: number;
 }
 
-// Reporting.Report.Exported
+// reporting.report.exported.v1
 {
   reportId: string;
   format: string;
@@ -616,7 +623,7 @@ POST   /schedules/:id/run     - Run scheduled report now
   timestamp: Date;
 }
 
-// Reporting.Report.Accessed
+// reporting.report.accessed.v1
 {
   reportId: string;
   userId: string;
@@ -624,6 +631,66 @@ POST   /schedules/:id/run     - Run scheduled report now
   timestamp: Date;
 }
 ```
+
+## Events Consumed
+
+```typescript
+// calculation.emission.calculated.v1
+// Triggered when emissions are calculated for an activity
+// Action: Update real-time dashboard metrics
+{
+  calculationId: string;
+  activityId: string;
+  projectId: string;
+  emissions: number;
+  scope: string;
+  timestamp: Date;
+}
+
+// calculation.rollup.completed.v1
+// Triggered when project-level emissions are aggregated
+// Action: Update project footprint reports and cached data
+{
+  projectId: string;
+  period: Period;
+  totalEmissions: number;
+  breakdown: EmissionBreakdown;
+  timestamp: Date;
+}
+
+// organization.project.created.v1
+// Triggered when a new project is created
+// Action: Initialize reporting templates and default reports
+{
+  projectId: string;
+  organizationId: string;
+  name: string;
+  timestamp: Date;
+}
+
+// calculation.recalculation.triggered.v1
+// Triggered when project emissions are recalculated
+// Action: Invalidate cached reports and schedule regeneration
+{
+  projectId: string;
+  totalActivities: number;
+  recalculated: number;
+  timestamp: Date;
+}
+```
+
+## Integration Points
+
+### Provides to Other Services
+- Report generation status events
+- Export file URLs (S3)
+- Dashboard data for frontend
+
+### Dependencies
+- **Calculation Service**: Consumes emission calculation results
+- **Organization Service**: Consumes project lifecycle events
+- **Identity Service**: User permissions for report access
+- **Audit Service**: All report access events logged
 
 ## Database Schema
 
@@ -705,11 +772,46 @@ describe('Export Service', () => {
 ```
 
 ## Commands
-- `/generate-report [type] [projectId]` - Generate report
-- `/export-report [reportId] [format]` - Export report
-- `/schedule-report [type] [cron]` - Schedule report
-- `/clear-report-cache [projectId]` - Clear cache
-- `/regenerate-expired` - Regenerate expired reports
+
+```javascript
+// Generate report
+execute({
+  action: 'bash',
+  content: 'curl -X POST http://localhost:3006/reports -H "Content-Type: application/json" -d \'{"type":"monthly-emissions","projectId":"projectId"}\''
+})
+
+// Export report to specific format
+execute({
+  action: 'bash',
+  content: 'curl http://localhost:3006/reports/reportId/export?format=pdf -o report.pdf'
+})
+
+// Schedule report generation
+execute({
+  action: 'mongodb',
+  content: `
+    db("clenergize_reporting").collection("scheduled_reports").insertOne({
+      type: "monthly-emissions",
+      projectId: ObjectId("projectId"),
+      cron: "0 0 1 * *",
+      enabled: true,
+      createdAt: new Date()
+    })
+  `
+})
+
+// Clear report cache
+execute({
+  action: 'redis',
+  content: 'DEL report:project:projectId:*'
+})
+
+// Regenerate expired reports
+execute({
+  action: 'bash',
+  content: 'cd NEW/reporting-service && npm run regenerate:expired'
+})
+```
 
 ## Success Metrics
 - No infinite SQS polling loops
@@ -729,5 +831,69 @@ describe('Export Service', () => {
 6. Add scheduled report system
 7. Implement access logging
 8. Add comprehensive tests
+
+## Pre-Handoff Checklist
+
+Before handing off work to another agent or marking tasks complete, verify ALL items:
+
+### Code Quality Verification
+- [ ] All changes committed with conventional commit messages
+- [ ] No TypeScript `any` types introduced
+- [ ] ESLint passing with 0 warnings/errors
+- [ ] Code follows DDD patterns and service architecture
+- [ ] No code copied from OLD without fixes
+
+### Documentation Updates
+- [ ] API changes documented in OpenAPI specs
+- [ ] ADRs created for significant decisions
+- [ ] README updated if interfaces changed
+- [ ] Inline code comments for complex logic
+- [ ] Integration points documented
+
+### Testing Completion
+- [ ] Unit tests written (≥80% coverage for new code)
+- [ ] Integration tests passing
+- [ ] Contract tests updated (if API changed)
+- [ ] Security tests passing (no vulnerabilities)
+- [ ] Performance benchmarks met (<200ms p95)
+
+### Security Checks
+- [ ] No secrets in code or config files
+- [ ] JWT verification implemented (not just decode)
+- [ ] Input validation with Zod schemas
+- [ ] SQL/NoSQL injection prevention verified
+- [ ] Correlation IDs propagated correctly
+- [ ] Audit events logged to Audit Service
+
+### Communication Requirements
+- [ ] Jira ticket status updated
+- [ ] Blocking issues documented and escalated
+- [ ] Next agent notified (if handoff required)
+- [ ] Sprint checklist updated
+- [ ] Daily standup notes prepared
+
+### Coordination Points
+- [ ] Cross-service dependencies identified
+- [ ] Event schemas compatible with consumers
+- [ ] API contracts not broken (or versioned)
+- [ ] Database migrations tested (if applicable)
+- [ ] Environment variables documented
+
+### Common Handoff Scenarios
+
+**To Calculation Agent**:
+- [ ] Report data requirements specified
+- [ ] Aggregation result format documented
+- [ ] Performance optimization needs identified
+
+**To Frontend Agent**:
+- [ ] Export API contract provided
+- [ ] Report formats documented
+- [ ] Download progress API specified
+
+**To DevOps Agent**:
+- [ ] S3 bucket configuration requirements specified
+- [ ] SQS queue configuration documented
+- [ ] Lambda trigger configuration provided
 
 Remember: Reporting is critical for compliance and decision-making. Reports must be accurate, timely, and auditable.
